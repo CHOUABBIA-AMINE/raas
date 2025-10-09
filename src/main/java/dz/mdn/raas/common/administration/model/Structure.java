@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Administration
+ *	@Package	: Common / Administration
  *
  **/
 
@@ -37,8 +37,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Structure")
-@Table(name="T_02_04", uniqueConstraints = { @UniqueConstraint(name = "T_02_04_UK_01", columnNames = { "F_03" }), 
-											 @UniqueConstraint(name = "T_02_04_UK_02", columnNames = { "F_06" })})
+@Table(name="T_01_04_07", uniqueConstraints = { @UniqueConstraint(name = "T_01_04_07_UK_01", columnNames = { "F_03" }), 
+											 	@UniqueConstraint(name = "T_01_04_07_UK_02", columnNames = { "F_06" })})
 public class Structure {
 	
 	@Id
@@ -65,10 +65,10 @@ public class Structure {
 	private String acronymFr;
 	
 	@ManyToOne
-    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_02_04_FK_01"), nullable=false)
+    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_01_04_07_FK_01"), nullable=false)
     private StructureType structureType;
 	
 	@ManyToOne
-    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_02_04_FK_02"), nullable=true)
+    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_01_04_07_FK_02"), nullable=true)
     private Structure structureUp;
 }

@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Plan
+ *	@Package	: Business / Plan
  *
  **/
 
@@ -32,7 +32,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="Item")
-@Table(name="T_10_06")
+@Table(name="T_02_02_06")
 public class Item {
 	
 	@Id
@@ -50,7 +50,7 @@ public class Item {
 	private String designationFr;
 	
 	@ManyToOne
-    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_10_06_FK_01"), nullable=false)
+    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_02_02_06_FK_01"), nullable=false)
     private Rubric rubric;
 	
 	@OneToMany(mappedBy="item")

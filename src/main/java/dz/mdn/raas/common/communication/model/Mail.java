@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Communication
+ *	@Package	: Common / Communication
  *
  **/
 
@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 import dz.mdn.raas.common.administration.model.Structure;
-import dz.mdn.raas.common.utility.model.File;
+import dz.mdn.raas.system.utility.model.File;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -45,7 +45,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Mail")
-@Table(name="T_04_03", uniqueConstraints = { @UniqueConstraint(name = "T_04_03_UK_01", columnNames = { "F_01" })})
+@Table(name="T_01_02_03", uniqueConstraints = { @UniqueConstraint(name = "T_01_02_03_UK_01", columnNames = { "F_01" })})
 public class Mail {
 	
 	@Id
@@ -69,27 +69,27 @@ public class Mail {
 	private Date recordDate;
 	
 	@ManyToOne
-    @JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_04_03_FK_01"), nullable=false)
+    @JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_01_02_03_FK_01"), nullable=false)
     private MailNature mailNature;
 	
 	@ManyToOne
-    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_04_03_FK_02"), nullable=false)
+    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_01_02_03_FK_02"), nullable=false)
     private MailType mailType;
 	
 	@ManyToOne
-    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_04_03_FK_03"), nullable=false)
+    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_01_02_03_FK_03"), nullable=false)
     private Structure structure;
 	
 	@ManyToOne
-    @JoinColumn(name="F_09", foreignKey=@ForeignKey(name="T_04_03_FK_04"), nullable=false)
+    @JoinColumn(name="F_09", foreignKey=@ForeignKey(name="T_01_02_03_FK_04"), nullable=false)
     private File file;
 	
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(
-			name = "R_04_03_04_03", 
-			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_04_03_04_03_FK_01")), 
-			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_04_03_04_03_FK_02")),
-			uniqueConstraints = @UniqueConstraint(name = "R_04_03_04_03_UK_01", columnNames = {"F_01", "F_02"}))
+			name = "R_T010203_T010203", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_T010203_T010203_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_T010203_T010203_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T010203_T010203_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<Mail> referencedMails;
 
 }

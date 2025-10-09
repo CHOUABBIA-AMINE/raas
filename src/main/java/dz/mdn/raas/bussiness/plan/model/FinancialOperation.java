@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Plan
+ *	@Package	: Business / Plan
  *
  **/
 
@@ -37,7 +37,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="FinancialOperation")
-@Table(name="T_10_02", uniqueConstraints = { @UniqueConstraint(name = "T_10_02_UK_01", columnNames = { "F_01" })})
+@Table(name="T_02_02_03", uniqueConstraints = { @UniqueConstraint(name = "T_02_02_03_UK_01", columnNames = { "F_01" })})
 public class FinancialOperation {
 	
 	@Id
@@ -52,7 +52,7 @@ public class FinancialOperation {
 	private String budgetYear;
 	
 	@ManyToOne
-    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_10_02_FK_01"), nullable=false)
+    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_02_02_03_FK_01"), nullable=false)
     private BudgetType budgetType;
 
 }

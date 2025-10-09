@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Consultation
+ *	@Package	: Business / Consultation
  *
  **/
 
@@ -16,7 +16,7 @@ package dz.mdn.raas.bussiness.consultation.model;
 import java.util.Date;
 
 import dz.mdn.raas.bussiness.provider.model.Provider;
-import dz.mdn.raas.common.utility.model.File;
+import dz.mdn.raas.system.utility.model.File;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -41,7 +41,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Submission")
-@Table(name="T_22_05", uniqueConstraints = { @UniqueConstraint(name = "T_22_05_UK_01", columnNames = { "F_03", "F_04" })})
+@Table(name="T_02_04_05", uniqueConstraints = { @UniqueConstraint(name = "T_02_04_05_UK_01", columnNames = { "F_03", "F_04" })})
 public class Submission {
 	
 	@Id
@@ -56,23 +56,23 @@ public class Submission {
 	private double financialOffer;
 	
 	@ManyToOne
-    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_22_05_FK_01"), nullable=false)
+    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_02_04_05_FK_01"), nullable=false)
     private Consultation consultation;
 	
 	@ManyToOne
-    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_22_05_FK_02"), nullable=false)
+    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_02_04_05_FK_02"), nullable=false)
     private Provider tender;
 	
 	@ManyToOne
-    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_22_05_FK_03"), nullable=true)
+    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_02_04_05_FK_03"), nullable=true)
     private File administrativePart;
 	
 	@ManyToOne
-    @JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_22_05_FK_04"), nullable=true)
+    @JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_02_04_05_FK_04"), nullable=true)
     private File technicalPart;
 	
 	@ManyToOne
-    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_22_05_FK_05"), nullable=true)
+    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_02_04_05_FK_05"), nullable=true)
     private File financialPart;
 
 }

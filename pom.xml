@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>dz.mdn</groupId>
 	<artifactId>raas</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>raas</name>
 	<description>Realization As A Service</description>
 	<url/>
@@ -68,6 +68,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>RAAS-API-${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

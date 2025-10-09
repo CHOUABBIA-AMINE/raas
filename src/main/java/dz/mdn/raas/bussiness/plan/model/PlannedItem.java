@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Plan
+ *	@Package	: Business / Plan
  *
  **/
 
@@ -31,7 +31,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="PlannedItem")
-@Table(name="T_10_08")
+@Table(name="T_02_02_08")
 public class PlannedItem {
 	
 	@Id
@@ -52,19 +52,19 @@ public class PlannedItem {
 	private double allocatedAmount;
 	
 	@ManyToOne
-    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_10_08_FK_01_"), nullable=false)
+    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_02_02_08_FK_01_"), nullable=false)
     private ItemStatus itemStatus;
 	
 	@ManyToOne
-    @JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_10_08_FK_02_"), nullable=false)
+    @JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_02_02_08_FK_02_"), nullable=false)
     private Item item;
 	
 	@ManyToOne
-    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_10_08_FK_03_"), nullable=false)
+    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_02_02_08_FK_03_"), nullable=false)
     private FinancialOperation financialOperation;
 	
 	@ManyToOne
-    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_10_08_FK_03_"), nullable=true)
+    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_02_02_08_FK_04_"), nullable=true)
     private BudgetModification budgetModification;
 	
 	@OneToMany(mappedBy="plannedItem")

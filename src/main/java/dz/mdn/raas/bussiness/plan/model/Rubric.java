@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Plan
+ *	@Package	: Business / Plan
  *
  **/
 
@@ -32,7 +32,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="Rubric")
-@Table(name="T_10_05", uniqueConstraints = { @UniqueConstraint(name = "T_10_05_UK_01", columnNames = { "F_03" })})
+@Table(name="T_02_02_05", uniqueConstraints = { @UniqueConstraint(name = "T_02_02_05_UK_01", columnNames = { "F_03" })})
 public class Rubric {
 	
 	@Id
@@ -50,7 +50,7 @@ public class Rubric {
 	private String designationFr;
 	
 	@ManyToOne
-    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_10_05_FK_01"), nullable=false)
+    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_02_02_05_FK_01"), nullable=false)
     private Domain domain;
 	
 	@OneToMany(mappedBy="rubric")

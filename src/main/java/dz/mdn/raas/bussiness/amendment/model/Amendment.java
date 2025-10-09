@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Amendment
+ *	@Package	: Business / Amendment
  *
  **/
 
@@ -16,11 +16,10 @@ package dz.mdn.raas.bussiness.amendment.model;
 import java.util.Date;
 import java.util.List;
 
-import dz.mdn.raas.bussiness.common.model.ApprovalStatus;
-import dz.mdn.raas.bussiness.common.model.Project;
-import dz.mdn.raas.bussiness.common.model.RealizationStatus;
 import dz.mdn.raas.bussiness.contract.model.Contract;
-import dz.mdn.raas.common.administration.model.Currency;
+import dz.mdn.raas.bussiness.core.model.ApprovalStatus;
+import dz.mdn.raas.bussiness.core.model.Currency;
+import dz.mdn.raas.bussiness.core.model.RealizationStatus;
 import dz.mdn.raas.common.communication.model.Mail;
 import dz.mdn.raas.common.document.model.Document;
 import jakarta.persistence.Column;
@@ -50,7 +49,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Amendment")
-@Table(name="T_24_04", uniqueConstraints = { @UniqueConstraint(name = "T_24_04_UK_01", columnNames = { "F_02" })})
+@Table(name="T_02_06_04", uniqueConstraints = { @UniqueConstraint(name = "T_02_06_04_UK_01", columnNames = { "F_02" })})
 public class Amendment {
 	
 	@Id
@@ -92,47 +91,43 @@ public class Amendment {
 	private String observation;
 	
 	@ManyToOne
-    @JoinColumn(name="F_12", foreignKey=@ForeignKey(name="T_24_04_FK_01"), nullable=false)
+    @JoinColumn(name="F_12", foreignKey=@ForeignKey(name="T_02_06_04_FK_01"), nullable=false)
     private Contract contract;
 	
 	@ManyToOne
-    @JoinColumn(name="F_13", foreignKey=@ForeignKey(name="T_24_04_FK_02"), nullable=false)
+    @JoinColumn(name="F_13", foreignKey=@ForeignKey(name="T_02_06_04_FK_02"), nullable=false)
     private AmendmentType amendmentType;
 
 	@ManyToOne
-    @JoinColumn(name="F_14", foreignKey=@ForeignKey(name="T_24_04_FK_03"), nullable=false)
+    @JoinColumn(name="F_14", foreignKey=@ForeignKey(name="T_02_06_04_FK_03"), nullable=false)
     private RealizationStatus realizationStatus;
 	
 	@ManyToOne
-    @JoinColumn(name="F_15", foreignKey=@ForeignKey(name="T_24_04_FK_04"), nullable=false)
+    @JoinColumn(name="F_15", foreignKey=@ForeignKey(name="T_02_06_04_FK_04"), nullable=false)
     private AmendmentPhase amendmentStep;
 	
 	@ManyToOne
-    @JoinColumn(name="F_16", foreignKey=@ForeignKey(name="T_24_04_FK_05"), nullable=true)
+    @JoinColumn(name="F_16", foreignKey=@ForeignKey(name="T_02_06_04_FK_05"), nullable=true)
     private ApprovalStatus approvalStatus;
 	
 	@ManyToOne
-    @JoinColumn(name="F_17", foreignKey=@ForeignKey(name="T_24_04_FK_06"), nullable=false)
+    @JoinColumn(name="F_17", foreignKey=@ForeignKey(name="T_02_06_04_FK_06"), nullable=false)
     private Currency currency;
-	
-	@ManyToOne
-    @JoinColumn(name="F_18", foreignKey=@ForeignKey(name="T_24_04_FK_07"), nullable=false)
-    private Project project;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
-			name = "R_24_04_03_21", 
-			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_24_04_05_02_FK_01")), 
-			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_24_04_05_02_FK_02")),
-			uniqueConstraints = @UniqueConstraint(name = "R_24_04_05_02_UK_01", columnNames = {"F_01", "F_02"}))
+			name = "R_T020604_T010302", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_T020604_T010302_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_T020604_T010302_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T020604_T010302_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<Document> documents;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
-			name = "R_24_04_04_03", 
-			joinColumns = @JoinColumn(name = "F_01", foreignKey = @ForeignKey(name = "R_24_04_04_03_FK_01")), 
-			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey = @ForeignKey(name = "R_24_04_04_03_FK_02")),
-			uniqueConstraints = @UniqueConstraint(name = "R_24_04_04_03_UK_01", columnNames = {"F_01", "F_02"}))
+			name = "R_T020604_T010203", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey = @ForeignKey(name = "R_T020604_T010203_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey = @ForeignKey(name = "R_T020604_T010203_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T020604_T010203_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<Mail> referencedMails;
 
 }

@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Contract
+ *	@Package	: Business / Contract
  *
  **/
 
@@ -37,7 +37,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="ContractItem")
-@Table(name="T_23_05", uniqueConstraints = { @UniqueConstraint(name = "T_23_05_UK_01", columnNames = { "F_02", "F_06" }) })
+@Table(name="T_02_05_05", uniqueConstraints = { @UniqueConstraint(name = "T_02_05_05_UK_01", columnNames = { "F_02", "F_06" }) })
 public class ContractItem {
 	
 	@Id
@@ -61,7 +61,7 @@ public class ContractItem {
 	private String observation;
 	
 	@ManyToOne
-	@JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_23_05_FK_01"), nullable=false)
+	@JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_02_05_05_FK_01"), nullable=false)
 	private Contract contract;
 	
 }

@@ -2,16 +2,16 @@
  *	
  *	@author		: CHOUABBIA Amine
  *
- *	@Name		: ApprovalStatus
+ *	@Name		: RealizationStatus
  *	@CreatedOn	: 06-26-2025
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Common
+ *	@Pakage		: Business / Core
  *
  **/
 
-package dz.mdn.raas.bussiness.common.model;
+package dz.mdn.raas.bussiness.core.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,9 +33,9 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name="ApprovalStatus")
-@Table(name="T_20_03", uniqueConstraints = { @UniqueConstraint(name = "T_20_03_UK_01", columnNames = { "F_03" })})
-public class ApprovalStatus {
+@Entity(name="RealizationStatus")
+@Table(name="T_02_01_05", uniqueConstraints = { @UniqueConstraint(name = "T_02_01_05_UK_01", columnNames = { "F_03" })})
+public class RealizationStatus {
 	
 	@Id
 	@Column(name="F_00")

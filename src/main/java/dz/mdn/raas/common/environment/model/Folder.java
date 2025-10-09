@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Environment
+ *	@Package	: Common / Environment
  *
  **/
 
@@ -37,8 +37,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Folder")
-@Table(name="T_03_07", uniqueConstraints = { @UniqueConstraint(name = "T_03_07_UK_01", columnNames = { "F_01" }),
-											 @UniqueConstraint(name = "T_03_07_UK_02", columnNames = { "F_04" })})
+@Table(name="T_01_01_07", uniqueConstraints = { @UniqueConstraint(name = "T_01_01_07_UK_01", columnNames = { "F_01" }),
+											 	@UniqueConstraint(name = "T_01_01_07_UK_02", columnNames = { "F_04" })})
 public class Folder {
 	
 	@Id
@@ -59,7 +59,7 @@ public class Folder {
 	private String designationFr;
 	
 	@ManyToOne
-    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_03_07_FK_01"), nullable=false)
+    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_01_01_07_FK_01"), nullable=false)
     private ArchiveBox archiveBox;
 	
 }

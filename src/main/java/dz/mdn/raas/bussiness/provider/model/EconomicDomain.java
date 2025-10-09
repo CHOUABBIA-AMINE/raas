@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Domain		: Provider
+ *	@Package	: Business / Provider
  *
  **/
 
@@ -34,7 +34,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="EconomicDomain")
-@Table(name="T_21_02", uniqueConstraints = { @UniqueConstraint(name = "T_21_02_UK_01", columnNames = { "F_03" })})
+@Table(name="T_02_03_01", uniqueConstraints = { @UniqueConstraint(name = "T_02_03_01_UK_01", columnNames = { "F_03" })})
 public class EconomicDomain {
 	
 	@Id

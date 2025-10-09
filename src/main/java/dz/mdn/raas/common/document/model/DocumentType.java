@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Document
+ *	@Package	: Common / Document
  *
  **/
 
@@ -37,7 +37,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="DocumentType")
-@Table(name="T_05_01", uniqueConstraints = { @UniqueConstraint(name = "T_05_01_UK_01", columnNames = { "F_03", "F_04" })})
+@Table(name="T_01_03_01", uniqueConstraints = { @UniqueConstraint(name = "T_01_03_01_UK_01", columnNames = { "F_03", "F_04" })})
 public class DocumentType {
 	
 	@Id

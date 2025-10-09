@@ -7,11 +7,11 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Administration
+ *	@Pakage		: Business / Core
  *
  **/
 
-package dz.mdn.raas.common.administration.model;
+package dz.mdn.raas.bussiness.core.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,11 +26,11 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="Currency")
-@Table(name="T_00_03", uniqueConstraints = { @UniqueConstraint(name = "T_00_03_UK_01", columnNames = { "F_01" }), 
-		 									 @UniqueConstraint(name = "T_00_03_UK_02", columnNames = { "F_02" }), 
-		 									 @UniqueConstraint(name = "T_00_03_UK_03", columnNames = { "F_03" }), 
-		 									 @UniqueConstraint(name = "T_00_03_UK_04", columnNames = { "F_04" }), 
-		 									 @UniqueConstraint(name = "T_00_03_UK_05", columnNames = { "F_05" })})
+@Table(name="T_02_01_01", uniqueConstraints = { @UniqueConstraint(name = "T_02_01_01_UK_01", columnNames = { "F_01" }), 
+		 									 	@UniqueConstraint(name = "T_02_01_01_UK_02", columnNames = { "F_02" }), 
+		 									 	@UniqueConstraint(name = "T_02_01_01_UK_03", columnNames = { "F_03" }), 
+		 									 	@UniqueConstraint(name = "T_02_01_01_UK_04", columnNames = { "F_04" }), 
+		 									 	@UniqueConstraint(name = "T_02_01_01_UK_05", columnNames = { "F_05" })})
 public class Currency {
 	
 	@Id

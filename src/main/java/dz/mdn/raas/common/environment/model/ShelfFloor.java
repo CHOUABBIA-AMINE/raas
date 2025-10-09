@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Environment
+ *	@Package	: Common / Environment
  *
  **/
 
@@ -34,8 +34,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="ShelfFloor")
-@Table(name="T_03_04", uniqueConstraints = { @UniqueConstraint(name = "T_03_04_UK_01", columnNames = { "F_01" }),
-											 @UniqueConstraint(name = "T_03_04_UK_02", columnNames = { "F_04" })})
+@Table(name="T_01_01_04", uniqueConstraints = { @UniqueConstraint(name = "T_01_01_04_UK_01", columnNames = { "F_01" }),
+											 	@UniqueConstraint(name = "T_01_01_04_UK_02", columnNames = { "F_04" })})
 public class ShelfFloor {
 	
 	@Id

@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Consultation
+ *	@Package	: Business / Consultation
  *
  **/
 
@@ -16,10 +16,10 @@ package dz.mdn.raas.bussiness.consultation.model;
 import java.util.Date;
 import java.util.List;
 
-import dz.mdn.raas.bussiness.common.model.ApprovalStatus;
-import dz.mdn.raas.bussiness.common.model.RealizationDirector;
-import dz.mdn.raas.bussiness.common.model.RealizationNature;
-import dz.mdn.raas.bussiness.common.model.RealizationStatus;
+import dz.mdn.raas.bussiness.core.model.ApprovalStatus;
+import dz.mdn.raas.bussiness.core.model.RealizationDirector;
+import dz.mdn.raas.bussiness.core.model.RealizationNature;
+import dz.mdn.raas.bussiness.core.model.RealizationStatus;
 import dz.mdn.raas.bussiness.plan.model.BudgetType;
 import dz.mdn.raas.bussiness.plan.model.PlannedItem;
 import dz.mdn.raas.common.communication.model.Mail;
@@ -52,7 +52,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Consultation")
-@Table(name="T_22_04", uniqueConstraints = { @UniqueConstraint(name = "T_22_04_UK_01", columnNames = { "F_01", "F_02" })})
+@Table(name="T_02_04_04", uniqueConstraints = { @UniqueConstraint(name = "T_02_04_04_UK_01", columnNames = { "F_01", "F_02" })})
 public class Consultation {
 	
 	@Id
@@ -103,31 +103,31 @@ public class Consultation {
 	private String observation;
 	
 	@ManyToOne
-    @JoinColumn(name="F_15", foreignKey=@ForeignKey(name="T_22_04_FK_01"), nullable=false)
+    @JoinColumn(name="F_15", foreignKey=@ForeignKey(name="T_02_04_04_FK_01"), nullable=false)
     private AwardMethod awardMethod;
 	
 	@ManyToOne
-    @JoinColumn(name="F_16", foreignKey=@ForeignKey(name="T_22_04_FK_02"), nullable=false)
+    @JoinColumn(name="F_16", foreignKey=@ForeignKey(name="T_02_04_04_FK_02"), nullable=false)
     private RealizationNature realizationNature;
 	
 	@ManyToOne
-    @JoinColumn(name="F_17", foreignKey=@ForeignKey(name="T_22_04_FK_03"), nullable=false)
+    @JoinColumn(name="F_17", foreignKey=@ForeignKey(name="T_02_04_04_FK_03"), nullable=false)
     private BudgetType budgetType;
 	
 	@ManyToOne
-    @JoinColumn(name="F_18", foreignKey=@ForeignKey(name="T_22_04_FK_04"), nullable=false)
+    @JoinColumn(name="F_18", foreignKey=@ForeignKey(name="T_02_04_04_FK_04"), nullable=false)
     private RealizationStatus realizationStatus;
 	
 	@ManyToOne
-    @JoinColumn(name="F_19", foreignKey=@ForeignKey(name="T_22_04_FK_05"), nullable=false)
+    @JoinColumn(name="F_19", foreignKey=@ForeignKey(name="T_02_04_04_FK_05"), nullable=false)
     private ApprovalStatus approvalStatus;
 	
 	@ManyToOne
-    @JoinColumn(name="F_20", foreignKey=@ForeignKey(name="T_22_04_FK_06"), nullable=false)
+    @JoinColumn(name="F_20", foreignKey=@ForeignKey(name="T_02_04_04_FK_06"), nullable=false)
     private RealizationDirector realizationDirector;
 	
 	@ManyToOne
-    @JoinColumn(name="F_21", foreignKey=@ForeignKey(name="T_22_04_FK_07"), nullable=false)
+    @JoinColumn(name="F_21", foreignKey=@ForeignKey(name="T_02_04_04_FK_07"), nullable=false)
     private ConsultationStep consultationStep;
 	
 	//@ManyToOne
@@ -144,26 +144,26 @@ public class Consultation {
 	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
-			name = "R_22_04_05_02", 
-			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_22_04_05_02_FK_01")), 
-			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_22_04_05_02_FK_02")),
-			uniqueConstraints = @UniqueConstraint(name = "R_22_04_05_02_UK_01", columnNames = {"F_01", "F_02"}))
+			name = "R_T020404_T010302", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_T020404_T010302_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_T020404_T010302_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T020404_T010302_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<Document> documents;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
-			name = "R_22_04_04_03", 
-			joinColumns = @JoinColumn(name = "F_01", foreignKey = @ForeignKey(name = "R_22_04_04_03_FK_01")), 
-			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey = @ForeignKey(name = "R_22_04_04_03_FK_02")),
-			uniqueConstraints = @UniqueConstraint(name = "R_22_04_04_03_UK_01", columnNames = {"F_01", "F_02"}))
+			name = "R_T020404_T010203", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey = @ForeignKey(name = "R_T020404_T010203_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey = @ForeignKey(name = "R_T020404_T010203_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T020404_T010203_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<Mail> referencedMails;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
-			name = "R_22_04_10_06", 
-			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_22_04_10_06_FK_01")), 
-			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_22_04_10_06_FK_02")),
-			uniqueConstraints = @UniqueConstraint(name = "R_22_04_10_06_UK_01", columnNames = {"F_01", "F_02"}))
+			name = "R_T020404_T020208", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_T020404_T020208_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_T020404_T020208_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T020404_T020208_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<PlannedItem> plannedItems;
 	
 	@OneToMany(mappedBy ="consultation")

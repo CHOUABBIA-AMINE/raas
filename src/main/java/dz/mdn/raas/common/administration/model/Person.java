@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Administration
+ *	@Package	: Common / Administration
  *
  **/
 
@@ -15,7 +15,7 @@ package dz.mdn.raas.common.administration.model;
 
 import java.util.Date;
 
-import dz.mdn.raas.common.utility.model.File;
+import dz.mdn.raas.system.utility.model.File;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -39,7 +39,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Person")
-@Table(name="T_02_06")
+@Table(name="T_01_04_09")
 public class Person {
 	
 	@Id
@@ -69,15 +69,15 @@ public class Person {
 	private String address;
 	
 	@ManyToOne
-    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_02_06_FK_01"), nullable=true)
+    @JoinColumn(name="F_08", foreignKey=@ForeignKey(name="T_01_04_09_FK_01"), nullable=true)
     private State birthState;
 	
 	@ManyToOne
-    @JoinColumn(name="F_09", foreignKey=@ForeignKey(name="T_02_06_FK_02"), nullable=true)
+    @JoinColumn(name="F_09", foreignKey=@ForeignKey(name="T_01_04_09_FK_02"), nullable=true)
     private State addressState;
 	
 	@ManyToOne
-    @JoinColumn(name="F_10", foreignKey=@ForeignKey(name="T_02_06_FK_03"), nullable=true)
+    @JoinColumn(name="F_10", foreignKey=@ForeignKey(name="T_01_04_09_FK_03"), nullable=true)
     private File picture;
 	
 }

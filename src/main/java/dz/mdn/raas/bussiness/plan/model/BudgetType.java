@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Plan
+ *	@Package	: Business / Plan
  *
  **/
 
@@ -34,8 +34,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="BudgetType")
-@Table(name="T_10_01", uniqueConstraints = { @UniqueConstraint(name = "T_10_01_UK_01", columnNames = { "F_03" }), 
-											 @UniqueConstraint(name = "T_10_01_UK_02", columnNames = { "F_06" })})
+@Table(name="T_02_02_01", uniqueConstraints = { @UniqueConstraint(name = "T_02_02_01_UK_01", columnNames = { "F_03" }), 
+											 	@UniqueConstraint(name = "T_02_02_01_UK_02", columnNames = { "F_06" })})
 public class BudgetType {
 	
 	@Id

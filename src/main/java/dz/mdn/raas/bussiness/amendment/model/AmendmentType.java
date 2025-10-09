@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Amendment
+ *	@Package	: Business / Amendment
  *
  **/
 
@@ -34,7 +34,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="AmendmentType")
-@Table(name="T_24_01", uniqueConstraints = { @UniqueConstraint(name = "T_24_01_UK_01", columnNames = { "F_03" })})
+@Table(name="T_02_06_01", uniqueConstraints = { @UniqueConstraint(name = "T_02_06_01_UK_01", columnNames = { "F_03" })})
 public class AmendmentType {
 	
 	@Id

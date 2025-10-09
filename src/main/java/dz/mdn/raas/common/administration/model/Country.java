@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Common
+ *	@Package	: Common / Administration
  *
  **/
 
@@ -26,7 +26,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="Country")
-@Table(name="T_00_01", uniqueConstraints = { @UniqueConstraint(name = "T_00_01_UK_01", columnNames = { "F_03" })})
+@Table(name="T_01_04_01", uniqueConstraints = { @UniqueConstraint(name = "T_01_04_01_UK_01", columnNames = { "F_03" })})
 public class Country {
 	
 	@Id

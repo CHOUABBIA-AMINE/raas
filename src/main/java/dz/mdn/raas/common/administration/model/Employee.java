@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Administration
+ *	@Package	: Common / Administration
  *
  **/
 
@@ -38,7 +38,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Employee")
-@Table(name="T_02_07")
+@Table(name="T_01_04_10")
 public class Employee {
 	
 	@Id
@@ -53,15 +53,15 @@ public class Employee {
 	private Date hiringDate;
 	
 	@ManyToOne
-    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_02_07_FK_01"), nullable=false)
+    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_01_04_10_FK_01"), nullable=false)
     private Person person;
 	
 	@ManyToOne
-    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_02_07_FK_02"), nullable=false)
+    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_01_04_10_FK_02"), nullable=false)
     private MilitaryRank militaryRank;
 	
 	@ManyToOne
-    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_02_07_FK_03"), nullable=true)
+    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_01_04_10_FK_03"), nullable=true)
     private Job job;
 	
 }

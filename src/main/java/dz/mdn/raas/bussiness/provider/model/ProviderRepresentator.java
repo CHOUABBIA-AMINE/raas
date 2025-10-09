@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Provider
+ *	@Package	: Business / Provider
  *
  **/
 
@@ -36,7 +36,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="ProviderRepresentator")
-@Table(name="T_21_05")
+@Table(name="T_02_03_05")
 public class ProviderRepresentator {
 	
 	@Id
@@ -72,7 +72,7 @@ public class ProviderRepresentator {
 	private String mail;
 	
 	@ManyToOne
-    @JoinColumn(name="F_10", foreignKey=@ForeignKey(name="T_20_05_FK_01"), nullable=false)
+    @JoinColumn(name="F_10", foreignKey=@ForeignKey(name="T_02_03_05_FK_01"), nullable=false)
     private Provider provider;
 
 }

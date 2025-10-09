@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Plan
+ *	@Package	: Business / Plan
  *
  **/
 
@@ -29,7 +29,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="ItemDistribution")
-@Table(name="T_10_09")
+@Table(name="T_02_02_09")
 public class ItemDistribution {
 	
 	@Id
@@ -41,15 +41,11 @@ public class ItemDistribution {
 	private float Quantity;
 	
 	@ManyToOne
-    @JoinColumn(name="F_02", foreignKey=@ForeignKey(name="T_10_09_FK_01"), nullable=false)
+    @JoinColumn(name="F_02", foreignKey=@ForeignKey(name="T_02_02_09_FK_01"), nullable=false)
     private PlannedItem plannedItem;
 	
 	@ManyToOne
-    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_10_09_FK_02"), nullable=false)
+    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_02_02_09_FK_02"), nullable=false)
     private Structure structure;
-	
-	//@ManyToOne
-    //@JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_10_12_FK_03"), nullable=false)
-    //private BudgetGoal budgetGoalStatus;
 
 }

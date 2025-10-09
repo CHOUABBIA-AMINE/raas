@@ -7,11 +7,11 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Common
+ *	@Pakage		: Business / Core
  *
  **/
 
-package dz.mdn.raas.bussiness.common.model;
+package dz.mdn.raas.bussiness.core.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,8 +34,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="RealizationNature")
-@Table(name="T_20_01", uniqueConstraints = { @UniqueConstraint(name = "T_20_01_UK_01", columnNames = { "F_03" }),
-											 @UniqueConstraint(name = "T_20_01_UK_01", columnNames = { "F_03" })})
+@Table(name="T_02_01_04", uniqueConstraints = { @UniqueConstraint(name = "T_02_01_04_UK_01", columnNames = { "F_03" }),
+											 	@UniqueConstraint(name = "T_02_01_04_UK_02", columnNames = { "F_03" })})
 public class RealizationNature {
 	
 	@Id

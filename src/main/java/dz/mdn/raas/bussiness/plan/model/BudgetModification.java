@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Plan
+ *	@Package	: Business / Plan
  *
  **/
 
@@ -32,8 +32,8 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="BudgetModification")
-@Table(name="T_10_07", uniqueConstraints = { @UniqueConstraint(name = "T_10_07_UK_01", columnNames = { "F_03" }), 
-											 @UniqueConstraint(name = "T_10_07_UK_02", columnNames = { "F_06" })})
+@Table(name="T_02_02_07", uniqueConstraints = { @UniqueConstraint(name = "T_02_02_07_UK_01", columnNames = { "F_03" }), 
+											 	@UniqueConstraint(name = "T_02_02_07_UK_02", columnNames = { "F_06" })})
 public class BudgetModification {
 	
 	@Id
@@ -51,11 +51,11 @@ public class BudgetModification {
 	private Date approvalDate;
 	
 	@ManyToOne
-    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_10_07_FK_01"), nullable=false)
+    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_02_02_07_FK_01"), nullable=false)
     private Document demande;
 	
 	@ManyToOne
-    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_10_07_FK_02"), nullable=false)
+    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_02_02_07_FK_02"), nullable=false)
     private Document response;
 
 }

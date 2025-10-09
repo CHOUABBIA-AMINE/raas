@@ -2,12 +2,12 @@
  *	
  *	@author		: CHOUABBIA Amine
  *
- *	@Name		: Empowerment
+ *	@Name		: Clearance
  *	@CreatedOn	: 06-26-2025
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Provider
+ *	@Package	: Business / Provider
  *
  **/
 
@@ -38,9 +38,9 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name="Empowerment")
-@Table(name="T_21_06")
-public class Empowerment {
+@Entity(name="Clearance")
+@Table(name="T_02_03_06")
+public class Clearance {
 	
 	@Id
 	@Column(name="F_00")
@@ -54,15 +54,15 @@ public class Empowerment {
 	private Date endDate;
 	
 	@ManyToOne
-    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_21_06_FK_01"), nullable=false)
+    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_02_03_06_FK_01"), nullable=false)
     private Provider provider;
 	
 	@ManyToOne
-    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_21_06_FK_02"), nullable=false)
+    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_02_03_06_FK_02"), nullable=false)
     private ProviderRepresentator providerRepresentator;
 
 	@ManyToOne
-    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_21_06_FK_03"), nullable=true)
+    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_02_03_06_FK_03"), nullable=true)
     private Mail reference;
 
 }

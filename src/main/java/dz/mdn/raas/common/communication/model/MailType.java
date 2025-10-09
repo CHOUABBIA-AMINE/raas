@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Communication
+ *	@Package	: Common / Communication
  *
  **/
 
@@ -34,7 +34,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="MailType")
-@Table(name="T_04_01", uniqueConstraints = { @UniqueConstraint(name = "T_04_01_UK_01", columnNames = { "F_03" })})
+@Table(name="T_01_02_02", uniqueConstraints = { @UniqueConstraint(name = "T_01_02_02_UK_01", columnNames = { "F_03" })})
 public class MailType {
 	
 	@Id

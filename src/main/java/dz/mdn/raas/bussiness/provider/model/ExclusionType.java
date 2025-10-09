@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Provider
+ *	@Package	: Business / Provider
  *
  **/
 
@@ -34,7 +34,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="ExclusionType")
-@Table(name="T_21_03", uniqueConstraints = { @UniqueConstraint(name = "T_21_02_UK_01", columnNames = { "F_03" })})
+@Table(name="T_02_03_03", uniqueConstraints = { @UniqueConstraint(name = "T_02_03_03_UK_01", columnNames = { "F_03" })})
 public class ExclusionType {
 	
 	@Id

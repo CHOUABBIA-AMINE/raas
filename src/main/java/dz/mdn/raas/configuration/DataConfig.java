@@ -108,7 +108,7 @@ public class DataConfig {
     LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
         factory.setDataSource(dataSource());
-        factory.setPackagesToScan("dz.mdn.raas.model");
+        factory.setPackagesToScan("dz.mdn.raas.*");
 
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         factory.setJpaVendorAdapter(vendorAdapter);

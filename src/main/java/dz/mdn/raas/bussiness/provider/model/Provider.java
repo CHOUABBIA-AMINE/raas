@@ -7,7 +7,7 @@
  *
  *	@Type		: Class
  *	@Layaer		: Model
- *	@Goal		: Provider
+ *	@Package	: Business / Provider
  *
  **/
 
@@ -19,7 +19,7 @@ import java.util.List;
 import dz.mdn.raas.bussiness.consultation.model.Submission;
 import dz.mdn.raas.common.administration.model.Country;
 import dz.mdn.raas.common.administration.model.State;
-import dz.mdn.raas.common.utility.model.File;
+import dz.mdn.raas.system.utility.model.File;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -40,7 +40,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="Provider")
-@Table(name="T_21_04")
+@Table(name="T_02_03_04")
 public class Provider {
 	
 	@Id
@@ -100,19 +100,19 @@ public class Provider {
 	private String website;
 	
 	@ManyToOne
-    @JoinColumn(name="F_18", foreignKey=@ForeignKey(name="T_21_04_FK_01"), nullable=true)
+    @JoinColumn(name="F_18", foreignKey=@ForeignKey(name="T_02_03_04_FK_01"), nullable=true)
 	private File logo;	
 	
 	@ManyToOne
-    @JoinColumn(name="F_19", foreignKey=@ForeignKey(name="T_21_04_FK_02"), nullable=false)
+    @JoinColumn(name="F_19", foreignKey=@ForeignKey(name="T_02_03_04_FK_02"), nullable=false)
     private EconomicNature economicNature;
 	
 	@ManyToOne
-    @JoinColumn(name="F_20", foreignKey=@ForeignKey(name="T_21_04_FK_03"), nullable=false)
+    @JoinColumn(name="F_20", foreignKey=@ForeignKey(name="T_02_03_04_FK_03"), nullable=false)
     private Country country;
 	
 	@ManyToOne
-    @JoinColumn(name="F_21", foreignKey=@ForeignKey(name="T_21_04_FK_04"), nullable=true)
+    @JoinColumn(name="F_21", foreignKey=@ForeignKey(name="T_02_03_04_FK_04"), nullable=true)
     private State state;
 	
 	@OneToMany(mappedBy ="provider")
@@ -122,14 +122,14 @@ public class Provider {
 	private List<ProviderRepresentator> providerRepresentators;
 	
 	@OneToMany(mappedBy ="provider")
-	private List<Empowerment> empowerments;
+	private List<Clearance> clearances;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(
-			name = "R_21_04_21_02", 
-			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_21_04_21_02_FK_01")), 
-			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_21_04_21_02_FK_02")),
-			uniqueConstraints = @UniqueConstraint(name = "R_21_04_21_02_UK_01", columnNames = {"F_01", "F_02"}))
+			name = "R_T020304_T020301", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_T020304_T020301_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_T020304_T020301_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T020304_T020301_UK_01", columnNames = {"F_01", "F_02"}))
 	private List<EconomicDomain> economicDomains;
 	
 	@OneToMany(mappedBy ="tender")
