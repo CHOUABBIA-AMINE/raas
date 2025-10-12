@@ -1,3 +1,16 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: BaseEntity
+ *	@CreatedOn	: 06-26-2025
+ *
+ *	@Type		: Class
+ *	@Layaer		: Model
+ *	@Package	: Configuration
+ *
+ **/
+
 package dz.mdn.raas.configuration;
 
 import java.io.Serializable;

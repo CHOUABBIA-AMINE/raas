@@ -1,3 +1,16 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: DataConfig
+ *	@CreatedOn	: 06-26-2025
+ *
+ *	@Type		: Class
+ *	@Layaer		: Configuration
+ *	@Package	: Configuration
+ *
+ **/
+
 package dz.mdn.raas.configuration;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -16,20 +29,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import java.util.Properties;
 
-/**
- * Database Configuration Class
- * 
- * Provides granular configuration for database connectivity,
- * connection pooling, JPA settings, and transaction management.
- * 
- * Features:
- * - HikariCP connection pooling with performance optimizations
- * - Hibernate JPA configuration with batch processing
- * - Transaction management setup
- * - Environment-specific database settings
- */
 @Configuration
-@EnableJpaRepositories(basePackages = "dz.mdn.raas.repository")
+@EnableJpaRepositories(basePackages = "dz.mdn.raas.*")
 @EnableTransactionManagement
 public class DataConfig {
 

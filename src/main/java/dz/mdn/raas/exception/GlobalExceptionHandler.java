@@ -1,3 +1,16 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: GlobalExceptionHandler
+ *	@CreatedOn	: 06-26-2025
+ *
+ *	@Type		: Class
+ *	@Layaer		: Controller
+ *	@Package	: Exception
+ *
+ **/
+
 package dz.mdn.raas.exception;
 
 import lombok.AllArgsConstructor;

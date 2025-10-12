@@ -1,3 +1,16 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: RaasException
+ *	@CreatedOn	: 06-26-2025
+ *
+ *	@Type		: Class
+ *	@Layaer		: Exception
+ *	@Package	: Exception
+ *
+ **/
+
 package dz.mdn.raas.exception;
 
 import lombok.Getter;

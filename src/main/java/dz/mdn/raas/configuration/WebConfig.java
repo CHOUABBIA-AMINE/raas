@@ -1,3 +1,16 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: WebConfig
+ *	@CreatedOn	: 06-26-2025
+ *
+ *	@Type		: Class
+ *	@Layaer		: Configuration
+ *	@Package	: Configuration
+ *
+ **/
+
 package dz.mdn.raas.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
