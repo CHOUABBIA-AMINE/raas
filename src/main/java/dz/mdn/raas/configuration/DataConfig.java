@@ -84,7 +84,8 @@ public class DataConfig {
         config.setIdleTimeout(idleTimeout);
         config.setMaxLifetime(maxLifetime);
         config.setLeakDetectionThreshold(leakDetectionThreshold);
-
+        config.setAutoCommit(false);
+        
         // Performance Optimizations
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
@@ -124,7 +125,7 @@ public class DataConfig {
      */
     private Properties hibernateProperties() {
         Properties properties = new Properties();
-        properties.put("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
+        properties.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         properties.put("hibernate.hbm2ddl.auto", "update");
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.format_sql", "true");

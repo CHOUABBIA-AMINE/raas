@@ -30,4 +30,13 @@ public class ResourceNotFoundException extends RaasException {
             resourceType, resourceId
         );
     }
+	
+	public ResourceNotFoundException(String resourceType) {
+        super(
+            String.format("%s with ID %s not found", resourceType),
+            "RESOURCE_NOT_FOUND",
+            HttpStatus.NOT_FOUND,
+            resourceType
+        );
+    }
 }
