@@ -13,14 +13,11 @@
 
 package dz.mdn.raas.common.administration.model;
 
-import java.util.List;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -53,8 +50,5 @@ public class MilitaryCategory {
 	
 	@Column(name="F_03", length=50, nullable=false)
 	private String designationFr;
-	
-	@OneToMany(mappedBy = "militaryCategory")
-    private List<MilitaryRank> militaryRanks;
 	
 }
