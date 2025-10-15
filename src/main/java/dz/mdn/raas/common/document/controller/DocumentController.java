@@ -33,7 +33,7 @@ import java.util.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/documents")
+@RequestMapping("/document")
 @RequiredArgsConstructor
 @Slf4j
 public class DocumentController {

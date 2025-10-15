@@ -13,15 +13,20 @@
 
 package dz.mdn.raas.common.document.dto;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.*;
+
+import dz.mdn.raas.common.document.model.Document;
+import dz.mdn.raas.common.document.model.DocumentType;
+import dz.mdn.raas.system.utility.model.File;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @Data
 @Builder
@@ -59,7 +64,7 @@ public class DocumentDTO {
     private String displayReference;
     private String fullDisplayText;
 
-    public static DocumentDTO fromEntity(dz.mdn.raas.common.document.model.Document document) {
+    public static DocumentDTO fromEntity(Document document) {
         if (document == null) return null;
         
         DocumentDTO.DocumentDTOBuilder builder = DocumentDTO.builder()
@@ -93,8 +98,8 @@ public class DocumentDTO {
         return dto;
     }
 
-    public dz.mdn.raas.common.document.model.Document toEntity() {
-        dz.mdn.raas.common.document.model.Document document = new dz.mdn.raas.common.document.model.Document();
+    public Document toEntity() {
+        Document document = new Document();
         document.setId(this.id);
         document.setReference(this.reference);
         document.setIssueDate(this.issueDate);
@@ -102,7 +107,7 @@ public class DocumentDTO {
         return document;
     }
 
-    public void updateEntity(dz.mdn.raas.common.document.model.Document document) {
+    public void updateEntity(Document document) {
         if (this.reference != null) {
             document.setReference(this.reference);
         }
@@ -161,7 +166,7 @@ public class DocumentDTO {
 
     // ========== HELPER METHODS ==========
 
-    private static String buildDocumentTypeDisplayText(dz.mdn.raas.common.document.model.DocumentType documentType) {
+    private static String buildDocumentTypeDisplayText(DocumentType documentType) {
         if (documentType.getDesignationFr() != null && !documentType.getDesignationFr().trim().isEmpty()) {
             return documentType.getDesignationFr();
         }
@@ -174,13 +179,13 @@ public class DocumentDTO {
         return "DocumentType #" + documentType.getId();
     }
 
-    private static String buildFileDisplayText(dz.mdn.raas.system.utility.model.File file) {
+    private static String buildFileDisplayText(File file) {
         String extension = file.getExtension() != null ? file.getExtension() : "";
         String sizeText = formatFileSize(file.getSize());
         return String.format("File #%d (%s) - %s", file.getId(), extension.toUpperCase(), sizeText);
     }
 
-    private static String getFileName(dz.mdn.raas.system.utility.model.File file) {
+    private static String getFileName(File file) {
         // Assuming file name is derived from ID and extension
         return "file_" + file.getId() + "." + (file.getExtension() != null ? file.getExtension() : "bin");
     }

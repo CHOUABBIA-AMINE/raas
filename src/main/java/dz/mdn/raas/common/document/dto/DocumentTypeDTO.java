@@ -14,7 +14,10 @@
 package dz.mdn.raas.common.document.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.*;
+
+import dz.mdn.raas.common.document.model.DocumentType;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,7 +48,7 @@ public class DocumentTypeDTO {
     private Long documentCount; // Count of associated documents
     private String displayText; // Formatted display text
 
-    public static DocumentTypeDTO fromEntity(dz.mdn.raas.common.document.model.DocumentType documentType) {
+    public static DocumentTypeDTO fromEntity(DocumentType documentType) {
         if (documentType == null) return null;
         
         return DocumentTypeDTO.builder()
@@ -59,8 +62,8 @@ public class DocumentTypeDTO {
                 .build();
     }
 
-    public dz.mdn.raas.common.document.model.DocumentType toEntity() {
-        dz.mdn.raas.common.document.model.DocumentType documentType = new dz.mdn.raas.common.document.model.DocumentType();
+    public DocumentType toEntity() {
+        DocumentType documentType = new DocumentType();
         documentType.setId(this.id);
         documentType.setDesignationAr(this.designationAr);
         documentType.setDesignationEn(this.designationEn);
@@ -170,7 +173,7 @@ public class DocumentTypeDTO {
                 .build();
     }
 
-    private static String buildDisplayText(dz.mdn.raas.common.document.model.DocumentType documentType) {
+    private static String buildDisplayText(DocumentType documentType) {
         String designation = documentType.getDesignationFr();
         if (designation == null || designation.trim().isEmpty()) {
             designation = documentType.getDesignationEn();
