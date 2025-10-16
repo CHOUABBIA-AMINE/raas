@@ -79,8 +79,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
      * Search employees by person name (first name or last name)
      */
     @Query("SELECT e FROM Employee e WHERE " +
-           "LOWER(e.person.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(e.person.lastName) LIKE LOWER(CONCAT('%', :search, '%'))")
+           "LOWER(e.person.firstnameAr) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.firstnameLt) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.lastnameAr) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.lastnameLt) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Employee> searchByPersonName(@Param("search") String search, Pageable pageable);
 
     /**
@@ -94,8 +96,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
      */
     @Query("SELECT e FROM Employee e WHERE " +
            "e.serial LIKE %:search% OR " +
-           "LOWER(e.person.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(e.person.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.firstnameAr) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.firstnameLt) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.lastnameAr) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.lastnameLt) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(e.militaryRank.designationFr) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(e.militaryRank.abbreviationFr) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Employee> searchByAnyField(@Param("search") String search, Pageable pageable);

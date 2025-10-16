@@ -338,7 +338,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
            "LOWER(p.lastnameLt) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(p.birthPlace) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(p.address) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(bs.designationFr) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(bs.designationLt) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(as_state.designationLt) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "ORDER BY p.firstnameLt ASC, p.lastnameLt ASC")
     Page<Person> comprehensiveSearch(@Param("search") String search, Pageable pageable);
