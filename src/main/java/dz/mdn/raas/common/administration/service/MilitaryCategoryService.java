@@ -11,6 +11,17 @@
  *
  **/
 
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *	@Name		: MilitaryCategoryService
+ *	@CreatedOn	: 10-16-2025
+ *	@Type		: Service
+ *	@Layer		: Business / Core
+ *	@Package	: Common / Administration / Service
+ *
+ **/
+
 package dz.mdn.raas.common.administration.service;
 
 import dz.mdn.raas.common.administration.model.MilitaryCategory;
@@ -27,11 +38,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 /**
- * MilitaryCategory Service with CRUD operations
+ * Military Category Service with CRUD operations
  * Handles military category management operations with multilingual support
- * Based on exact field names: F_01=designationAr, F_02=designationEn, F_03=designationFr
+ * Based on exact field names: F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr
  * F_03 (designationFr) has unique constraint and is required
- * F_01 (designationAr) and F_02 (designationEn) are optional
+ * F_06 (abbreviationFr) is required
+ * F_01, F_02, F_04, F_05 are optional
  */
 @Service
 @RequiredArgsConstructor
@@ -47,9 +59,10 @@ public class MilitaryCategoryService {
      * Create new military category
      */
     public MilitaryCategoryDTO createMilitaryCategory(MilitaryCategoryDTO militaryCategoryDTO) {
-        log.info("Creating military category with French designation: {} and designations: AR={}, EN={}", 
+        log.info("Creating military category with French designation: {} and designations: AR={}, EN={}, Abbreviations: FR={}, AR={}, EN={}", 
                 militaryCategoryDTO.getDesignationFr(), militaryCategoryDTO.getDesignationAr(), 
-                militaryCategoryDTO.getDesignationEn());
+                militaryCategoryDTO.getDesignationEn(), militaryCategoryDTO.getAbbreviationFr(),
+                militaryCategoryDTO.getAbbreviationAr(), militaryCategoryDTO.getAbbreviationEn());
 
         // Validate required fields
         validateRequiredFields(militaryCategoryDTO, "create");
@@ -62,6 +75,9 @@ public class MilitaryCategoryService {
         militaryCategory.setDesignationAr(militaryCategoryDTO.getDesignationAr()); // F_01
         militaryCategory.setDesignationEn(militaryCategoryDTO.getDesignationEn()); // F_02
         militaryCategory.setDesignationFr(militaryCategoryDTO.getDesignationFr()); // F_03
+        militaryCategory.setAbbreviationAr(militaryCategoryDTO.getAbbreviationAr()); // F_04
+        militaryCategory.setAbbreviationEn(militaryCategoryDTO.getAbbreviationEn()); // F_05
+        militaryCategory.setAbbreviationFr(militaryCategoryDTO.getAbbreviationFr()); // F_06
 
         MilitaryCategory savedMilitaryCategory = militaryCategoryRepository.save(militaryCategory);
         log.info("Successfully created military category with ID: {}", savedMilitaryCategory.getId());
@@ -101,6 +117,17 @@ public class MilitaryCategoryService {
         log.debug("Finding military category with French designation: {}", designationFr);
 
         return militaryCategoryRepository.findByDesignationFr(designationFr)
+                .map(MilitaryCategoryDTO::fromEntity);
+    }
+
+    /**
+     * Find military category by French abbreviation (F_06)
+     */
+    @Transactional(readOnly = true)
+    public Optional<MilitaryCategoryDTO> findByAbbreviationFr(String abbreviationFr) {
+        log.debug("Finding military category with French abbreviation: {}", abbreviationFr);
+
+        return militaryCategoryRepository.findByAbbreviationFr(abbreviationFr)
                 .map(MilitaryCategoryDTO::fromEntity);
     }
 
@@ -149,7 +176,7 @@ public class MilitaryCategoryService {
     }
 
     /**
-     * Search military categories by designation
+     * Search military categories by designation or abbreviation
      */
     @Transactional(readOnly = true)
     public Page<MilitaryCategoryDTO> searchMilitaryCategories(String searchTerm, Pageable pageable) {
@@ -159,7 +186,7 @@ public class MilitaryCategoryService {
             return getAllMilitaryCategories(pageable);
         }
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.searchByDesignation(searchTerm.trim(), pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.searchByDesignationOrAbbreviation(searchTerm.trim(), pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
@@ -175,46 +202,90 @@ public class MilitaryCategoryService {
     }
 
     /**
-     * Get officer categories
+     * Get army categories
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getOfficerCategories(Pageable pageable) {
-        log.debug("Getting officer categories");
+    public Page<MilitaryCategoryDTO> getArmyCategories(Pageable pageable) {
+        log.debug("Getting army military categories");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findOfficerCategories(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findArmyCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
     /**
-     * Get NCO categories
+     * Get navy categories
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getNCOCategories(Pageable pageable) {
-        log.debug("Getting NCO categories");
+    public Page<MilitaryCategoryDTO> getNavyCategories(Pageable pageable) {
+        log.debug("Getting navy military categories");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findNCOCategories(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findNavyCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
     /**
-     * Get enlisted categories
+     * Get air force categories
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getEnlistedCategories(Pageable pageable) {
-        log.debug("Getting enlisted categories");
+    public Page<MilitaryCategoryDTO> getAirForceCategories(Pageable pageable) {
+        log.debug("Getting air force military categories");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findEnlistedCategories(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findAirForceCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
     /**
-     * Get specialist categories
+     * Get gendarmerie categories
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getSpecialistCategories(Pageable pageable) {
-        log.debug("Getting specialist categories");
+    public Page<MilitaryCategoryDTO> getGendarmerieCategories(Pageable pageable) {
+        log.debug("Getting gendarmerie military categories");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findSpecialistCategories(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findGendarmerieCategories(pageable);
+        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
+    }
+
+    /**
+     * Get security categories
+     */
+    @Transactional(readOnly = true)
+    public Page<MilitaryCategoryDTO> getSecurityCategories(Pageable pageable) {
+        log.debug("Getting security military categories");
+
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findSecurityCategories(pageable);
+        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
+    }
+
+    /**
+     * Get support categories
+     */
+    @Transactional(readOnly = true)
+    public Page<MilitaryCategoryDTO> getSupportCategories(Pageable pageable) {
+        log.debug("Getting support military categories");
+
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findSupportCategories(pageable);
+        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
+    }
+
+    /**
+     * Get main service branches
+     */
+    @Transactional(readOnly = true)
+    public Page<MilitaryCategoryDTO> getMainServiceBranches(Pageable pageable) {
+        log.debug("Getting main service branch military categories");
+
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findMainServiceBranches(pageable);
+        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
+    }
+
+    /**
+     * Get intelligence categories
+     */
+    @Transactional(readOnly = true)
+    public Page<MilitaryCategoryDTO> getIntelligenceCategories(Pageable pageable) {
+        log.debug("Getting intelligence military categories");
+
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findIntelligenceCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
@@ -223,130 +294,53 @@ public class MilitaryCategoryService {
      */
     @Transactional(readOnly = true)
     public Page<MilitaryCategoryDTO> getMedicalCategories(Pageable pageable) {
-        log.debug("Getting medical categories");
+        log.debug("Getting medical military categories");
 
         Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findMedicalCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
     /**
-     * Get administrative categories
+     * Get logistics categories
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getAdministrativeCategories(Pageable pageable) {
-        log.debug("Getting administrative categories");
+    public Page<MilitaryCategoryDTO> getLogisticsCategories(Pageable pageable) {
+        log.debug("Getting logistics military categories");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findAdministrativeCategories(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findLogisticsCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
     /**
-     * Get reserve categories
+     * Get communications categories
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getReserveCategories(Pageable pageable) {
-        log.debug("Getting reserve categories");
+    public Page<MilitaryCategoryDTO> getCommunicationsCategories(Pageable pageable) {
+        log.debug("Getting communications military categories");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findReserveCategories(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findCommunicationsCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
     /**
-     * Get cadet categories
+     * Get republican guard categories
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getCadetCategories(Pageable pageable) {
-        log.debug("Getting cadet categories");
+    public Page<MilitaryCategoryDTO> getRepublicanGuardCategories(Pageable pageable) {
+        log.debug("Getting republican guard military categories");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findCadetCategories(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findRepublicanGuardCategories(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
     /**
-     * Get retired categories
+     * Get military categories missing translations
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getRetiredCategories(Pageable pageable) {
-        log.debug("Getting retired categories");
+    public Page<MilitaryCategoryDTO> getMilitaryCategoriesMissingTranslations(Pageable pageable) {
+        log.debug("Getting military categories missing translations");
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findRetiredCategories(pageable);
-        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
-     * Get active duty categories
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getActiveDutyCategories(Pageable pageable) {
-        log.debug("Getting active duty categories");
-
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findActiveDutyCategories(pageable);
-        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
-     * Get command categories
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getCommandCategories(Pageable pageable) {
-        log.debug("Getting command categories");
-
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findCommandCategories(pageable);
-        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
-     * Get security clearance categories
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getSecurityClearanceCategories(Pageable pageable) {
-        log.debug("Getting security clearance categories");
-
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findSecurityClearanceCategories(pageable);
-        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
-     * Get operational categories
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getOperationalCategories(Pageable pageable) {
-        log.debug("Getting operational categories");
-
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findOperationalCategories(pageable);
-        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
-     * Get commissioned personnel
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getCommissionedPersonnel(Pageable pageable) {
-        log.debug("Getting commissioned personnel");
-
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findCommissionedPersonnel(pageable);
-        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
-     * Get non-commissioned personnel
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getNonCommissionedPersonnel(Pageable pageable) {
-        log.debug("Getting non-commissioned personnel");
-
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findNonCommissionedPersonnel(pageable);
-        return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
-     * Get enlisted personnel
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryCategoryDTO> getEnlistedPersonnel(Pageable pageable) {
-        log.debug("Getting enlisted personnel");
-
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findEnlistedPersonnel(pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.findMissingTranslations(pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
@@ -370,6 +364,9 @@ public class MilitaryCategoryService {
         existingMilitaryCategory.setDesignationAr(militaryCategoryDTO.getDesignationAr()); // F_01
         existingMilitaryCategory.setDesignationEn(militaryCategoryDTO.getDesignationEn()); // F_02
         existingMilitaryCategory.setDesignationFr(militaryCategoryDTO.getDesignationFr()); // F_03
+        existingMilitaryCategory.setAbbreviationAr(militaryCategoryDTO.getAbbreviationAr()); // F_04
+        existingMilitaryCategory.setAbbreviationEn(militaryCategoryDTO.getAbbreviationEn()); // F_05
+        existingMilitaryCategory.setAbbreviationFr(militaryCategoryDTO.getAbbreviationFr()); // F_06
 
         MilitaryCategory updatedMilitaryCategory = militaryCategoryRepository.save(existingMilitaryCategory);
         log.info("Successfully updated military category with ID: {}", id);
@@ -424,6 +421,14 @@ public class MilitaryCategoryService {
     }
 
     /**
+     * Check if military category exists by French abbreviation
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByAbbreviationFr(String abbreviationFr) {
+        return militaryCategoryRepository.existsByAbbreviationFr(abbreviationFr);
+    }
+
+    /**
      * Get total count of military categories
      */
     @Transactional(readOnly = true)
@@ -432,43 +437,35 @@ public class MilitaryCategoryService {
     }
 
     /**
-     * Get count of officer categories
+     * Get count of main service branches
      */
     @Transactional(readOnly = true)
-    public Long getOfficerCount() {
-        return militaryCategoryRepository.countOfficerCategories();
+    public Long getMainServiceBranchesCount() {
+        return militaryCategoryRepository.countMainServiceBranches();
     }
 
     /**
-     * Get count of NCO categories
+     * Get count of security services
      */
     @Transactional(readOnly = true)
-    public Long getNCOCount() {
-        return militaryCategoryRepository.countNCOCategories();
+    public Long getSecurityServicesCount() {
+        return militaryCategoryRepository.countSecurityServices();
     }
 
     /**
-     * Get count of enlisted categories
+     * Get count of support services
      */
     @Transactional(readOnly = true)
-    public Long getEnlistedCount() {
-        return militaryCategoryRepository.countEnlistedCategories();
+    public Long getSupportServicesCount() {
+        return militaryCategoryRepository.countSupportServices();
     }
 
     /**
-     * Get count of specialist categories
+     * Get count of multilingual military categories
      */
     @Transactional(readOnly = true)
-    public Long getSpecialistCount() {
-        return militaryCategoryRepository.countSpecialistCategories();
-    }
-
-    /**
-     * Get count of medical categories
-     */
-    @Transactional(readOnly = true)
-    public Long getMedicalCount() {
-        return militaryCategoryRepository.countMedicalCategories();
+    public Long getMultilingualCount() {
+        return militaryCategoryRepository.countMultilingualMilitaryCategories();
     }
 
     // ========== VALIDATION METHODS ==========
@@ -479,6 +476,9 @@ public class MilitaryCategoryService {
     private void validateRequiredFields(MilitaryCategoryDTO militaryCategoryDTO, String operation) {
         if (militaryCategoryDTO.getDesignationFr() == null || militaryCategoryDTO.getDesignationFr().trim().isEmpty()) {
             throw new RuntimeException("French designation is required for " + operation);
+        }
+        if (militaryCategoryDTO.getAbbreviationFr() == null || militaryCategoryDTO.getAbbreviationFr().trim().isEmpty()) {
+            throw new RuntimeException("French abbreviation is required for " + operation);
         }
     }
 
@@ -494,6 +494,19 @@ public class MilitaryCategoryService {
         } else {
             if (militaryCategoryRepository.existsByDesignationFrAndIdNot(militaryCategoryDTO.getDesignationFr(), excludeId)) {
                 throw new RuntimeException("Another military category with French designation '" + militaryCategoryDTO.getDesignationFr() + "' already exists");
+            }
+        }
+
+        // Additional check for abbreviation uniqueness (business rule)
+        if (militaryCategoryDTO.getAbbreviationFr() != null && !militaryCategoryDTO.getAbbreviationFr().trim().isEmpty()) {
+            if (excludeId == null) {
+                if (militaryCategoryRepository.existsByAbbreviationFr(militaryCategoryDTO.getAbbreviationFr())) {
+                    throw new RuntimeException("Military category with French abbreviation '" + militaryCategoryDTO.getAbbreviationFr() + "' already exists");
+                }
+            } else {
+                if (militaryCategoryRepository.existsByAbbreviationFrAndIdNot(militaryCategoryDTO.getAbbreviationFr(), excludeId)) {
+                    throw new RuntimeException("Another military category with French abbreviation '" + militaryCategoryDTO.getAbbreviationFr() + "' already exists");
+                }
             }
         }
     }

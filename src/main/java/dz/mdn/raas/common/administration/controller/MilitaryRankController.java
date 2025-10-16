@@ -10,6 +10,16 @@
  *	@Package	: Common / Administration
  *
  **/
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *	@Name		: MilitaryRankController
+ *	@CreatedOn	: 10-16-2025
+ *	@Type		: REST Controller
+ *	@Layer		: Presentation
+ *	@Package	: Common / Administration / Controller
+ *
+ **/
 
 package dz.mdn.raas.common.administration.controller;
 
@@ -29,15 +39,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * MilitaryRank REST Controller
+ * Military Rank REST Controller
  * Handles military rank operations: create, get metadata, delete, get all
- * Based on exact MilitaryRank model: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=militaryCategory
+ * Based on exact MilitaryRank model: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr, F_07=militaryCategory
  * F_03 (designationFr) has unique constraint and is required
- * F_01 (designationAr) and F_02 (designationEn) are optional
- * F_04 (militaryCategory) is required foreign key
+ * F_06 (abbreviationFr) is required
+ * F_07 (militaryCategory) is required foreign key
+ * F_01, F_02, F_04, F_05 are optional
  */
 @RestController
-@RequestMapping("/militaryRank")
+@RequestMapping("/api/v1/military-ranks")
 @RequiredArgsConstructor
 @Slf4j
 public class MilitaryRankController {
@@ -48,13 +59,15 @@ public class MilitaryRankController {
 
     /**
      * Create new military rank
-     * Creates military rank with multilingual designations and military hierarchy classification
+     * Creates military rank with multilingual designations and abbreviations, and military category assignment
      */
     @PostMapping
     public ResponseEntity<MilitaryRankDTO> createMilitaryRank(@Valid @RequestBody MilitaryRankDTO militaryRankDTO) {
-        log.info("Creating military rank with French designation: {} and designations: AR={}, EN={}, Category ID: {}", 
+        log.info("Creating military rank with French designation: {} and designations: AR={}, EN={}, Abbreviations: FR={}, AR={}, EN={}, Category ID: {}", 
                 militaryRankDTO.getDesignationFr(), militaryRankDTO.getDesignationAr(), 
-                militaryRankDTO.getDesignationEn(), militaryRankDTO.getMilitaryCategoryId());
+                militaryRankDTO.getDesignationEn(), militaryRankDTO.getAbbreviationFr(),
+                militaryRankDTO.getAbbreviationAr(), militaryRankDTO.getAbbreviationEn(),
+                militaryRankDTO.getMilitaryCategoryId());
         
         MilitaryRankDTO createdMilitaryRank = militaryRankService.createMilitaryRank(militaryRankDTO);
         
@@ -65,7 +78,7 @@ public class MilitaryRankController {
 
     /**
      * Get military rank metadata by ID
-     * Returns military rank information with military hierarchy classification and multilingual support
+     * Returns military rank information with multilingual designations, abbreviations, and military category context
      */
     @GetMapping("/{id}")
     public ResponseEntity<MilitaryRankDTO> getMilitaryRankMetadata(@PathVariable Long id) {
@@ -77,13 +90,25 @@ public class MilitaryRankController {
     }
 
     /**
-     * Get military rank by French designation (unique field F_03)
+     * Get military rank by French designation (F_03) - unique field
      */
     @GetMapping("/designation-fr/{designationFr}")
     public ResponseEntity<MilitaryRankDTO> getMilitaryRankByDesignationFr(@PathVariable String designationFr) {
         log.debug("Getting military rank by French designation: {}", designationFr);
         
         return militaryRankService.findByDesignationFr(designationFr)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get military rank by French abbreviation (F_06)
+     */
+    @GetMapping("/abbreviation-fr/{abbreviationFr}")
+    public ResponseEntity<MilitaryRankDTO> getMilitaryRankByAbbreviationFr(@PathVariable String abbreviationFr) {
+        log.debug("Getting military rank by French abbreviation: {}", abbreviationFr);
+        
+        return militaryRankService.findByAbbreviationFr(abbreviationFr)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -113,18 +138,18 @@ public class MilitaryRankController {
     }
 
     /**
-     * Get military ranks by military category ID (F_04)
+     * Get military ranks by military category ID (F_07)
      */
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Page<MilitaryRankDTO>> getMilitaryRanksByCategory(
-            @PathVariable Long categoryId,
+    @GetMapping("/military-category/{militaryCategoryId}")
+    public ResponseEntity<Page<MilitaryRankDTO>> getMilitaryRanksByMilitaryCategory(
+            @PathVariable Long militaryCategoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting military ranks for category ID: {}", categoryId);
+        log.debug("Getting military ranks for military category ID: {}", militaryCategoryId);
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.findByMilitaryCategoryId(categoryId, pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.findByMilitaryCategoryId(militaryCategoryId, pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
@@ -171,14 +196,14 @@ public class MilitaryRankController {
     }
 
     /**
-     * Get all military ranks ordered by category and designation
+     * Get all military ranks ordered by military category and designation
      */
     @GetMapping("/ordered-by-category")
     public ResponseEntity<Page<MilitaryRankDTO>> getAllMilitaryRanksOrderedByCategory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting all military ranks ordered by category and designation");
+        log.debug("Getting all military ranks ordered by military category and designation");
         
         Pageable pageable = PageRequest.of(page, size);
         Page<MilitaryRankDTO> militaryRanks = militaryRankService.getAllMilitaryRanksOrderedByCategory(pageable);
@@ -189,7 +214,7 @@ public class MilitaryRankController {
     // ========== SEARCH ENDPOINTS ==========
 
     /**
-     * Search military ranks by designation (all languages)
+     * Search military ranks by designation or abbreviation (all languages)
      */
     @GetMapping("/search")
     public ResponseEntity<Page<MilitaryRankDTO>> searchMilitaryRanks(
@@ -211,7 +236,30 @@ public class MilitaryRankController {
         return ResponseEntity.ok(militaryRanks);
     }
 
-    // ========== MILITARY RANK LEVEL ENDPOINTS ==========
+    /**
+     * Search military ranks with military category context
+     */
+    @GetMapping("/search/context")
+    public ResponseEntity<Page<MilitaryRankDTO>> searchMilitaryRanksWithCategoryContext(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "designationFr") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        
+        log.debug("Searching military ranks with military category context for query: {}", query);
+        
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? 
+                Sort.Direction.DESC : Sort.Direction.ASC;
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.searchMilitaryRanksWithCategoryContext(query, pageable);
+        
+        return ResponseEntity.ok(militaryRanks);
+    }
+
+    // ========== MILITARY RANK CATEGORY ENDPOINTS ==========
 
     /**
      * Get multilingual military ranks
@@ -230,128 +278,14 @@ public class MilitaryRankController {
     }
 
     /**
-     * Get general officer ranks
+     * Get officer military ranks
      */
-    @GetMapping("/general-officer")
-    public ResponseEntity<Page<MilitaryRankDTO>> getGeneralOfficerRanks(
+    @GetMapping("/officers")
+    public ResponseEntity<Page<MilitaryRankDTO>> getOfficerMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting general officer ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getGeneralOfficerRanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    /**
-     * Get field officer ranks
-     */
-    @GetMapping("/field-officer")
-    public ResponseEntity<Page<MilitaryRankDTO>> getFieldOfficerRanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting field officer ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getFieldOfficerRanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    /**
-     * Get company officer ranks
-     */
-    @GetMapping("/company-officer")
-    public ResponseEntity<Page<MilitaryRankDTO>> getCompanyOfficerRanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting company officer ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getCompanyOfficerRanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    /**
-     * Get senior NCO ranks
-     */
-    @GetMapping("/senior-nco")
-    public ResponseEntity<Page<MilitaryRankDTO>> getSeniorNCORanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting senior NCO ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getSeniorNCORanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    /**
-     * Get junior NCO ranks
-     */
-    @GetMapping("/junior-nco")
-    public ResponseEntity<Page<MilitaryRankDTO>> getJuniorNCORanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting junior NCO ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getJuniorNCORanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    /**
-     * Get enlisted ranks
-     */
-    @GetMapping("/enlisted")
-    public ResponseEntity<Page<MilitaryRankDTO>> getEnlistedRanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting enlisted ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getEnlistedRanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    /**
-     * Get cadet ranks
-     */
-    @GetMapping("/cadet")
-    public ResponseEntity<Page<MilitaryRankDTO>> getCadetRanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting cadet ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getCadetRanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    // ========== MILITARY HIERARCHY ENDPOINTS ==========
-
-    /**
-     * Get all officer ranks
-     */
-    @GetMapping("/officer")
-    public ResponseEntity<Page<MilitaryRankDTO>> getOfficerRanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting officer ranks");
+        log.debug("Getting officer military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
         Page<MilitaryRankDTO> militaryRanks = militaryRankService.getOfficerRanks(pageable);
@@ -360,14 +294,30 @@ public class MilitaryRankController {
     }
 
     /**
-     * Get all NCO ranks
+     * Get senior officer military ranks
      */
-    @GetMapping("/nco")
-    public ResponseEntity<Page<MilitaryRankDTO>> getNCORanks(
+    @GetMapping("/senior-officers")
+    public ResponseEntity<Page<MilitaryRankDTO>> getSeniorOfficerMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting NCO ranks");
+        log.debug("Getting senior officer military ranks");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getSeniorOfficerRanks(pageable);
+        
+        return ResponseEntity.ok(militaryRanks);
+    }
+
+    /**
+     * Get NCO military ranks
+     */
+    @GetMapping("/ncos")
+    public ResponseEntity<Page<MilitaryRankDTO>> getNCOMilitaryRanks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting NCO military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
         Page<MilitaryRankDTO> militaryRanks = militaryRankService.getNCORanks(pageable);
@@ -376,150 +326,185 @@ public class MilitaryRankController {
     }
 
     /**
-     * Get security clearance ranks
+     * Get enlisted military ranks
      */
-    @GetMapping("/security-clearance")
-    public ResponseEntity<Page<MilitaryRankDTO>> getSecurityClearanceRanks(
+    @GetMapping("/enlisted")
+    public ResponseEntity<Page<MilitaryRankDTO>> getEnlistedMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting security clearance ranks");
+        log.debug("Getting enlisted military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getSecurityClearanceRanks(pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getEnlistedRanks(pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
 
     /**
-     * Get promotion eligible ranks
+     * Get general military ranks
      */
-    @GetMapping("/promotion-eligible")
-    public ResponseEntity<Page<MilitaryRankDTO>> getPromotionEligibleRanks(
+    @GetMapping("/generals")
+    public ResponseEntity<Page<MilitaryRankDTO>> getGeneralMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting promotion eligible ranks");
+        log.debug("Getting general military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getPromotionEligibleRanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    // ========== SERVICE BRANCH ENDPOINTS ==========
-
-    /**
-     * Get Army ranks
-     */
-    @GetMapping("/army")
-    public ResponseEntity<Page<MilitaryRankDTO>> getArmyRanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting Army ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getArmyRanks(pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getGeneralRanks(pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
 
     /**
-     * Get Navy ranks
+     * Get command military ranks
      */
-    @GetMapping("/navy")
-    public ResponseEntity<Page<MilitaryRankDTO>> getNavyRanks(
+    @GetMapping("/command")
+    public ResponseEntity<Page<MilitaryRankDTO>> getCommandMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting Navy ranks");
+        log.debug("Getting command military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getNavyRanks(pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getCommandRanks(pageable);
+        
+        return ResponseEntity.ok(militaryRanks);
+    }
+
+    // ========== MILITARY RANK LEVEL ENDPOINTS ==========
+
+    /**
+     * Get top military ranks
+     */
+    @GetMapping("/level/top")
+    public ResponseEntity<Page<MilitaryRankDTO>> getTopMilitaryRanks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting top military ranks");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getTopRanks(pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
 
     /**
-     * Get Air Force ranks
+     * Get colonel military ranks
      */
-    @GetMapping("/air-force")
-    public ResponseEntity<Page<MilitaryRankDTO>> getAirForceRanks(
+    @GetMapping("/level/colonel")
+    public ResponseEntity<Page<MilitaryRankDTO>> getColonelMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting Air Force ranks");
+        log.debug("Getting colonel military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getAirForceRanks(pageable);
-        
-        return ResponseEntity.ok(militaryRanks);
-    }
-
-    // ========== COMMAND LEVEL ENDPOINTS ==========
-
-    /**
-     * Get strategic command ranks
-     */
-    @GetMapping("/command/strategic")
-    public ResponseEntity<Page<MilitaryRankDTO>> getStrategicCommandRanks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting strategic command ranks");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getStrategicCommandRanks(pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getColonelRanks(pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
 
     /**
-     * Get operational command ranks
+     * Get major military ranks
      */
-    @GetMapping("/command/operational")
-    public ResponseEntity<Page<MilitaryRankDTO>> getOperationalCommandRanks(
+    @GetMapping("/level/major")
+    public ResponseEntity<Page<MilitaryRankDTO>> getMajorMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting operational command ranks");
+        log.debug("Getting major military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getOperationalCommandRanks(pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getMajorRanks(pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
 
     /**
-     * Get tactical command ranks
+     * Get captain military ranks
      */
-    @GetMapping("/command/tactical")
-    public ResponseEntity<Page<MilitaryRankDTO>> getTacticalCommandRanks(
+    @GetMapping("/level/captain")
+    public ResponseEntity<Page<MilitaryRankDTO>> getCaptainMilitaryRanks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting tactical command ranks");
+        log.debug("Getting captain military ranks");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getTacticalCommandRanks(pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getCaptainRanks(pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
 
     /**
-     * Find by category designation
+     * Get lieutenant military ranks
+     */
+    @GetMapping("/level/lieutenant")
+    public ResponseEntity<Page<MilitaryRankDTO>> getLieutenantMilitaryRanks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting lieutenant military ranks");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getLieutenantRanks(pageable);
+        
+        return ResponseEntity.ok(militaryRanks);
+    }
+
+    // ========== MILITARY CATEGORY-BASED ENDPOINTS ==========
+
+    /**
+     * Find military ranks by military category designation
      */
     @GetMapping("/category-designation/{categoryDesignation}")
-    public ResponseEntity<Page<MilitaryRankDTO>> findByCategoryDesignation(
+    public ResponseEntity<Page<MilitaryRankDTO>> getMilitaryRanksByMilitaryCategoryDesignation(
             @PathVariable String categoryDesignation,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Finding military ranks by category designation: {}", categoryDesignation);
+        log.debug("Finding military ranks by military category designation: {}", categoryDesignation);
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryRankDTO> militaryRanks = militaryRankService.findByCategoryDesignation(categoryDesignation, pageable);
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.findByMilitaryCategoryDesignation(categoryDesignation, pageable);
+        
+        return ResponseEntity.ok(militaryRanks);
+    }
+
+    /**
+     * Find military ranks by military category code
+     */
+    @GetMapping("/category-code/{categoryCode}")
+    public ResponseEntity<Page<MilitaryRankDTO>> getMilitaryRanksByMilitaryCategoryCode(
+            @PathVariable String categoryCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Finding military ranks by military category code: {}", categoryCode);
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.findByMilitaryCategoryCode(categoryCode, pageable);
+        
+        return ResponseEntity.ok(militaryRanks);
+    }
+
+    // ========== ADMINISTRATIVE ENDPOINTS ==========
+
+    /**
+     * Get military ranks missing translations
+     */
+    @GetMapping("/missing-translations")
+    public ResponseEntity<Page<MilitaryRankDTO>> getMilitaryRanksMissingTranslations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting military ranks missing translations");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryRankDTO> militaryRanks = militaryRankService.getMilitaryRanksMissingTranslations(pageable);
         
         return ResponseEntity.ok(militaryRanks);
     }
@@ -567,6 +552,18 @@ public class MilitaryRankController {
         return ResponseEntity.ok(exists);
     }
 
+    /**
+     * Check if military rank exists by French abbreviation
+     */
+    @GetMapping("/exists/abbreviation-fr/{abbreviationFr}")
+    public ResponseEntity<Boolean> checkMilitaryRankExistsByAbbreviationFr(@PathVariable String abbreviationFr) {
+        log.debug("Checking existence by French abbreviation: {}", abbreviationFr);
+        
+        boolean exists = militaryRankService.existsByAbbreviationFr(abbreviationFr);
+        
+        return ResponseEntity.ok(exists);
+    }
+
     // ========== STATISTICS ENDPOINTS ==========
 
     /**
@@ -584,71 +581,71 @@ public class MilitaryRankController {
     /**
      * Get count by military category
      */
-    @GetMapping("/count/category/{categoryId}")
-    public ResponseEntity<Long> getCountByCategory(@PathVariable Long categoryId) {
-        log.debug("Getting count for category ID: {}", categoryId);
+    @GetMapping("/count/military-category/{militaryCategoryId}")
+    public ResponseEntity<Long> getCountByMilitaryCategory(@PathVariable Long militaryCategoryId) {
+        log.debug("Getting count for military category ID: {}", militaryCategoryId);
         
-        Long count = militaryRankService.getCountByCategory(categoryId);
+        Long count = militaryRankService.getCountByMilitaryCategory(militaryCategoryId);
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count of general officer ranks
+     * Get count of senior officer military ranks
      */
-    @GetMapping("/count/general-officer")
-    public ResponseEntity<Long> getGeneralOfficerCount() {
-        log.debug("Getting count of general officer ranks");
+    @GetMapping("/count/senior-officers")
+    public ResponseEntity<Long> getSeniorOfficerRanksCount() {
+        log.debug("Getting count of senior officer military ranks");
         
-        Long count = militaryRankService.getGeneralOfficerCount();
+        Long count = militaryRankService.getSeniorOfficerRanksCount();
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count of field officer ranks
+     * Get count of officer military ranks
      */
-    @GetMapping("/count/field-officer")
-    public ResponseEntity<Long> getFieldOfficerCount() {
-        log.debug("Getting count of field officer ranks");
+    @GetMapping("/count/officers")
+    public ResponseEntity<Long> getOfficerRanksCount() {
+        log.debug("Getting count of officer military ranks");
         
-        Long count = militaryRankService.getFieldOfficerCount();
+        Long count = militaryRankService.getOfficerRanksCount();
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count of company officer ranks
+     * Get count of NCO military ranks
      */
-    @GetMapping("/count/company-officer")
-    public ResponseEntity<Long> getCompanyOfficerCount() {
-        log.debug("Getting count of company officer ranks");
+    @GetMapping("/count/ncos")
+    public ResponseEntity<Long> getNCORanksCount() {
+        log.debug("Getting count of NCO military ranks");
         
-        Long count = militaryRankService.getCompanyOfficerCount();
-        
-        return ResponseEntity.ok(count);
-    }
-
-    /**
-     * Get count of NCO ranks
-     */
-    @GetMapping("/count/nco")
-    public ResponseEntity<Long> getNCOCount() {
-        log.debug("Getting count of NCO ranks");
-        
-        Long count = militaryRankService.getNCOCount();
+        Long count = militaryRankService.getNCORanksCount();
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count of enlisted ranks
+     * Get count of enlisted military ranks
      */
     @GetMapping("/count/enlisted")
-    public ResponseEntity<Long> getEnlistedCount() {
-        log.debug("Getting count of enlisted ranks");
+    public ResponseEntity<Long> getEnlistedRanksCount() {
+        log.debug("Getting count of enlisted military ranks");
         
-        Long count = militaryRankService.getEnlistedCount();
+        Long count = militaryRankService.getEnlistedRanksCount();
+        
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get count of multilingual military ranks
+     */
+    @GetMapping("/count/multilingual")
+    public ResponseEntity<Long> getMultilingualCount() {
+        log.debug("Getting count of multilingual military ranks");
+        
+        Long count = militaryRankService.getMultilingualCount();
         
         return ResponseEntity.ok(count);
     }
@@ -665,32 +662,32 @@ public class MilitaryRankController {
                     .map(militaryRankDTO -> {
                         MilitaryRankInfoResponse response = MilitaryRankInfoResponse.builder()
                                 .militaryRankMetadata(militaryRankDTO)
-                                .hasArabicDesignation(militaryRankDTO.getDesignationAr() != null && !militaryRankDTO.getDesignationAr().trim().isEmpty())
-                                .hasEnglishDesignation(militaryRankDTO.getDesignationEn() != null && !militaryRankDTO.getDesignationEn().trim().isEmpty())
-                                .hasFrenchDesignation(militaryRankDTO.getDesignationFr() != null && !militaryRankDTO.getDesignationFr().trim().isEmpty())
-                                .isMultilingual(militaryRankDTO.isMultilingual())
-                                .isOfficerRank(militaryRankDTO.isOfficerRank())
-                                .isNCORank(militaryRankDTO.isNCORank())
-                                .isEnlistedRank(militaryRankDTO.isEnlistedRank())
-                                .isPromotionEligible(militaryRankDTO.isPromotionEligible())
-                                .requiresSecurityClearance(militaryRankDTO.requiresSecurityClearance())
-                                .isValid(militaryRankDTO.isValid())
                                 .defaultDesignation(militaryRankDTO.getDefaultDesignation())
+                                .defaultAbbreviation(militaryRankDTO.getDefaultAbbreviation())
                                 .displayText(militaryRankDTO.getDisplayText())
+                                .displayAbbreviation(militaryRankDTO.getDisplayAbbreviation())
+                                .isMultilingual(militaryRankDTO.isMultilingual())
+                                .availableLanguages(militaryRankDTO.getAvailableLanguages())
                                 .rankLevel(militaryRankDTO.getRankLevel())
-                                .rankOrder(militaryRankDTO.getRankOrder())
-                                .commandLevel(militaryRankDTO.getCommandLevel())
-                                .seniorityLevel(militaryRankDTO.getSeniorityLevel())
-                                .insigniaDescription(militaryRankDTO.getInsigniaDescription())
-                                .rankAbbreviation(militaryRankDTO.getRankAbbreviation())
-                                .typicalServiceYears(militaryRankDTO.getTypicalServiceYears())
-                                .payGrade(militaryRankDTO.getPayGrade())
+                                .rankCategory(militaryRankDTO.getRankCategory())
                                 .militaryCategoryDesignation(militaryRankDTO.getMilitaryCategoryDesignation())
+                                .seniorityLevel(militaryRankDTO.getSeniorityLevel())
+                                .hasCommandAuthority(militaryRankDTO.hasCommandAuthority())
+                                .promotionRequirements(militaryRankDTO.getPromotionRequirements())
                                 .shortDisplay(militaryRankDTO.getShortDisplay())
                                 .fullDisplay(militaryRankDTO.getFullDisplay())
-                                .displayWithLevel(militaryRankDTO.getDisplayWithLevel())
-                                .availableLanguages(militaryRankDTO.getAvailableLanguages())
                                 .comparisonKey(militaryRankDTO.getComparisonKey())
+                                .displayWithCategory(militaryRankDTO.getDisplayWithCategory())
+                                .displayWithAbbreviationAndCategory(militaryRankDTO.getDisplayWithAbbreviationAndCategory())
+                                .formalMilitaryDisplay(militaryRankDTO.getFormalMilitaryDisplay())
+                                .isCommissionedOfficer(militaryRankDTO.isCommissionedOfficer())
+                                .isNonCommissionedOfficer(militaryRankDTO.isNonCommissionedOfficer())
+                                .isEnlistedPersonnel(militaryRankDTO.isEnlistedPersonnel())
+                                .minimumYearsForPromotion(militaryRankDTO.getMinimumYearsForPromotion())
+                                .rankInsigniaDescription(militaryRankDTO.getRankInsigniaDescription())
+                                .commandSpanDescription(militaryRankDTO.getCommandSpanDescription())
+                                .typicalAssignment(militaryRankDTO.getTypicalAssignment())
+                                .retirementEligibility(militaryRankDTO.getRetirementEligibility())
                                 .build();
                         
                         return ResponseEntity.ok(response);
@@ -711,31 +708,32 @@ public class MilitaryRankController {
     @lombok.AllArgsConstructor
     public static class MilitaryRankInfoResponse {
         private MilitaryRankDTO militaryRankMetadata;
-        private Boolean hasArabicDesignation;
-        private Boolean hasEnglishDesignation;
-        private Boolean hasFrenchDesignation;
-        private Boolean isMultilingual;
-        private Boolean isOfficerRank;
-        private Boolean isNCORank;
-        private Boolean isEnlistedRank;
-        private Boolean isPromotionEligible;
-        private Boolean requiresSecurityClearance;
-        private Boolean isValid;
         private String defaultDesignation;
+        private String defaultAbbreviation;
         private String displayText;
-        private String rankLevel;
-        private Integer rankOrder;
-        private String commandLevel;
-        private Integer seniorityLevel;
-        private String insigniaDescription;
-        private String rankAbbreviation;
-        private String typicalServiceYears;
-        private String payGrade;
+        private String displayAbbreviation;
+        private Boolean isMultilingual;
+        private String[] availableLanguages;
+        private Integer rankLevel;
+        private String rankCategory;
         private String militaryCategoryDesignation;
+        private String militaryCategoryCode;
+        private Integer seniorityLevel;
+        private Boolean hasCommandAuthority;
+        private String promotionRequirements;
         private String shortDisplay;
         private String fullDisplay;
-        private String displayWithLevel;
-        private String[] availableLanguages;
         private String comparisonKey;
+        private String displayWithCategory;
+        private String displayWithAbbreviationAndCategory;
+        private String formalMilitaryDisplay;
+        private Boolean isCommissionedOfficer;
+        private Boolean isNonCommissionedOfficer;
+        private Boolean isEnlistedPersonnel;
+        private Integer minimumYearsForPromotion;
+        private String rankInsigniaDescription;
+        private String commandSpanDescription;
+        private String typicalAssignment;
+        private String retirementEligibility;
     }
 }

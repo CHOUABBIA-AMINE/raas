@@ -54,8 +54,17 @@ public class MilitaryRank {
 	@Column(name="F_03", length=50, nullable=false)
 	private String designationFr;
 	
+	@Column(name="F_04", length=10)
+	private String abbreviationAr;
+	
+	@Column(name="F_05", length=10)
+	private String abbreviationEn;
+	
+	@Column(name="F_06", length=10, nullable=false)
+	private String abbreviationFr;
+	
 	@ManyToOne
-    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_01_04_05_FK_01"), nullable=false)
+    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_01_04_05_FK_01"), nullable=false)
     private MilitaryCategory militaryCategory;
 	
 }

@@ -24,11 +24,12 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * MilitaryRank Repository with essential CRUD operations
- * Based on exact field names: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=militaryCategory
+ * Military Rank Repository with essential CRUD operations
+ * Based on exact field names: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr, F_07=militaryCategory
  * F_03 (designationFr) has unique constraint and is required
- * F_01 (designationAr) and F_02 (designationEn) are optional
- * F_04 (militaryCategory) is required foreign key
+ * F_06 (abbreviationFr) is required
+ * F_07 (militaryCategory) is required foreign key
+ * F_01, F_02, F_04, F_05 are optional
  */
 @Repository
 public interface MilitaryRankRepository extends JpaRepository<MilitaryRank, Long> {
@@ -36,280 +37,285 @@ public interface MilitaryRankRepository extends JpaRepository<MilitaryRank, Long
     /**
      * Find military rank by French designation (F_03) - unique field
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationFr = :designationFr")
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.designationFr = :designationFr")
     Optional<MilitaryRank> findByDesignationFr(@Param("designationFr") String designationFr);
 
     /**
-     * Find military rank by Arabic designation (F_01)
+     * Find military rank by French abbreviation (F_06)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationAr = :designationAr")
-    Optional<MilitaryRank> findByDesignationAr(@Param("designationAr") String designationAr);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.abbreviationFr = :abbreviationFr")
+    Optional<MilitaryRank> findByAbbreviationFr(@Param("abbreviationFr") String abbreviationFr);
 
     /**
-     * Find military rank by English designation (F_02)
+     * Find military ranks by military category ID (F_07)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationEn = :designationEn")
-    Optional<MilitaryRank> findByDesignationEn(@Param("designationEn") String designationEn);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.militaryCategory.id = :militaryCategoryId ORDER BY mr.designationFr ASC")
+    Page<MilitaryRank> findByMilitaryCategoryId(@Param("militaryCategoryId") Long militaryCategoryId, Pageable pageable);
 
     /**
      * Check if military rank exists by French designation
      */
-    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM MilitaryRank r WHERE r.designationFr = :designationFr")
+    @Query("SELECT CASE WHEN COUNT(mr) > 0 THEN true ELSE false END FROM MilitaryRank mr WHERE mr.designationFr = :designationFr")
     boolean existsByDesignationFr(@Param("designationFr") String designationFr);
 
     /**
      * Check unique constraint for updates (excluding current ID)
      */
-    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM MilitaryRank r WHERE r.designationFr = :designationFr AND r.id != :id")
+    @Query("SELECT CASE WHEN COUNT(mr) > 0 THEN true ELSE false END FROM MilitaryRank mr WHERE mr.designationFr = :designationFr AND mr.id != :id")
     boolean existsByDesignationFrAndIdNot(@Param("designationFr") String designationFr, @Param("id") Long id);
-
-    /**
-     * Find military ranks by military category ID (F_04)
-     */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.militaryCategory.id = :categoryId ORDER BY r.designationFr ASC")
-    Page<MilitaryRank> findByMilitaryCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
 
     /**
      * Find all military ranks with pagination ordered by French designation
      */
-    @Query("SELECT r FROM MilitaryRank r ORDER BY r.designationFr ASC")
+    @Query("SELECT mr FROM MilitaryRank mr ORDER BY mr.designationFr ASC")
     Page<MilitaryRank> findAllOrderByDesignationFr(Pageable pageable);
 
     /**
      * Find all military ranks ordered by military category and designation
      */
-    @Query("SELECT r FROM MilitaryRank r ORDER BY r.militaryCategory.designationFr ASC, r.designationFr ASC")
+    @Query("SELECT mr FROM MilitaryRank mr ORDER BY mr.militaryCategory.designationFr ASC, mr.designationFr ASC")
     Page<MilitaryRank> findAllOrderByCategoryAndDesignation(Pageable pageable);
 
     /**
-     * Search military ranks by any designation field
+     * Search military ranks by any designation or abbreviation field
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "r.designationAr LIKE %:search% OR " +
-           "r.designationEn LIKE %:search% OR " +
-           "r.designationFr LIKE %:search%")
-    Page<MilitaryRank> searchByDesignation(@Param("search") String search, Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "mr.designationAr LIKE %:search% OR " +
+           "mr.designationEn LIKE %:search% OR " +
+           "mr.designationFr LIKE %:search% OR " +
+           "mr.abbreviationAr LIKE %:search% OR " +
+           "mr.abbreviationEn LIKE %:search% OR " +
+           "mr.abbreviationFr LIKE %:search%")
+    Page<MilitaryRank> searchByDesignationOrAbbreviation(@Param("search") String search, Pageable pageable);
 
     /**
      * Find military ranks by French designation pattern (F_03)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationFr LIKE %:pattern%")
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.designationFr LIKE %:pattern%")
     Page<MilitaryRank> findByDesignationFrContaining(@Param("pattern") String pattern, Pageable pageable);
 
     /**
-     * Find military ranks by Arabic designation pattern (F_01)
+     * Find military ranks by French abbreviation pattern (F_06)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationAr LIKE %:pattern%")
-    Page<MilitaryRank> findByDesignationArContaining(@Param("pattern") String pattern, Pageable pageable);
-
-    /**
-     * Find military ranks by English designation pattern (F_02)
-     */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationEn LIKE %:pattern%")
-    Page<MilitaryRank> findByDesignationEnContaining(@Param("pattern") String pattern, Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.abbreviationFr LIKE %:pattern%")
+    Page<MilitaryRank> findByAbbreviationFrContaining(@Param("pattern") String pattern, Pageable pageable);
 
     /**
      * Count total military ranks
      */
-    @Query("SELECT COUNT(r) FROM MilitaryRank r")
+    @Query("SELECT COUNT(mr) FROM MilitaryRank mr")
     Long countAllMilitaryRanks();
 
     /**
-     * Count military ranks by category
+     * Count military ranks by military category
      */
-    @Query("SELECT COUNT(r) FROM MilitaryRank r WHERE r.militaryCategory.id = :categoryId")
-    Long countByMilitaryCategoryId(@Param("categoryId") Long categoryId);
+    @Query("SELECT COUNT(mr) FROM MilitaryRank mr WHERE mr.militaryCategory.id = :militaryCategoryId")
+    Long countByMilitaryCategoryId(@Param("militaryCategoryId") Long militaryCategoryId);
 
     /**
      * Find military ranks that have Arabic designation
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationAr IS NOT NULL AND r.designationAr != ''")
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.designationAr IS NOT NULL AND mr.designationAr != ''")
     Page<MilitaryRank> findWithArabicDesignation(Pageable pageable);
 
     /**
      * Find military ranks that have English designation
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.designationEn IS NOT NULL AND r.designationEn != ''")
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.designationEn IS NOT NULL AND mr.designationEn != ''")
     Page<MilitaryRank> findWithEnglishDesignation(Pageable pageable);
 
     /**
      * Find multilingual military ranks (have at least 2 designations)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "(r.designationAr IS NOT NULL AND r.designationAr != '' AND r.designationEn IS NOT NULL AND r.designationEn != '') OR " +
-           "(r.designationAr IS NOT NULL AND r.designationAr != '' AND r.designationFr IS NOT NULL AND r.designationFr != '') OR " +
-           "(r.designationEn IS NOT NULL AND r.designationEn != '' AND r.designationFr IS NOT NULL AND r.designationFr != '')")
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "(mr.designationAr IS NOT NULL AND mr.designationAr != '' AND mr.designationEn IS NOT NULL AND mr.designationEn != '') OR " +
+           "(mr.designationAr IS NOT NULL AND mr.designationAr != '' AND mr.designationFr IS NOT NULL AND mr.designationFr != '') OR " +
+           "(mr.designationEn IS NOT NULL AND mr.designationEn != '' AND mr.designationFr IS NOT NULL AND mr.designationFr != '')")
     Page<MilitaryRank> findMultilingualMilitaryRanks(Pageable pageable);
 
     /**
-     * Find general officer ranks (based on French designation patterns)
+     * Find officer ranks (based on French designation patterns)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%général%' OR LOWER(r.designationFr) LIKE '%amiral%' OR " +
-           "LOWER(r.designationFr) LIKE '%general%' OR LOWER(r.designationFr) LIKE '%admiral%'")
-    Page<MilitaryRank> findGeneralOfficerRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%général%' OR LOWER(mr.designationFr) LIKE '%colonel%' OR " +
+           "LOWER(mr.designationFr) LIKE '%commandant%' OR LOWER(mr.designationFr) LIKE '%capitaine%' OR " +
+           "LOWER(mr.designationFr) LIKE '%lieutenant%' OR LOWER(mr.designationFr) LIKE '%major%'")
+    Page<MilitaryRank> findOfficerRanks(Pageable pageable);
 
     /**
-     * Find field officer ranks (based on French designation patterns)
+     * Find senior officer ranks (based on French designation patterns)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%colonel%' OR LOWER(r.designationFr) LIKE '%lieutenant-colonel%' OR " +
-           "LOWER(r.designationFr) LIKE '%commandant%' OR LOWER(r.designationFr) LIKE '%major%'")
-    Page<MilitaryRank> findFieldOfficerRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%général%' OR LOWER(mr.designationFr) LIKE '%amiral%' OR " +
+           "LOWER(mr.designationFr) LIKE '%colonel%'")
+    Page<MilitaryRank> findSeniorOfficerRanks(Pageable pageable);
 
     /**
-     * Find company officer ranks (based on French designation patterns)
+     * Find NCO ranks (based on French designation patterns)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%capitaine%' OR LOWER(r.designationFr) LIKE '%lieutenant%' OR " +
-           "LOWER(r.designationFr) LIKE '%sous-lieutenant%' OR LOWER(r.designationFr) LIKE '%enseigne%'")
-    Page<MilitaryRank> findCompanyOfficerRanks(Pageable pageable);
-
-    /**
-     * Find senior NCO ranks (based on French designation patterns)
-     */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%adjudant-chef%' OR LOWER(r.designationFr) LIKE '%adjudant%' OR " +
-           "LOWER(r.designationFr) LIKE '%sergent-chef%' OR LOWER(r.designationFr) LIKE '%maître%'")
-    Page<MilitaryRank> findSeniorNCORanks(Pageable pageable);
-
-    /**
-     * Find junior NCO ranks (based on French designation patterns)
-     */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%sergent%' OR LOWER(r.designationFr) LIKE '%caporal-chef%' OR " +
-           "LOWER(r.designationFr) LIKE '%quartier-maître%'")
-    Page<MilitaryRank> findJuniorNCORanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%adjudant%' OR LOWER(mr.designationFr) LIKE '%sergent%'")
+    Page<MilitaryRank> findNCORanks(Pageable pageable);
 
     /**
      * Find enlisted ranks (based on French designation patterns)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%caporal%' OR LOWER(r.designationFr) LIKE '%soldat%' OR " +
-           "LOWER(r.designationFr) LIKE '%matelot%' OR LOWER(r.designationFr) LIKE '%aviateur%'")
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%caporal%' OR LOWER(mr.designationFr) LIKE '%soldat%'")
     Page<MilitaryRank> findEnlistedRanks(Pageable pageable);
 
     /**
-     * Find cadet ranks (based on French designation patterns)
+     * Find general ranks (based on French designation patterns)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%élève%' OR LOWER(r.designationFr) LIKE '%aspirant%' OR " +
-           "LOWER(r.designationFr) LIKE '%cadet%'")
-    Page<MilitaryRank> findCadetRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%général%' OR LOWER(mr.designationFr) LIKE '%amiral%'")
+    Page<MilitaryRank> findGeneralRanks(Pageable pageable);
 
     /**
-     * Find officer ranks (all officer levels)
+     * Find command ranks (leadership positions)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%général%' OR LOWER(r.designationFr) LIKE '%amiral%' OR " +
-           "LOWER(r.designationFr) LIKE '%colonel%' OR LOWER(r.designationFr) LIKE '%commandant%' OR " +
-           "LOWER(r.designationFr) LIKE '%capitaine%' OR LOWER(r.designationFr) LIKE '%lieutenant%'")
-    Page<MilitaryRank> findOfficerRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%général%' OR LOWER(mr.designationFr) LIKE '%colonel%' OR " +
+           "LOWER(mr.designationFr) LIKE '%commandant%' OR LOWER(mr.designationFr) LIKE '%capitaine%' OR " +
+           "LOWER(mr.designationFr) LIKE '%adjudant%'")
+    Page<MilitaryRank> findCommandRanks(Pageable pageable);
 
     /**
-     * Find NCO ranks (all NCO levels)
+     * Find military ranks with join fetch for military category
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%adjudant%' OR LOWER(r.designationFr) LIKE '%sergent%' OR " +
-           "LOWER(r.designationFr) LIKE '%caporal-chef%' OR LOWER(r.designationFr) LIKE '%maître%'")
-    Page<MilitaryRank> findNCORanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr JOIN FETCH mr.militaryCategory ORDER BY mr.designationFr ASC")
+    Page<MilitaryRank> findAllWithMilitaryCategory(Pageable pageable);
 
     /**
-     * Find ranks requiring security clearance (officers and senior NCOs)
+     * Find military ranks by military category designation
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%général%' OR LOWER(r.designationFr) LIKE '%amiral%' OR " +
-           "LOWER(r.designationFr) LIKE '%colonel%' OR LOWER(r.designationFr) LIKE '%commandant%' OR " +
-           "LOWER(r.designationFr) LIKE '%capitaine%' OR LOWER(r.designationFr) LIKE '%lieutenant%' OR " +
-           "LOWER(r.designationFr) LIKE '%adjudant%'")
-    Page<MilitaryRank> findSecurityClearanceRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.militaryCategory.designationFr = :categoryDesignation ORDER BY mr.designationFr ASC")
+    Page<MilitaryRank> findByMilitaryCategoryDesignation(@Param("categoryDesignation") String categoryDesignation, Pageable pageable);
 
     /**
-     * Find promotion eligible ranks (excluding highest ranks)
+     * Find military ranks by military category code
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "NOT (LOWER(r.designationFr) LIKE '%général d''armée%' OR LOWER(r.designationFr) LIKE '%amiral%')")
-    Page<MilitaryRank> findPromotionEligibleRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.militaryCategory.code = :categoryCode ORDER BY mr.designationFr ASC")
+    Page<MilitaryRank> findByMilitaryCategoryCode(@Param("categoryCode") String categoryCode, Pageable pageable);
+
+    /**
+     * Search military ranks with military category context
+     */
+    @Query("SELECT mr FROM MilitaryRank mr LEFT JOIN mr.militaryCategory mc WHERE " +
+           "(mr.designationAr LIKE %:search% OR mr.designationEn LIKE %:search% OR " +
+           "mr.designationFr LIKE %:search% OR mr.abbreviationAr LIKE %:search% OR " +
+           "mr.abbreviationEn LIKE %:search% OR mr.abbreviationFr LIKE %:search% OR " +
+           "mc.designationFr LIKE %:search% OR mc.code LIKE %:search%) " +
+           "ORDER BY mr.designationFr ASC")
+    Page<MilitaryRank> searchWithMilitaryCategoryContext(@Param("search") String search, Pageable pageable);
 
     /**
      * Find military ranks ordered by designation in specific language
      */
-    @Query("SELECT r FROM MilitaryRank r ORDER BY r.designationAr ASC")
+    @Query("SELECT mr FROM MilitaryRank mr ORDER BY mr.designationAr ASC")
     Page<MilitaryRank> findAllOrderByDesignationAr(Pageable pageable);
 
-    @Query("SELECT r FROM MilitaryRank r ORDER BY r.designationEn ASC")
+    @Query("SELECT mr FROM MilitaryRank mr ORDER BY mr.designationEn ASC")
     Page<MilitaryRank> findAllOrderByDesignationEn(Pageable pageable);
 
     /**
-     * Count ranks by level
+     * Count military ranks by category
      */
-    @Query("SELECT COUNT(r) FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%général%' OR LOWER(r.designationFr) LIKE '%amiral%'")
-    Long countGeneralOfficerRanks();
+    @Query("SELECT COUNT(mr) FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%général%' OR LOWER(mr.designationFr) LIKE '%amiral%' OR " +
+           "LOWER(mr.designationFr) LIKE '%colonel%'")
+    Long countSeniorOfficerRanks();
 
-    @Query("SELECT COUNT(r) FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%colonel%' OR LOWER(r.designationFr) LIKE '%commandant%'")
-    Long countFieldOfficerRanks();
+    @Query("SELECT COUNT(mr) FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%commandant%' OR LOWER(mr.designationFr) LIKE '%capitaine%' OR " +
+           "LOWER(mr.designationFr) LIKE '%lieutenant%' OR LOWER(mr.designationFr) LIKE '%major%'")
+    Long countOfficerRanks();
 
-    @Query("SELECT COUNT(r) FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%capitaine%' OR LOWER(r.designationFr) LIKE '%lieutenant%'")
-    Long countCompanyOfficerRanks();
-
-    @Query("SELECT COUNT(r) FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%adjudant%' OR LOWER(r.designationFr) LIKE '%sergent%'")
+    @Query("SELECT COUNT(mr) FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%adjudant%' OR LOWER(mr.designationFr) LIKE '%sergent%'")
     Long countNCORanks();
 
-    @Query("SELECT COUNT(r) FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%caporal%' OR LOWER(r.designationFr) LIKE '%soldat%'")
+    @Query("SELECT COUNT(mr) FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%caporal%' OR LOWER(mr.designationFr) LIKE '%soldat%'")
     Long countEnlistedRanks();
 
     /**
-     * Find ranks by service branch (based on designation patterns)
+     * Count multilingual military ranks
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%terre%' OR LOWER(r.designationFr) LIKE '%armée%'")
-    Page<MilitaryRank> findArmyRanks(Pageable pageable);
-
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%marine%' OR LOWER(r.designationFr) LIKE '%naval%' OR " +
-           "LOWER(r.designationFr) LIKE '%matelot%' OR LOWER(r.designationFr) LIKE '%amiral%'")
-    Page<MilitaryRank> findNavyRanks(Pageable pageable);
-
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%air%' OR LOWER(r.designationFr) LIKE '%aviateur%' OR " +
-           "LOWER(r.designationFr) LIKE '%aviation%'")
-    Page<MilitaryRank> findAirForceRanks(Pageable pageable);
+    @Query("SELECT COUNT(mr) FROM MilitaryRank mr WHERE " +
+           "(mr.designationAr IS NOT NULL AND mr.designationAr != '' AND mr.designationEn IS NOT NULL AND mr.designationEn != '') OR " +
+           "(mr.designationAr IS NOT NULL AND mr.designationAr != '' AND mr.designationFr IS NOT NULL AND mr.designationFr != '') OR " +
+           "(mr.designationEn IS NOT NULL AND mr.designationEn != '' AND mr.designationFr IS NOT NULL AND mr.designationFr != '')")
+    Long countMultilingualMilitaryRanks();
 
     /**
-     * Find ranks by command level
+     * Find military ranks by rank hierarchy level (estimated based on keywords)
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%général%' OR LOWER(r.designationFr) LIKE '%amiral%'")
-    Page<MilitaryRank> findStrategicCommandRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%général major%' OR LOWER(mr.designationFr) LIKE '%amiral%'")
+    Page<MilitaryRank> findTopRanks(Pageable pageable);
 
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%colonel%' OR LOWER(r.designationFr) LIKE '%commandant%'")
-    Page<MilitaryRank> findOperationalCommandRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%général%' AND LOWER(mr.designationFr) NOT LIKE '%major%'")
+    Page<MilitaryRank> findGeneralRanksExcludingTop(Pageable pageable);
 
-    @Query("SELECT r FROM MilitaryRank r WHERE " +
-           "LOWER(r.designationFr) LIKE '%capitaine%' OR LOWER(r.designationFr) LIKE '%lieutenant%'")
-    Page<MilitaryRank> findTacticalCommandRanks(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%colonel%'")
+    Page<MilitaryRank> findColonelRanks(Pageable pageable);
+
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%commandant%' OR LOWER(mr.designationFr) LIKE '%major%'")
+    Page<MilitaryRank> findMajorRanks(Pageable pageable);
+
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%capitaine%'")
+    Page<MilitaryRank> findCaptainRanks(Pageable pageable);
+
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%lieutenant%' AND LOWER(mr.designationFr) NOT LIKE '%sous%'")
+    Page<MilitaryRank> findLieutenantRanks(Pageable pageable);
+
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "LOWER(mr.designationFr) LIKE '%sous-lieutenant%'")
+    Page<MilitaryRank> findSubLieutenantRanks(Pageable pageable);
 
     /**
-     * Search ranks by rank level pattern
+     * Find military ranks by abbreviation length
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE LOWER(r.designationFr) LIKE %:levelPattern%")
-    Page<MilitaryRank> findByRankLevel(@Param("levelPattern") String levelPattern, Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE LENGTH(mr.abbreviationFr) <= :maxLength")
+    Page<MilitaryRank> findByAbbreviationLength(@Param("maxLength") Integer maxLength, Pageable pageable);
 
     /**
-     * Find ranks with join fetch for military category
+     * Find military ranks missing translations
      */
-    @Query("SELECT r FROM MilitaryRank r JOIN FETCH r.militaryCategory ORDER BY r.designationFr ASC")
-    Page<MilitaryRank> findAllWithCategory(Pageable pageable);
+    @Query("SELECT mr FROM MilitaryRank mr WHERE " +
+           "(mr.designationAr IS NULL OR mr.designationAr = '') OR " +
+           "(mr.designationEn IS NULL OR mr.designationEn = '') OR " +
+           "(mr.abbreviationAr IS NULL OR mr.abbreviationAr = '') OR " +
+           "(mr.abbreviationEn IS NULL OR mr.abbreviationEn = '')")
+    Page<MilitaryRank> findMissingTranslations(Pageable pageable);
 
     /**
-     * Find ranks by category designation
+     * Check if abbreviation exists
      */
-    @Query("SELECT r FROM MilitaryRank r WHERE r.militaryCategory.designationFr = :categoryDesignation ORDER BY r.designationFr ASC")
-    Page<MilitaryRank> findByCategoryDesignation(@Param("categoryDesignation") String categoryDesignation, Pageable pageable);
+    @Query("SELECT CASE WHEN COUNT(mr) > 0 THEN true ELSE false END FROM MilitaryRank mr WHERE mr.abbreviationFr = :abbreviationFr")
+    boolean existsByAbbreviationFr(@Param("abbreviationFr") String abbreviationFr);
+
+    /**
+     * Check if abbreviation exists excluding current ID
+     */
+    @Query("SELECT CASE WHEN COUNT(mr) > 0 THEN true ELSE false END FROM MilitaryRank mr WHERE mr.abbreviationFr = :abbreviationFr AND mr.id != :id")
+    boolean existsByAbbreviationFrAndIdNot(@Param("abbreviationFr") String abbreviationFr, @Param("id") Long id);
+
+    /**
+     * Find military ranks by Arabic designation
+     */
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.designationAr = :designationAr")
+    Optional<MilitaryRank> findByDesignationAr(@Param("designationAr") String designationAr);
+
+    /**
+     * Find military ranks by English designation
+     */
+    @Query("SELECT mr FROM MilitaryRank mr WHERE mr.designationEn = :designationEn")
+    Optional<MilitaryRank> findByDesignationEn(@Param("designationEn") String designationEn);
 }

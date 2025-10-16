@@ -29,11 +29,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * MilitaryCategory REST Controller
+ * Military Category REST Controller
  * Handles military category operations: create, get metadata, delete, get all
- * Based on exact MilitaryCategory model: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr
+ * Based on exact MilitaryCategory model: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr
  * F_03 (designationFr) has unique constraint and is required
- * F_01 (designationAr) and F_02 (designationEn) are optional
+ * F_06 (abbreviationFr) is required
+ * F_01, F_02, F_04, F_05 are optional
  */
 @RestController
 @RequestMapping("/militaryCategory")
@@ -47,13 +48,14 @@ public class MilitaryCategoryController {
 
     /**
      * Create new military category
-     * Creates military category with multilingual designations and military hierarchy classification
+     * Creates military category with multilingual designations and abbreviations
      */
     @PostMapping
     public ResponseEntity<MilitaryCategoryDTO> createMilitaryCategory(@Valid @RequestBody MilitaryCategoryDTO militaryCategoryDTO) {
-        log.info("Creating military category with French designation: {} and designations: AR={}, EN={}", 
+        log.info("Creating military category with French designation: {} and designations: AR={}, EN={}, Abbreviations: FR={}, AR={}, EN={}", 
                 militaryCategoryDTO.getDesignationFr(), militaryCategoryDTO.getDesignationAr(), 
-                militaryCategoryDTO.getDesignationEn());
+                militaryCategoryDTO.getDesignationEn(), militaryCategoryDTO.getAbbreviationFr(),
+                militaryCategoryDTO.getAbbreviationAr(), militaryCategoryDTO.getAbbreviationEn());
         
         MilitaryCategoryDTO createdMilitaryCategory = militaryCategoryService.createMilitaryCategory(militaryCategoryDTO);
         
@@ -64,7 +66,7 @@ public class MilitaryCategoryController {
 
     /**
      * Get military category metadata by ID
-     * Returns military category information with military hierarchy classification and multilingual support
+     * Returns military category information with multilingual designations, abbreviations, and organizational intelligence
      */
     @GetMapping("/{id}")
     public ResponseEntity<MilitaryCategoryDTO> getMilitaryCategoryMetadata(@PathVariable Long id) {
@@ -76,13 +78,25 @@ public class MilitaryCategoryController {
     }
 
     /**
-     * Get military category by French designation (unique field F_03)
+     * Get military category by French designation (F_03) - unique field
      */
     @GetMapping("/designation-fr/{designationFr}")
     public ResponseEntity<MilitaryCategoryDTO> getMilitaryCategoryByDesignationFr(@PathVariable String designationFr) {
         log.debug("Getting military category by French designation: {}", designationFr);
         
         return militaryCategoryService.findByDesignationFr(designationFr)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get military category by French abbreviation (F_06)
+     */
+    @GetMapping("/abbreviation-fr/{abbreviationFr}")
+    public ResponseEntity<MilitaryCategoryDTO> getMilitaryCategoryByAbbreviationFr(@PathVariable String abbreviationFr) {
+        log.debug("Getting military category by French abbreviation: {}", abbreviationFr);
+        
+        return militaryCategoryService.findByAbbreviationFr(abbreviationFr)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -155,7 +169,7 @@ public class MilitaryCategoryController {
     // ========== SEARCH ENDPOINTS ==========
 
     /**
-     * Search military categories by designation (all languages)
+     * Search military categories by designation or abbreviation (all languages)
      */
     @GetMapping("/search")
     public ResponseEntity<Page<MilitaryCategoryDTO>> searchMilitaryCategories(
@@ -177,7 +191,7 @@ public class MilitaryCategoryController {
         return ResponseEntity.ok(militaryCategories);
     }
 
-    // ========== MILITARY CATEGORY TYPE ENDPOINTS ==========
+    // ========== MILITARY SERVICE CLASSIFICATION ENDPOINTS ==========
 
     /**
      * Get multilingual military categories
@@ -196,78 +210,144 @@ public class MilitaryCategoryController {
     }
 
     /**
-     * Get officer categories
+     * Get main service branches (Army, Navy, Air Force)
      */
-    @GetMapping("/officer")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getOfficerCategories(
+    @GetMapping("/main-service-branches")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getMainServiceBranches(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting officer categories");
+        log.debug("Getting main service branch military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getOfficerCategories(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getMainServiceBranches(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
 
     /**
-     * Get NCO categories
+     * Get army military categories
      */
-    @GetMapping("/nco")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getNCOCategories(
+    @GetMapping("/army")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getArmyMilitaryCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting NCO categories");
+        log.debug("Getting army military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getNCOCategories(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getArmyCategories(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
 
     /**
-     * Get enlisted categories
+     * Get navy military categories
      */
-    @GetMapping("/enlisted")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getEnlistedCategories(
+    @GetMapping("/navy")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getNavyMilitaryCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting enlisted categories");
+        log.debug("Getting navy military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getEnlistedCategories(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getNavyCategories(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
 
     /**
-     * Get specialist categories
+     * Get air force military categories
      */
-    @GetMapping("/specialist")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getSpecialistCategories(
+    @GetMapping("/air-force")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getAirForceMilitaryCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting specialist categories");
+        log.debug("Getting air force military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getSpecialistCategories(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getAirForceCategories(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
 
     /**
-     * Get medical categories
+     * Get gendarmerie military categories
+     */
+    @GetMapping("/gendarmerie")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getGendarmerieMilitaryCategories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting gendarmerie military categories");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getGendarmerieCategories(pageable);
+        
+        return ResponseEntity.ok(militaryCategories);
+    }
+
+    /**
+     * Get security military categories
+     */
+    @GetMapping("/security")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getSecurityMilitaryCategories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting security military categories");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getSecurityCategories(pageable);
+        
+        return ResponseEntity.ok(militaryCategories);
+    }
+
+    /**
+     * Get support military categories
+     */
+    @GetMapping("/support")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getSupportMilitaryCategories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting support military categories");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getSupportCategories(pageable);
+        
+        return ResponseEntity.ok(militaryCategories);
+    }
+
+    // ========== SPECIALIZED SERVICE ENDPOINTS ==========
+
+    /**
+     * Get intelligence military categories
+     */
+    @GetMapping("/intelligence")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getIntelligenceMilitaryCategories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting intelligence military categories");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getIntelligenceCategories(pageable);
+        
+        return ResponseEntity.ok(militaryCategories);
+    }
+
+    /**
+     * Get medical military categories
      */
     @GetMapping("/medical")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getMedicalCategories(
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getMedicalMilitaryCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting medical categories");
+        log.debug("Getting medical military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
         Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getMedicalCategories(pageable);
@@ -276,181 +356,67 @@ public class MilitaryCategoryController {
     }
 
     /**
-     * Get administrative categories
+     * Get logistics military categories
      */
-    @GetMapping("/administrative")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getAdministrativeCategories(
+    @GetMapping("/logistics")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getLogisticsMilitaryCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting administrative categories");
+        log.debug("Getting logistics military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getAdministrativeCategories(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getLogisticsCategories(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
 
     /**
-     * Get reserve categories
+     * Get communications military categories
      */
-    @GetMapping("/reserve")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getReserveCategories(
+    @GetMapping("/communications")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getCommunicationsMilitaryCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting reserve categories");
+        log.debug("Getting communications military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getReserveCategories(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getCommunicationsCategories(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
 
     /**
-     * Get cadet categories
+     * Get republican guard military categories
      */
-    @GetMapping("/cadet")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getCadetCategories(
+    @GetMapping("/republican-guard")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getRepublicanGuardMilitaryCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting cadet categories");
+        log.debug("Getting republican guard military categories");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getCadetCategories(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getRepublicanGuardCategories(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
 
+    // ========== ADMINISTRATIVE ENDPOINTS ==========
+
     /**
-     * Get retired categories
+     * Get military categories missing translations
      */
-    @GetMapping("/retired")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getRetiredCategories(
+    @GetMapping("/missing-translations")
+    public ResponseEntity<Page<MilitaryCategoryDTO>> getMilitaryCategoriesMissingTranslations(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting retired categories");
+        log.debug("Getting military categories missing translations");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getRetiredCategories(pageable);
-        
-        return ResponseEntity.ok(militaryCategories);
-    }
-
-    // ========== MILITARY HIERARCHY ENDPOINTS ==========
-
-    /**
-     * Get active duty categories
-     */
-    @GetMapping("/active-duty")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getActiveDutyCategories(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting active duty categories");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getActiveDutyCategories(pageable);
-        
-        return ResponseEntity.ok(militaryCategories);
-    }
-
-    /**
-     * Get command categories
-     */
-    @GetMapping("/command")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getCommandCategories(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting command categories");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getCommandCategories(pageable);
-        
-        return ResponseEntity.ok(militaryCategories);
-    }
-
-    /**
-     * Get security clearance categories
-     */
-    @GetMapping("/security-clearance")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getSecurityClearanceCategories(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting security clearance categories");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getSecurityClearanceCategories(pageable);
-        
-        return ResponseEntity.ok(militaryCategories);
-    }
-
-    /**
-     * Get operational categories
-     */
-    @GetMapping("/operational")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getOperationalCategories(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting operational categories");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getOperationalCategories(pageable);
-        
-        return ResponseEntity.ok(militaryCategories);
-    }
-
-    // ========== PERSONNEL CLASSIFICATION ENDPOINTS ==========
-
-    /**
-     * Get commissioned personnel
-     */
-    @GetMapping("/personnel/commissioned")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getCommissionedPersonnel(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting commissioned personnel");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getCommissionedPersonnel(pageable);
-        
-        return ResponseEntity.ok(militaryCategories);
-    }
-
-    /**
-     * Get non-commissioned personnel
-     */
-    @GetMapping("/personnel/non-commissioned")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getNonCommissionedPersonnel(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting non-commissioned personnel");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getNonCommissionedPersonnel(pageable);
-        
-        return ResponseEntity.ok(militaryCategories);
-    }
-
-    /**
-     * Get enlisted personnel
-     */
-    @GetMapping("/personnel/enlisted")
-    public ResponseEntity<Page<MilitaryCategoryDTO>> getEnlistedPersonnel(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting enlisted personnel");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getEnlistedPersonnel(pageable);
+        Page<MilitaryCategoryDTO> militaryCategories = militaryCategoryService.getMilitaryCategoriesMissingTranslations(pageable);
         
         return ResponseEntity.ok(militaryCategories);
     }
@@ -498,6 +464,18 @@ public class MilitaryCategoryController {
         return ResponseEntity.ok(exists);
     }
 
+    /**
+     * Check if military category exists by French abbreviation
+     */
+    @GetMapping("/exists/abbreviation-fr/{abbreviationFr}")
+    public ResponseEntity<Boolean> checkMilitaryCategoryExistsByAbbreviationFr(@PathVariable String abbreviationFr) {
+        log.debug("Checking existence by French abbreviation: {}", abbreviationFr);
+        
+        boolean exists = militaryCategoryService.existsByAbbreviationFr(abbreviationFr);
+        
+        return ResponseEntity.ok(exists);
+    }
+
     // ========== STATISTICS ENDPOINTS ==========
 
     /**
@@ -513,61 +491,49 @@ public class MilitaryCategoryController {
     }
 
     /**
-     * Get count of officer categories
+     * Get count of main service branches
      */
-    @GetMapping("/count/officer")
-    public ResponseEntity<Long> getOfficerCategoriesCount() {
-        log.debug("Getting count of officer categories");
+    @GetMapping("/count/main-service-branches")
+    public ResponseEntity<Long> getMainServiceBranchesCount() {
+        log.debug("Getting count of main service branch military categories");
         
-        Long count = militaryCategoryService.getOfficerCount();
+        Long count = militaryCategoryService.getMainServiceBranchesCount();
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count of NCO categories
+     * Get count of security services
      */
-    @GetMapping("/count/nco")
-    public ResponseEntity<Long> getNCOCategoriesCount() {
-        log.debug("Getting count of NCO categories");
+    @GetMapping("/count/security-services")
+    public ResponseEntity<Long> getSecurityServicesCount() {
+        log.debug("Getting count of security service military categories");
         
-        Long count = militaryCategoryService.getNCOCount();
+        Long count = militaryCategoryService.getSecurityServicesCount();
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count of enlisted categories
+     * Get count of support services
      */
-    @GetMapping("/count/enlisted")
-    public ResponseEntity<Long> getEnlistedCategoriesCount() {
-        log.debug("Getting count of enlisted categories");
+    @GetMapping("/count/support-services")
+    public ResponseEntity<Long> getSupportServicesCount() {
+        log.debug("Getting count of support service military categories");
         
-        Long count = militaryCategoryService.getEnlistedCount();
+        Long count = militaryCategoryService.getSupportServicesCount();
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count of specialist categories
+     * Get count of multilingual military categories
      */
-    @GetMapping("/count/specialist")
-    public ResponseEntity<Long> getSpecialistCategoriesCount() {
-        log.debug("Getting count of specialist categories");
+    @GetMapping("/count/multilingual")
+    public ResponseEntity<Long> getMultilingualCount() {
+        log.debug("Getting count of multilingual military categories");
         
-        Long count = militaryCategoryService.getSpecialistCount();
-        
-        return ResponseEntity.ok(count);
-    }
-
-    /**
-     * Get count of medical categories
-     */
-    @GetMapping("/count/medical")
-    public ResponseEntity<Long> getMedicalCategoriesCount() {
-        log.debug("Getting count of medical categories");
-        
-        Long count = militaryCategoryService.getMedicalCount();
+        Long count = militaryCategoryService.getMultilingualCount();
         
         return ResponseEntity.ok(count);
     }
@@ -584,33 +550,33 @@ public class MilitaryCategoryController {
                     .map(militaryCategoryDTO -> {
                         MilitaryCategoryInfoResponse response = MilitaryCategoryInfoResponse.builder()
                                 .militaryCategoryMetadata(militaryCategoryDTO)
-                                .hasArabicDesignation(militaryCategoryDTO.getDesignationAr() != null && !militaryCategoryDTO.getDesignationAr().trim().isEmpty())
-                                .hasEnglishDesignation(militaryCategoryDTO.getDesignationEn() != null && !militaryCategoryDTO.getDesignationEn().trim().isEmpty())
-                                .hasFrenchDesignation(militaryCategoryDTO.getDesignationFr() != null && !militaryCategoryDTO.getDesignationFr().trim().isEmpty())
-                                .isMultilingual(militaryCategoryDTO.isMultilingual())
-                                .isOfficerCategory(militaryCategoryDTO.isOfficerCategory())
-                                .isNCOCategory(militaryCategoryDTO.isNCOCategory())
-                                .isEnlistedCategory(militaryCategoryDTO.isEnlistedCategory())
-                                .isActiveDuty(militaryCategoryDTO.isActiveDuty())
-                                .requiresSecurityClearance(militaryCategoryDTO.requiresSecurityClearance())
-                                .hasOperationalRole(militaryCategoryDTO.hasOperationalRole())
-                                .isValid(militaryCategoryDTO.isValid())
                                 .defaultDesignation(militaryCategoryDTO.getDefaultDesignation())
+                                .defaultAbbreviation(militaryCategoryDTO.getDefaultAbbreviation())
                                 .displayText(militaryCategoryDTO.getDisplayText())
-                                .militaryCategoryType(militaryCategoryDTO.getMilitaryCategoryType())
-                                .hierarchyLevel(militaryCategoryDTO.getHierarchyLevel())
-                                .commandAuthority(militaryCategoryDTO.getCommandAuthority())
+                                .displayAbbreviation(militaryCategoryDTO.getDisplayAbbreviation())
+                                .isMultilingual(militaryCategoryDTO.isMultilingual())
+                                .availableLanguages(militaryCategoryDTO.getAvailableLanguages())
+                                .code(militaryCategoryDTO.getCode())
+                                .categoryType(militaryCategoryDTO.getCategoryType())
                                 .categoryPriority(militaryCategoryDTO.getCategoryPriority())
-                                .trainingRequirement(militaryCategoryDTO.getTrainingRequirement())
-                                .deploymentEligibility(militaryCategoryDTO.getDeploymentEligibility())
-                                .personnelClassification(militaryCategoryDTO.getPersonnelClassification())
-                                .categoryAbbreviation(militaryCategoryDTO.getCategoryAbbreviation())
-                                .serviceBranches(militaryCategoryDTO.getServiceBranches())
+                                .isMainServiceBranch(militaryCategoryDTO.isMainServiceBranch())
+                                .isSupportService(militaryCategoryDTO.isSupportService())
+                                .isSecurityService(militaryCategoryDTO.isSecurityService())
+                                .organizationalLevel(militaryCategoryDTO.getOrganizationalLevel())
                                 .shortDisplay(militaryCategoryDTO.getShortDisplay())
                                 .fullDisplay(militaryCategoryDTO.getFullDisplay())
-                                .displayWithType(militaryCategoryDTO.getDisplayWithType())
-                                .availableLanguages(militaryCategoryDTO.getAvailableLanguages())
                                 .comparisonKey(militaryCategoryDTO.getComparisonKey())
+                                .displayWithType(militaryCategoryDTO.getDisplayWithType())
+                                .displayWithAbbreviationAndType(militaryCategoryDTO.getDisplayWithAbbreviationAndType())
+                                .formalMilitaryDisplay(militaryCategoryDTO.getFormalMilitaryDisplay())
+                                .commandStructureLevel(militaryCategoryDTO.getCommandStructureLevel())
+                                .personnelSizeCategory(militaryCategoryDTO.getPersonnelSizeCategory())
+                                .deploymentType(militaryCategoryDTO.getDeploymentType())
+                                .headquartersType(militaryCategoryDTO.getHeadquartersType())
+                                .recruitmentProfile(militaryCategoryDTO.getRecruitmentProfile())
+                                .trainingEmphasis(militaryCategoryDTO.getTrainingEmphasis())
+                                .categoryDescription(militaryCategoryDTO.getCategoryDescription())
+                                .uniformColorScheme(militaryCategoryDTO.getUniformColorScheme())
                                 .build();
                         
                         return ResponseEntity.ok(response);
@@ -631,32 +597,32 @@ public class MilitaryCategoryController {
     @lombok.AllArgsConstructor
     public static class MilitaryCategoryInfoResponse {
         private MilitaryCategoryDTO militaryCategoryMetadata;
-        private Boolean hasArabicDesignation;
-        private Boolean hasEnglishDesignation;
-        private Boolean hasFrenchDesignation;
-        private Boolean isMultilingual;
-        private Boolean isOfficerCategory;
-        private Boolean isNCOCategory;
-        private Boolean isEnlistedCategory;
-        private Boolean isActiveDuty;
-        private Boolean requiresSecurityClearance;
-        private Boolean hasOperationalRole;
-        private Boolean isValid;
         private String defaultDesignation;
+        private String defaultAbbreviation;
         private String displayText;
-        private String militaryCategoryType;
-        private String hierarchyLevel;
-        private String commandAuthority;
+        private String displayAbbreviation;
+        private Boolean isMultilingual;
+        private String[] availableLanguages;
+        private String code;
+        private String categoryType;
         private Integer categoryPriority;
-        private String trainingRequirement;
-        private String deploymentEligibility;
-        private String personnelClassification;
-        private String categoryAbbreviation;
-        private String[] serviceBranches;
+        private Boolean isMainServiceBranch;
+        private Boolean isSupportService;
+        private Boolean isSecurityService;
+        private String organizationalLevel;
         private String shortDisplay;
         private String fullDisplay;
-        private String displayWithType;
-        private String[] availableLanguages;
         private String comparisonKey;
+        private String displayWithType;
+        private String displayWithAbbreviationAndType;
+        private String formalMilitaryDisplay;
+        private String commandStructureLevel;
+        private String personnelSizeCategory;
+        private String deploymentType;
+        private String headquartersType;
+        private String recruitmentProfile;
+        private String trainingEmphasis;
+        private String categoryDescription;
+        private String uniformColorScheme;
     }
 }

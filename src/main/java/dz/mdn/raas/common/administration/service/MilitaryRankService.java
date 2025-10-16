@@ -29,12 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 /**
- * MilitaryRank Service with CRUD operations
+ * Military Rank Service with CRUD operations
  * Handles military rank management operations with multilingual support and foreign key relationships
- * Based on exact field names: F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=militaryCategory
+ * Based on exact field names: F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr, F_07=militaryCategory
  * F_03 (designationFr) has unique constraint and is required
- * F_01 (designationAr) and F_02 (designationEn) are optional
- * F_04 (militaryCategory) is required foreign key
+ * F_06 (abbreviationFr) is required
+ * F_07 (militaryCategory) is required foreign key
+ * F_01, F_02, F_04, F_05 are optional
  */
 @Service
 @RequiredArgsConstructor
@@ -51,9 +52,11 @@ public class MilitaryRankService {
      * Create new military rank
      */
     public MilitaryRankDTO createMilitaryRank(MilitaryRankDTO militaryRankDTO) {
-        log.info("Creating military rank with French designation: {} and designations: AR={}, EN={}, Category ID: {}", 
+        log.info("Creating military rank with French designation: {} and designations: AR={}, EN={}, Abbreviations: FR={}, AR={}, EN={}, Category ID: {}", 
                 militaryRankDTO.getDesignationFr(), militaryRankDTO.getDesignationAr(), 
-                militaryRankDTO.getDesignationEn(), militaryRankDTO.getMilitaryCategoryId());
+                militaryRankDTO.getDesignationEn(), militaryRankDTO.getAbbreviationFr(),
+                militaryRankDTO.getAbbreviationAr(), militaryRankDTO.getAbbreviationEn(),
+                militaryRankDTO.getMilitaryCategoryId());
 
         // Validate required fields
         validateRequiredFields(militaryRankDTO, "create");
@@ -69,7 +72,10 @@ public class MilitaryRankService {
         militaryRank.setDesignationAr(militaryRankDTO.getDesignationAr()); // F_01
         militaryRank.setDesignationEn(militaryRankDTO.getDesignationEn()); // F_02
         militaryRank.setDesignationFr(militaryRankDTO.getDesignationFr()); // F_03
-        militaryRank.setMilitaryCategory(militaryCategory); // F_04
+        militaryRank.setAbbreviationAr(militaryRankDTO.getAbbreviationAr()); // F_04
+        militaryRank.setAbbreviationEn(militaryRankDTO.getAbbreviationEn()); // F_05
+        militaryRank.setAbbreviationFr(militaryRankDTO.getAbbreviationFr()); // F_06
+        militaryRank.setMilitaryCategory(militaryCategory); // F_07
 
         MilitaryRank savedMilitaryRank = militaryRankRepository.save(militaryRank);
         log.info("Successfully created military rank with ID: {}", savedMilitaryRank.getId());
@@ -113,6 +119,17 @@ public class MilitaryRankService {
     }
 
     /**
+     * Find military rank by French abbreviation (F_06)
+     */
+    @Transactional(readOnly = true)
+    public Optional<MilitaryRankDTO> findByAbbreviationFr(String abbreviationFr) {
+        log.debug("Finding military rank with French abbreviation: {}", abbreviationFr);
+
+        return militaryRankRepository.findByAbbreviationFr(abbreviationFr)
+                .map(MilitaryRankDTO::fromEntity);
+    }
+
+    /**
      * Find military rank by Arabic designation (F_01)
      */
     @Transactional(readOnly = true)
@@ -135,13 +152,13 @@ public class MilitaryRankService {
     }
 
     /**
-     * Find military ranks by military category ID (F_04)
+     * Find military ranks by military category ID (F_07)
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> findByMilitaryCategoryId(Long categoryId, Pageable pageable) {
-        log.debug("Finding military ranks for category ID: {}", categoryId);
+    public Page<MilitaryRankDTO> findByMilitaryCategoryId(Long militaryCategoryId, Pageable pageable) {
+        log.debug("Finding military ranks for military category ID: {}", militaryCategoryId);
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findByMilitaryCategoryId(categoryId, pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findByMilitaryCategoryId(militaryCategoryId, pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
@@ -157,11 +174,11 @@ public class MilitaryRankService {
     }
 
     /**
-     * Get all military ranks ordered by category and designation
+     * Get all military ranks ordered by military category and designation
      */
     @Transactional(readOnly = true)
     public Page<MilitaryRankDTO> getAllMilitaryRanksOrderedByCategory(Pageable pageable) {
-        log.debug("Getting all military ranks ordered by category and designation");
+        log.debug("Getting all military ranks ordered by military category and designation");
 
         Page<MilitaryRank> militaryRanks = militaryRankRepository.findAllOrderByCategoryAndDesignation(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
@@ -179,7 +196,7 @@ public class MilitaryRankService {
     }
 
     /**
-     * Search military ranks by designation
+     * Search military ranks by designation or abbreviation
      */
     @Transactional(readOnly = true)
     public Page<MilitaryRankDTO> searchMilitaryRanks(String searchTerm, Pageable pageable) {
@@ -189,7 +206,22 @@ public class MilitaryRankService {
             return getAllMilitaryRanks(pageable);
         }
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.searchByDesignation(searchTerm.trim(), pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.searchByDesignationOrAbbreviation(searchTerm.trim(), pageable);
+        return militaryRanks.map(MilitaryRankDTO::fromEntity);
+    }
+
+    /**
+     * Search military ranks with military category context
+     */
+    @Transactional(readOnly = true)
+    public Page<MilitaryRankDTO> searchMilitaryRanksWithCategoryContext(String searchTerm, Pageable pageable) {
+        log.debug("Searching military ranks with military category context for term: {}", searchTerm);
+
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getAllMilitaryRanks(pageable);
+        }
+
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.searchWithMilitaryCategoryContext(searchTerm.trim(), pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
@@ -205,57 +237,35 @@ public class MilitaryRankService {
     }
 
     /**
-     * Get general officer ranks
+     * Get officer ranks
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getGeneralOfficerRanks(Pageable pageable) {
-        log.debug("Getting general officer ranks");
+    public Page<MilitaryRankDTO> getOfficerRanks(Pageable pageable) {
+        log.debug("Getting officer military ranks");
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findGeneralOfficerRanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findOfficerRanks(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get field officer ranks
+     * Get senior officer ranks
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getFieldOfficerRanks(Pageable pageable) {
-        log.debug("Getting field officer ranks");
+    public Page<MilitaryRankDTO> getSeniorOfficerRanks(Pageable pageable) {
+        log.debug("Getting senior officer military ranks");
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findFieldOfficerRanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findSeniorOfficerRanks(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get company officer ranks
+     * Get NCO ranks
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getCompanyOfficerRanks(Pageable pageable) {
-        log.debug("Getting company officer ranks");
+    public Page<MilitaryRankDTO> getNCORanks(Pageable pageable) {
+        log.debug("Getting NCO military ranks");
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findCompanyOfficerRanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Get senior NCO ranks
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getSeniorNCORanks(Pageable pageable) {
-        log.debug("Getting senior NCO ranks");
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findSeniorNCORanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Get junior NCO ranks
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getJuniorNCORanks(Pageable pageable) {
-        log.debug("Getting junior NCO ranks");
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findJuniorNCORanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findNCORanks(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
@@ -264,141 +274,107 @@ public class MilitaryRankService {
      */
     @Transactional(readOnly = true)
     public Page<MilitaryRankDTO> getEnlistedRanks(Pageable pageable) {
-        log.debug("Getting enlisted ranks");
+        log.debug("Getting enlisted military ranks");
 
         Page<MilitaryRank> militaryRanks = militaryRankRepository.findEnlistedRanks(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get cadet ranks
+     * Get general ranks
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getCadetRanks(Pageable pageable) {
-        log.debug("Getting cadet ranks");
+    public Page<MilitaryRankDTO> getGeneralRanks(Pageable pageable) {
+        log.debug("Getting general military ranks");
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findCadetRanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findGeneralRanks(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get all officer ranks
+     * Get command ranks
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getOfficerRanks(Pageable pageable) {
-        log.debug("Getting officer ranks");
+    public Page<MilitaryRankDTO> getCommandRanks(Pageable pageable) {
+        log.debug("Getting command military ranks");
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findOfficerRanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findCommandRanks(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get all NCO ranks
+     * Find military ranks by military category designation
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getNCORanks(Pageable pageable) {
-        log.debug("Getting NCO ranks");
+    public Page<MilitaryRankDTO> findByMilitaryCategoryDesignation(String categoryDesignation, Pageable pageable) {
+        log.debug("Finding military ranks by military category designation: {}", categoryDesignation);
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findNCORanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findByMilitaryCategoryDesignation(categoryDesignation, pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get security clearance ranks
+     * Find military ranks by military category code
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getSecurityClearanceRanks(Pageable pageable) {
-        log.debug("Getting security clearance ranks");
+    public Page<MilitaryRankDTO> findByMilitaryCategoryCode(String categoryCode, Pageable pageable) {
+        log.debug("Finding military ranks by military category code: {}", categoryCode);
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findSecurityClearanceRanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findByMilitaryCategoryCode(categoryCode, pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get promotion eligible ranks
+     * Get specific rank levels
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getPromotionEligibleRanks(Pageable pageable) {
-        log.debug("Getting promotion eligible ranks");
+    public Page<MilitaryRankDTO> getTopRanks(Pageable pageable) {
+        log.debug("Getting top military ranks");
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findPromotionEligibleRanks(pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findTopRanks(pageable);
+        return militaryRanks.map(MilitaryRankDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MilitaryRankDTO> getColonelRanks(Pageable pageable) {
+        log.debug("Getting colonel military ranks");
+
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findColonelRanks(pageable);
+        return militaryRanks.map(MilitaryRankDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MilitaryRankDTO> getMajorRanks(Pageable pageable) {
+        log.debug("Getting major military ranks");
+
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findMajorRanks(pageable);
+        return militaryRanks.map(MilitaryRankDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MilitaryRankDTO> getCaptainRanks(Pageable pageable) {
+        log.debug("Getting captain military ranks");
+
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findCaptainRanks(pageable);
+        return militaryRanks.map(MilitaryRankDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MilitaryRankDTO> getLieutenantRanks(Pageable pageable) {
+        log.debug("Getting lieutenant military ranks");
+
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findLieutenantRanks(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
     /**
-     * Get Army ranks
+     * Get military ranks missing translations
      */
     @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getArmyRanks(Pageable pageable) {
-        log.debug("Getting Army ranks");
+    public Page<MilitaryRankDTO> getMilitaryRanksMissingTranslations(Pageable pageable) {
+        log.debug("Getting military ranks missing translations");
 
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findArmyRanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Get Navy ranks
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getNavyRanks(Pageable pageable) {
-        log.debug("Getting Navy ranks");
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findNavyRanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Get Air Force ranks
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getAirForceRanks(Pageable pageable) {
-        log.debug("Getting Air Force ranks");
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findAirForceRanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Get strategic command ranks
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getStrategicCommandRanks(Pageable pageable) {
-        log.debug("Getting strategic command ranks");
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findStrategicCommandRanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Get operational command ranks
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getOperationalCommandRanks(Pageable pageable) {
-        log.debug("Getting operational command ranks");
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findOperationalCommandRanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Get tactical command ranks
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> getTacticalCommandRanks(Pageable pageable) {
-        log.debug("Getting tactical command ranks");
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findTacticalCommandRanks(pageable);
-        return militaryRanks.map(MilitaryRankDTO::fromEntity);
-    }
-
-    /**
-     * Find by category designation
-     */
-    @Transactional(readOnly = true)
-    public Page<MilitaryRankDTO> findByCategoryDesignation(String categoryDesignation, Pageable pageable) {
-        log.debug("Finding military ranks by category designation: {}", categoryDesignation);
-
-        Page<MilitaryRank> militaryRanks = militaryRankRepository.findByCategoryDesignation(categoryDesignation, pageable);
+        Page<MilitaryRank> militaryRanks = militaryRankRepository.findMissingTranslations(pageable);
         return militaryRanks.map(MilitaryRankDTO::fromEntity);
     }
 
@@ -428,8 +404,11 @@ public class MilitaryRankService {
         existingMilitaryRank.setDesignationAr(militaryRankDTO.getDesignationAr()); // F_01
         existingMilitaryRank.setDesignationEn(militaryRankDTO.getDesignationEn()); // F_02
         existingMilitaryRank.setDesignationFr(militaryRankDTO.getDesignationFr()); // F_03
+        existingMilitaryRank.setAbbreviationAr(militaryRankDTO.getAbbreviationAr()); // F_04
+        existingMilitaryRank.setAbbreviationEn(militaryRankDTO.getAbbreviationEn()); // F_05
+        existingMilitaryRank.setAbbreviationFr(militaryRankDTO.getAbbreviationFr()); // F_06
         if (militaryCategory != null) {
-            existingMilitaryRank.setMilitaryCategory(militaryCategory); // F_04
+            existingMilitaryRank.setMilitaryCategory(militaryCategory); // F_07
         }
 
         MilitaryRank updatedMilitaryRank = militaryRankRepository.save(existingMilitaryRank);
@@ -485,6 +464,14 @@ public class MilitaryRankService {
     }
 
     /**
+     * Check if military rank exists by French abbreviation
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByAbbreviationFr(String abbreviationFr) {
+        return militaryRankRepository.existsByAbbreviationFr(abbreviationFr);
+    }
+
+    /**
      * Get total count of military ranks
      */
     @Transactional(readOnly = true)
@@ -496,39 +483,31 @@ public class MilitaryRankService {
      * Get count by military category
      */
     @Transactional(readOnly = true)
-    public Long getCountByCategory(Long categoryId) {
-        return militaryRankRepository.countByMilitaryCategoryId(categoryId);
+    public Long getCountByMilitaryCategory(Long militaryCategoryId) {
+        return militaryRankRepository.countByMilitaryCategoryId(militaryCategoryId);
     }
 
     /**
-     * Get count of general officer ranks
+     * Get count of senior officer ranks
      */
     @Transactional(readOnly = true)
-    public Long getGeneralOfficerCount() {
-        return militaryRankRepository.countGeneralOfficerRanks();
+    public Long getSeniorOfficerRanksCount() {
+        return militaryRankRepository.countSeniorOfficerRanks();
     }
 
     /**
-     * Get count of field officer ranks
+     * Get count of officer ranks
      */
     @Transactional(readOnly = true)
-    public Long getFieldOfficerCount() {
-        return militaryRankRepository.countFieldOfficerRanks();
-    }
-
-    /**
-     * Get count of company officer ranks
-     */
-    @Transactional(readOnly = true)
-    public Long getCompanyOfficerCount() {
-        return militaryRankRepository.countCompanyOfficerRanks();
+    public Long getOfficerRanksCount() {
+        return militaryRankRepository.countOfficerRanks();
     }
 
     /**
      * Get count of NCO ranks
      */
     @Transactional(readOnly = true)
-    public Long getNCOCount() {
+    public Long getNCORanksCount() {
         return militaryRankRepository.countNCORanks();
     }
 
@@ -536,8 +515,16 @@ public class MilitaryRankService {
      * Get count of enlisted ranks
      */
     @Transactional(readOnly = true)
-    public Long getEnlistedCount() {
+    public Long getEnlistedRanksCount() {
         return militaryRankRepository.countEnlistedRanks();
+    }
+
+    /**
+     * Get count of multilingual military ranks
+     */
+    @Transactional(readOnly = true)
+    public Long getMultilingualCount() {
+        return militaryRankRepository.countMultilingualMilitaryRanks();
     }
 
     // ========== VALIDATION METHODS ==========
@@ -548,6 +535,9 @@ public class MilitaryRankService {
     private void validateRequiredFields(MilitaryRankDTO militaryRankDTO, String operation) {
         if (militaryRankDTO.getDesignationFr() == null || militaryRankDTO.getDesignationFr().trim().isEmpty()) {
             throw new RuntimeException("French designation is required for " + operation);
+        }
+        if (militaryRankDTO.getAbbreviationFr() == null || militaryRankDTO.getAbbreviationFr().trim().isEmpty()) {
+            throw new RuntimeException("French abbreviation is required for " + operation);
         }
         if (militaryRankDTO.getMilitaryCategoryId() == null) {
             throw new RuntimeException("Military category is required for " + operation);
@@ -568,13 +558,26 @@ public class MilitaryRankService {
                 throw new RuntimeException("Another military rank with French designation '" + militaryRankDTO.getDesignationFr() + "' already exists");
             }
         }
+
+        // Additional check for abbreviation uniqueness (business rule)
+        if (militaryRankDTO.getAbbreviationFr() != null && !militaryRankDTO.getAbbreviationFr().trim().isEmpty()) {
+            if (excludeId == null) {
+                if (militaryRankRepository.existsByAbbreviationFr(militaryRankDTO.getAbbreviationFr())) {
+                    throw new RuntimeException("Military rank with French abbreviation '" + militaryRankDTO.getAbbreviationFr() + "' already exists");
+                }
+            } else {
+                if (militaryRankRepository.existsByAbbreviationFrAndIdNot(militaryRankDTO.getAbbreviationFr(), excludeId)) {
+                    throw new RuntimeException("Another military rank with French abbreviation '" + militaryRankDTO.getAbbreviationFr() + "' already exists");
+                }
+            }
+        }
     }
 
     /**
      * Validate and get military category
      */
-    private MilitaryCategory validateAndGetMilitaryCategory(Long categoryId) {
-        return militaryCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Military category not found with ID: " + categoryId));
+    private MilitaryCategory validateAndGetMilitaryCategory(Long militaryCategoryId) {
+        return militaryCategoryRepository.findById(militaryCategoryId)
+                .orElseThrow(() -> new RuntimeException("Military category not found with ID: " + militaryCategoryId));
     }
 }

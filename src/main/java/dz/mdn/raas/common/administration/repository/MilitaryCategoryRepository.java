@@ -24,10 +24,11 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * MilitaryCategory Repository with essential CRUD operations
- * Based on exact field names: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr
+ * Military Category Repository with essential CRUD operations
+ * Based on exact field names: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr
  * F_03 (designationFr) has unique constraint and is required
- * F_01 (designationAr) and F_02 (designationEn) are optional
+ * F_06 (abbreviationFr) is required
+ * F_01, F_02, F_04, F_05 are optional
  */
 @Repository
 public interface MilitaryCategoryRepository extends JpaRepository<MilitaryCategory, Long> {
@@ -35,248 +36,245 @@ public interface MilitaryCategoryRepository extends JpaRepository<MilitaryCatego
     /**
      * Find military category by French designation (F_03) - unique field
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationFr = :designationFr")
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationFr = :designationFr")
     Optional<MilitaryCategory> findByDesignationFr(@Param("designationFr") String designationFr);
 
     /**
-     * Find military category by Arabic designation (F_01)
+     * Find military category by French abbreviation (F_06)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationAr = :designationAr")
-    Optional<MilitaryCategory> findByDesignationAr(@Param("designationAr") String designationAr);
-
-    /**
-     * Find military category by English designation (F_02)
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationEn = :designationEn")
-    Optional<MilitaryCategory> findByDesignationEn(@Param("designationEn") String designationEn);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.abbreviationFr = :abbreviationFr")
+    Optional<MilitaryCategory> findByAbbreviationFr(@Param("abbreviationFr") String abbreviationFr);
 
     /**
      * Check if military category exists by French designation
      */
-    @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END FROM MilitaryCategory m WHERE m.designationFr = :designationFr")
+    @Query("SELECT CASE WHEN COUNT(mc) > 0 THEN true ELSE false END FROM MilitaryCategory mc WHERE mc.designationFr = :designationFr")
     boolean existsByDesignationFr(@Param("designationFr") String designationFr);
 
     /**
      * Check unique constraint for updates (excluding current ID)
      */
-    @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END FROM MilitaryCategory m WHERE m.designationFr = :designationFr AND m.id != :id")
+    @Query("SELECT CASE WHEN COUNT(mc) > 0 THEN true ELSE false END FROM MilitaryCategory mc WHERE mc.designationFr = :designationFr AND mc.id != :id")
     boolean existsByDesignationFrAndIdNot(@Param("designationFr") String designationFr, @Param("id") Long id);
 
     /**
      * Find all military categories with pagination ordered by French designation
      */
-    @Query("SELECT m FROM MilitaryCategory m ORDER BY m.designationFr ASC")
+    @Query("SELECT mc FROM MilitaryCategory mc ORDER BY mc.designationFr ASC")
     Page<MilitaryCategory> findAllOrderByDesignationFr(Pageable pageable);
 
     /**
-     * Search military categories by any designation field
+     * Search military categories by any designation or abbreviation field
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "m.designationAr LIKE %:search% OR " +
-           "m.designationEn LIKE %:search% OR " +
-           "m.designationFr LIKE %:search%")
-    Page<MilitaryCategory> searchByDesignation(@Param("search") String search, Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "mc.designationAr LIKE %:search% OR " +
+           "mc.designationEn LIKE %:search% OR " +
+           "mc.designationFr LIKE %:search% OR " +
+           "mc.abbreviationAr LIKE %:search% OR " +
+           "mc.abbreviationEn LIKE %:search% OR " +
+           "mc.abbreviationFr LIKE %:search%")
+    Page<MilitaryCategory> searchByDesignationOrAbbreviation(@Param("search") String search, Pageable pageable);
 
     /**
      * Find military categories by French designation pattern (F_03)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationFr LIKE %:pattern%")
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationFr LIKE %:pattern%")
     Page<MilitaryCategory> findByDesignationFrContaining(@Param("pattern") String pattern, Pageable pageable);
 
     /**
-     * Find military categories by Arabic designation pattern (F_01)
+     * Find military categories by French abbreviation pattern (F_06)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationAr LIKE %:pattern%")
-    Page<MilitaryCategory> findByDesignationArContaining(@Param("pattern") String pattern, Pageable pageable);
-
-    /**
-     * Find military categories by English designation pattern (F_02)
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationEn LIKE %:pattern%")
-    Page<MilitaryCategory> findByDesignationEnContaining(@Param("pattern") String pattern, Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.abbreviationFr LIKE %:pattern%")
+    Page<MilitaryCategory> findByAbbreviationFrContaining(@Param("pattern") String pattern, Pageable pageable);
 
     /**
      * Count total military categories
      */
-    @Query("SELECT COUNT(m) FROM MilitaryCategory m")
+    @Query("SELECT COUNT(mc) FROM MilitaryCategory mc")
     Long countAllMilitaryCategories();
 
     /**
      * Find military categories that have Arabic designation
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationAr IS NOT NULL AND m.designationAr != ''")
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationAr IS NOT NULL AND mc.designationAr != ''")
     Page<MilitaryCategory> findWithArabicDesignation(Pageable pageable);
 
     /**
      * Find military categories that have English designation
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE m.designationEn IS NOT NULL AND m.designationEn != ''")
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationEn IS NOT NULL AND mc.designationEn != ''")
     Page<MilitaryCategory> findWithEnglishDesignation(Pageable pageable);
 
     /**
      * Find multilingual military categories (have at least 2 designations)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "(m.designationAr IS NOT NULL AND m.designationAr != '' AND m.designationEn IS NOT NULL AND m.designationEn != '') OR " +
-           "(m.designationAr IS NOT NULL AND m.designationAr != '' AND m.designationFr IS NOT NULL AND m.designationFr != '') OR " +
-           "(m.designationEn IS NOT NULL AND m.designationEn != '' AND m.designationFr IS NOT NULL AND m.designationFr != '')")
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "(mc.designationAr IS NOT NULL AND mc.designationAr != '' AND mc.designationEn IS NOT NULL AND mc.designationEn != '') OR " +
+           "(mc.designationAr IS NOT NULL AND mc.designationAr != '' AND mc.designationFr IS NOT NULL AND mc.designationFr != '') OR " +
+           "(mc.designationEn IS NOT NULL AND mc.designationEn != '' AND mc.designationFr IS NOT NULL AND mc.designationFr != '')")
     Page<MilitaryCategory> findMultilingualMilitaryCategories(Pageable pageable);
 
     /**
-     * Find officer categories (based on French designation patterns)
+     * Find army categories (based on French designation patterns)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%officier%' OR LOWER(m.designationFr) LIKE '%officer%' OR " +
-           "LOWER(m.designationFr) LIKE '%commandant%' OR LOWER(m.designationFr) LIKE '%colonel%'")
-    Page<MilitaryCategory> findOfficerCategories(Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%armée%' AND LOWER(mc.designationFr) LIKE '%terre%'")
+    Page<MilitaryCategory> findArmyCategories(Pageable pageable);
 
     /**
-     * Find NCO categories (based on French designation patterns)
+     * Find navy categories (based on French designation patterns)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%sous-officier%' OR LOWER(m.designationFr) LIKE '%sergent%' OR " +
-           "LOWER(m.designationFr) LIKE '%adjudant%' OR LOWER(m.designationFr) LIKE '%nco%'")
-    Page<MilitaryCategory> findNCOCategories(Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%marine%' OR LOWER(mc.designationFr) LIKE '%naval%'")
+    Page<MilitaryCategory> findNavyCategories(Pageable pageable);
 
     /**
-     * Find enlisted categories (based on French designation patterns)
+     * Find air force categories (based on French designation patterns)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%soldat%' OR LOWER(m.designationFr) LIKE '%caporal%' OR " +
-           "LOWER(m.designationFr) LIKE '%enlisted%' OR LOWER(m.designationFr) LIKE '%militaire du rang%'")
-    Page<MilitaryCategory> findEnlistedCategories(Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%air%' OR LOWER(mc.designationFr) LIKE '%aérienne%'")
+    Page<MilitaryCategory> findAirForceCategories(Pageable pageable);
 
     /**
-     * Find specialist categories (based on French designation patterns)
+     * Find gendarmerie categories (based on French designation patterns)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%spécialisé%' OR LOWER(m.designationFr) LIKE '%specialist%' OR " +
-           "LOWER(m.designationFr) LIKE '%technicien%' OR LOWER(m.designationFr) LIKE '%technician%'")
-    Page<MilitaryCategory> findSpecialistCategories(Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%gendarmerie%'")
+    Page<MilitaryCategory> findGendarmerieCategories(Pageable pageable);
 
     /**
-     * Find medical categories (based on French designation patterns)
+     * Find security categories (based on French designation patterns)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%médical%' OR LOWER(m.designationFr) LIKE '%medical%' OR " +
-           "LOWER(m.designationFr) LIKE '%santé%' OR LOWER(m.designationFr) LIKE '%infirmier%'")
-    Page<MilitaryCategory> findMedicalCategories(Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%sécurité%' OR LOWER(mc.designationFr) LIKE '%garde%'")
+    Page<MilitaryCategory> findSecurityCategories(Pageable pageable);
 
     /**
-     * Find administrative categories (based on French designation patterns)
+     * Find support categories (based on French designation patterns)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%administratif%' OR LOWER(m.designationFr) LIKE '%administrative%' OR " +
-           "LOWER(m.designationFr) LIKE '%civil%' OR LOWER(m.designationFr) LIKE '%clerical%'")
-    Page<MilitaryCategory> findAdministrativeCategories(Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%logistique%' OR LOWER(mc.designationFr) LIKE '%médical%' OR " +
+           "LOWER(mc.designationFr) LIKE '%communication%' OR LOWER(mc.designationFr) LIKE '%transmission%'")
+    Page<MilitaryCategory> findSupportCategories(Pageable pageable);
 
     /**
-     * Find reserve categories (based on French designation patterns)
+     * Find main service branches (Army, Navy, Air Force)
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%réserve%' OR LOWER(m.designationFr) LIKE '%reserve%' OR " +
-           "LOWER(m.designationFr) LIKE '%auxiliaire%' OR LOWER(m.designationFr) LIKE '%auxiliary%'")
-    Page<MilitaryCategory> findReserveCategories(Pageable pageable);
-
-    /**
-     * Find cadet categories (based on French designation patterns)
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%élève%' OR LOWER(m.designationFr) LIKE '%étudiant%' OR " +
-           "LOWER(m.designationFr) LIKE '%cadet%' OR LOWER(m.designationFr) LIKE '%student%'")
-    Page<MilitaryCategory> findCadetCategories(Pageable pageable);
-
-    /**
-     * Find retired categories (based on French designation patterns)
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%retraité%' OR LOWER(m.designationFr) LIKE '%retired%' OR " +
-           "LOWER(m.designationFr) LIKE '%honoraire%' OR LOWER(m.designationFr) LIKE '%emeritus%'")
-    Page<MilitaryCategory> findRetiredCategories(Pageable pageable);
-
-    /**
-     * Find active duty categories (officers, NCOs, enlisted, specialists, medical)
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%officier%' OR LOWER(m.designationFr) LIKE '%sous-officier%' OR " +
-           "LOWER(m.designationFr) LIKE '%soldat%' OR LOWER(m.designationFr) LIKE '%spécialisé%' OR " +
-           "LOWER(m.designationFr) LIKE '%médical%'")
-    Page<MilitaryCategory> findActiveDutyCategories(Pageable pageable);
-
-    /**
-     * Find command categories (officers and senior NCOs)
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%officier%' OR LOWER(m.designationFr) LIKE '%commandant%' OR " +
-           "LOWER(m.designationFr) LIKE '%adjudant%'")
-    Page<MilitaryCategory> findCommandCategories(Pageable pageable);
-
-    /**
-     * Find categories requiring security clearance
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%officier%' OR LOWER(m.designationFr) LIKE '%sous-officier%' OR " +
-           "LOWER(m.designationFr) LIKE '%spécialisé%'")
-    Page<MilitaryCategory> findSecurityClearanceCategories(Pageable pageable);
-
-    /**
-     * Find operational categories
-     */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%officier%' OR LOWER(m.designationFr) LIKE '%sous-officier%' OR " +
-           "LOWER(m.designationFr) LIKE '%soldat%' OR LOWER(m.designationFr) LIKE '%spécialisé%'")
-    Page<MilitaryCategory> findOperationalCategories(Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "(LOWER(mc.designationFr) LIKE '%armée%' AND LOWER(mc.designationFr) LIKE '%terre%') OR " +
+           "LOWER(mc.designationFr) LIKE '%marine%' OR LOWER(mc.designationFr) LIKE '%naval%' OR " +
+           "LOWER(mc.designationFr) LIKE '%air%' OR LOWER(mc.designationFr) LIKE '%aérienne%'")
+    Page<MilitaryCategory> findMainServiceBranches(Pageable pageable);
 
     /**
      * Find military categories ordered by designation in specific language
      */
-    @Query("SELECT m FROM MilitaryCategory m ORDER BY m.designationAr ASC")
+    @Query("SELECT mc FROM MilitaryCategory mc ORDER BY mc.designationAr ASC")
     Page<MilitaryCategory> findAllOrderByDesignationAr(Pageable pageable);
 
-    @Query("SELECT m FROM MilitaryCategory m ORDER BY m.designationEn ASC")
+    @Query("SELECT mc FROM MilitaryCategory mc ORDER BY mc.designationEn ASC")
     Page<MilitaryCategory> findAllOrderByDesignationEn(Pageable pageable);
 
     /**
-     * Count categories by type
+     * Count military categories by type
      */
-    @Query("SELECT COUNT(m) FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%officier%' OR LOWER(m.designationFr) LIKE '%officer%'")
-    Long countOfficerCategories();
+    @Query("SELECT COUNT(mc) FROM MilitaryCategory mc WHERE " +
+           "(LOWER(mc.designationFr) LIKE '%armée%' AND LOWER(mc.designationFr) LIKE '%terre%') OR " +
+           "LOWER(mc.designationFr) LIKE '%marine%' OR LOWER(mc.designationFr) LIKE '%naval%' OR " +
+           "LOWER(mc.designationFr) LIKE '%air%' OR LOWER(mc.designationFr) LIKE '%aérienne%'")
+    Long countMainServiceBranches();
 
-    @Query("SELECT COUNT(m) FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%sous-officier%' OR LOWER(m.designationFr) LIKE '%sergent%'")
-    Long countNCOCategories();
+    @Query("SELECT COUNT(mc) FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%gendarmerie%' OR " +
+           "LOWER(mc.designationFr) LIKE '%sécurité%' OR LOWER(mc.designationFr) LIKE '%garde%'")
+    Long countSecurityServices();
 
-    @Query("SELECT COUNT(m) FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%soldat%' OR LOWER(m.designationFr) LIKE '%caporal%'")
-    Long countEnlistedCategories();
-
-    @Query("SELECT COUNT(m) FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%spécialisé%' OR LOWER(m.designationFr) LIKE '%technicien%'")
-    Long countSpecialistCategories();
-
-    @Query("SELECT COUNT(m) FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%médical%' OR LOWER(m.designationFr) LIKE '%santé%'")
-    Long countMedicalCategories();
+    @Query("SELECT COUNT(mc) FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%logistique%' OR LOWER(mc.designationFr) LIKE '%médical%' OR " +
+           "LOWER(mc.designationFr) LIKE '%communication%' OR LOWER(mc.designationFr) LIKE '%transmission%'")
+    Long countSupportServices();
 
     /**
-     * Find categories by hierarchy level
+     * Count multilingual military categories
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%officier%'")
-    Page<MilitaryCategory> findCommissionedPersonnel(Pageable pageable);
-
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%sous-officier%' OR LOWER(m.designationFr) LIKE '%sergent%'")
-    Page<MilitaryCategory> findNonCommissionedPersonnel(Pageable pageable);
-
-    @Query("SELECT m FROM MilitaryCategory m WHERE " +
-           "LOWER(m.designationFr) LIKE '%soldat%' OR LOWER(m.designationFr) LIKE '%caporal%'")
-    Page<MilitaryCategory> findEnlistedPersonnel(Pageable pageable);
+    @Query("SELECT COUNT(mc) FROM MilitaryCategory mc WHERE " +
+           "(mc.designationAr IS NOT NULL AND mc.designationAr != '' AND mc.designationEn IS NOT NULL AND mc.designationEn != '') OR " +
+           "(mc.designationAr IS NOT NULL AND mc.designationAr != '' AND mc.designationFr IS NOT NULL AND mc.designationFr != '') OR " +
+           "(mc.designationEn IS NOT NULL AND mc.designationEn != '' AND mc.designationFr IS NOT NULL AND mc.designationFr != '')")
+    Long countMultilingualMilitaryCategories();
 
     /**
-     * Search categories by category type pattern
+     * Find military categories by abbreviation length
      */
-    @Query("SELECT m FROM MilitaryCategory m WHERE LOWER(m.designationFr) LIKE %:typePattern%")
-    Page<MilitaryCategory> findByCategoryType(@Param("typePattern") String typePattern, Pageable pageable);
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE LENGTH(mc.abbreviationFr) <= :maxLength")
+    Page<MilitaryCategory> findByAbbreviationLength(@Param("maxLength") Integer maxLength, Pageable pageable);
+
+    /**
+     * Find military categories missing translations
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "(mc.designationAr IS NULL OR mc.designationAr = '') OR " +
+           "(mc.designationEn IS NULL OR mc.designationEn = '') OR " +
+           "(mc.abbreviationAr IS NULL OR mc.abbreviationAr = '') OR " +
+           "(mc.abbreviationEn IS NULL OR mc.abbreviationEn = '')")
+    Page<MilitaryCategory> findMissingTranslations(Pageable pageable);
+
+    /**
+     * Check if abbreviation exists
+     */
+    @Query("SELECT CASE WHEN COUNT(mc) > 0 THEN true ELSE false END FROM MilitaryCategory mc WHERE mc.abbreviationFr = :abbreviationFr")
+    boolean existsByAbbreviationFr(@Param("abbreviationFr") String abbreviationFr);
+
+    /**
+     * Check if abbreviation exists excluding current ID
+     */
+    @Query("SELECT CASE WHEN COUNT(mc) > 0 THEN true ELSE false END FROM MilitaryCategory mc WHERE mc.abbreviationFr = :abbreviationFr AND mc.id != :id")
+    boolean existsByAbbreviationFrAndIdNot(@Param("abbreviationFr") String abbreviationFr, @Param("id") Long id);
+
+    /**
+     * Find military categories by Arabic designation
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationAr = :designationAr")
+    Optional<MilitaryCategory> findByDesignationAr(@Param("designationAr") String designationAr);
+
+    /**
+     * Find military categories by English designation
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationEn = :designationEn")
+    Optional<MilitaryCategory> findByDesignationEn(@Param("designationEn") String designationEn);
+
+    /**
+     * Find intelligence categories (based on French designation patterns)
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%renseignement%' OR LOWER(mc.designationFr) LIKE '%intelligence%'")
+    Page<MilitaryCategory> findIntelligenceCategories(Pageable pageable);
+
+    /**
+     * Find medical categories (based on French designation patterns)
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%médical%' OR LOWER(mc.designationFr) LIKE '%santé%'")
+    Page<MilitaryCategory> findMedicalCategories(Pageable pageable);
+
+    /**
+     * Find logistics categories (based on French designation patterns)
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%logistique%' OR LOWER(mc.designationFr) LIKE '%approvisionnement%'")
+    Page<MilitaryCategory> findLogisticsCategories(Pageable pageable);
+
+    /**
+     * Find communications categories (based on French designation patterns)
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%communication%' OR LOWER(mc.designationFr) LIKE '%transmission%'")
+    Page<MilitaryCategory> findCommunicationsCategories(Pageable pageable);
+
+    /**
+     * Find republican guard categories (based on French designation patterns)
+     */
+    @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
+           "LOWER(mc.designationFr) LIKE '%garde%' AND LOWER(mc.designationFr) LIKE '%républicaine%'")
+    Page<MilitaryCategory> findRepublicanGuardCategories(Pageable pageable);
 }

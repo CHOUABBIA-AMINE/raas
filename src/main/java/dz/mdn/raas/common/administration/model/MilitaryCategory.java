@@ -51,4 +51,13 @@ public class MilitaryCategory {
 	@Column(name="F_03", length=50, nullable=false)
 	private String designationFr;
 	
+	@Column(name="F_04", length=10)
+	private String abbreviationAr;
+	
+	@Column(name="F_05", length=10)
+	private String abbreviationEn;
+	
+	@Column(name="F_06", length=10, nullable=false)
+	private String abbreviationFr;
+	
 }

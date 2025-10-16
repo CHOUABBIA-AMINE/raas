@@ -21,10 +21,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * MilitaryCategory Data Transfer Object
- * Maps exactly to MilitaryCategory model fields: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr
+ * Military Category Data Transfer Object
+ * Maps exactly to MilitaryCategory model fields: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr
  * F_03 (designationFr) has unique constraint and is required
- * F_01 (designationAr) and F_02 (designationEn) are optional
+ * F_06 (abbreviationFr) is required
+ * F_01, F_02, F_04, F_05 are optional
  */
 @Data
 @Builder
@@ -45,6 +46,16 @@ public class MilitaryCategoryDTO {
     @Size(max = 50, message = "French designation must not exceed 50 characters")
     private String designationFr; // F_03 - required and unique
 
+    @Size(max = 10, message = "Arabic abbreviation must not exceed 10 characters")
+    private String abbreviationAr; // F_04 - optional
+
+    @Size(max = 10, message = "English abbreviation must not exceed 10 characters")
+    private String abbreviationEn; // F_05 - optional
+
+    @NotBlank(message = "French abbreviation is required")
+    @Size(max = 10, message = "French abbreviation must not exceed 10 characters")
+    private String abbreviationFr; // F_06 - required
+
     /**
      * Create DTO from entity
      */
@@ -56,6 +67,9 @@ public class MilitaryCategoryDTO {
                 .designationAr(militaryCategory.getDesignationAr())
                 .designationEn(militaryCategory.getDesignationEn())
                 .designationFr(militaryCategory.getDesignationFr())
+                .abbreviationAr(militaryCategory.getAbbreviationAr())
+                .abbreviationEn(militaryCategory.getAbbreviationEn())
+                .abbreviationFr(militaryCategory.getAbbreviationFr())
                 .build();
     }
 
@@ -69,6 +83,9 @@ public class MilitaryCategoryDTO {
         militaryCategory.setDesignationAr(this.designationAr);
         militaryCategory.setDesignationEn(this.designationEn);
         militaryCategory.setDesignationFr(this.designationFr);
+        militaryCategory.setAbbreviationAr(this.abbreviationAr);
+        militaryCategory.setAbbreviationEn(this.abbreviationEn);
+        militaryCategory.setAbbreviationFr(this.abbreviationFr);
         return militaryCategory;
     }
 
@@ -85,6 +102,15 @@ public class MilitaryCategoryDTO {
         if (this.designationFr != null) {
             militaryCategory.setDesignationFr(this.designationFr);
         }
+        if (this.abbreviationAr != null) {
+            militaryCategory.setAbbreviationAr(this.abbreviationAr);
+        }
+        if (this.abbreviationEn != null) {
+            militaryCategory.setAbbreviationEn(this.abbreviationEn);
+        }
+        if (this.abbreviationFr != null) {
+            militaryCategory.setAbbreviationFr(this.abbreviationFr);
+        }
     }
 
     /**
@@ -92,6 +118,13 @@ public class MilitaryCategoryDTO {
      */
     public String getDefaultDesignation() {
         return designationFr;
+    }
+
+    /**
+     * Get default abbreviation (French as it's required)
+     */
+    public String getDefaultAbbreviation() {
+        return abbreviationFr;
     }
 
     /**
@@ -109,6 +142,20 @@ public class MilitaryCategoryDTO {
     }
 
     /**
+     * Get abbreviation by language preference
+     */
+    public String getAbbreviationByLanguage(String language) {
+        if (language == null) return abbreviationFr;
+        
+        return switch (language.toLowerCase()) {
+            case "ar", "arabic" -> abbreviationAr != null ? abbreviationAr : abbreviationFr;
+            case "en", "english" -> abbreviationEn != null ? abbreviationEn : abbreviationFr;
+            case "fr", "french" -> abbreviationFr;
+            default -> abbreviationFr;
+        };
+    }
+
+    /**
      * Get display text with priority: French designation > English designation > Arabic designation
      */
     public String getDisplayText() {
@@ -120,6 +167,22 @@ public class MilitaryCategoryDTO {
         }
         if (designationAr != null && !designationAr.trim().isEmpty()) {
             return designationAr;
+        }
+        return "N/A";
+    }
+
+    /**
+     * Get display abbreviation
+     */
+    public String getDisplayAbbreviation() {
+        if (abbreviationFr != null && !abbreviationFr.trim().isEmpty()) {
+            return abbreviationFr;
+        }
+        if (abbreviationEn != null && !abbreviationEn.trim().isEmpty()) {
+            return abbreviationEn;
+        }
+        if (abbreviationAr != null && !abbreviationAr.trim().isEmpty()) {
+            return abbreviationAr;
         }
         return "N/A";
     }
@@ -155,219 +218,123 @@ public class MilitaryCategoryDTO {
     }
 
     /**
+     * Get military category code/identifier (using French abbreviation)
+     */
+    public String getCode() {
+        return abbreviationFr;
+    }
+
+    /**
      * Get military category type based on French designation analysis
      */
-    public String getMilitaryCategoryType() {
-        if (designationFr == null) return "UNKNOWN";
+    public String getCategoryType() {
+        if (designationFr == null) return "OTHER";
         
         String designation = designationFr.toLowerCase();
         
-        // Officer categories
-        if (designation.contains("officier") || designation.contains("officer") || 
-            designation.contains("commandant") || designation.contains("colonel")) {
-            return "OFFICER";
+        if (designation.contains("armée") && designation.contains("terre")) {
+            return "ARMY";
         }
-        
-        // Non-commissioned officer categories
-        if (designation.contains("sous-officier") || designation.contains("sergent") || 
-            designation.contains("adjudant") || designation.contains("nco")) {
-            return "NCO";
+        if (designation.contains("marine") || designation.contains("naval")) {
+            return "NAVY";
         }
-        
-        // Enlisted personnel categories
-        if (designation.contains("soldat") || designation.contains("caporal") || 
-            designation.contains("enlisted") || designation.contains("militaire du rang")) {
-            return "ENLISTED";
+        if (designation.contains("air") || designation.contains("aérienne")) {
+            return "AIR_FORCE";
         }
-        
-        // Specialized categories
-        if (designation.contains("spécialisé") || designation.contains("specialist") || 
-            designation.contains("technicien") || designation.contains("technician")) {
-            return "SPECIALIST";
+        if (designation.contains("gendarmerie")) {
+            return "GENDARMERIE";
         }
-        
-        // Medical categories
-        if (designation.contains("médical") || designation.contains("medical") || 
-            designation.contains("santé") || designation.contains("infirmier")) {
+        if (designation.contains("garde") && designation.contains("républicaine")) {
+            return "REPUBLICAN_GUARD";
+        }
+        if (designation.contains("sécurité")) {
+            return "SECURITY";
+        }
+        if (designation.contains("logistique")) {
+            return "LOGISTICS";
+        }
+        if (designation.contains("médical") || designation.contains("santé")) {
             return "MEDICAL";
         }
-        
-        // Administrative categories
-        if (designation.contains("administratif") || designation.contains("administrative") || 
-            designation.contains("civil") || designation.contains("clerical")) {
-            return "ADMINISTRATIVE";
+        if (designation.contains("communication") || designation.contains("transmission")) {
+            return "COMMUNICATIONS";
+        }
+        if (designation.contains("renseignement")) {
+            return "INTELLIGENCE";
         }
         
-        // Reserve categories
-        if (designation.contains("réserve") || designation.contains("reserve") || 
-            designation.contains("auxiliaire") || designation.contains("auxiliary")) {
-            return "RESERVE";
-        }
+        return "OTHER";
+    }
+
+    /**
+     * Get military category priority (lower number = higher priority)
+     */
+    public Integer getCategoryPriority() {
+        String type = getCategoryType();
         
-        // Cadet/Student categories
-        if (designation.contains("élève") || designation.contains("étudiant") || 
-            designation.contains("cadet") || designation.contains("student")) {
-            return "CADET";
-        }
+        return switch (type) {
+            case "ARMY" -> 1;
+            case "NAVY" -> 2;
+            case "AIR_FORCE" -> 3;
+            case "GENDARMERIE" -> 4;
+            case "REPUBLICAN_GUARD" -> 5;
+            case "SECURITY" -> 6;
+            case "INTELLIGENCE" -> 7;
+            case "COMMUNICATIONS" -> 8;
+            case "MEDICAL" -> 9;
+            case "LOGISTICS" -> 10;
+            default -> 99;
+        };
+    }
+
+    /**
+     * Check if category is a main service branch
+     */
+    public boolean isMainServiceBranch() {
+        String type = getCategoryType();
+        return "ARMY".equals(type) || "NAVY".equals(type) || "AIR_FORCE".equals(type);
+    }
+
+    /**
+     * Check if category is a support service
+     */
+    public boolean isSupportService() {
+        String type = getCategoryType();
+        return "LOGISTICS".equals(type) || "MEDICAL".equals(type) || "COMMUNICATIONS".equals(type);
+    }
+
+    /**
+     * Check if category is a security service
+     */
+    public boolean isSecurityService() {
+        String type = getCategoryType();
+        return "GENDARMERIE".equals(type) || "REPUBLICAN_GUARD".equals(type) || 
+               "SECURITY".equals(type) || "INTELLIGENCE".equals(type);
+    }
+
+    /**
+     * Get organizational level
+     */
+    public String getOrganizationalLevel() {
+        String type = getCategoryType();
         
-        // Retired categories
-        if (designation.contains("retraité") || designation.contains("retired") || 
-            designation.contains("honoraire") || designation.contains("emeritus")) {
-            return "RETIRED";
-        }
-        
-        return "GENERAL";
-    }
-
-    /**
-     * Check if this is an officer category
-     */
-    public boolean isOfficerCategory() {
-        return "OFFICER".equals(getMilitaryCategoryType());
-    }
-
-    /**
-     * Check if this is an NCO category
-     */
-    public boolean isNCOCategory() {
-        return "NCO".equals(getMilitaryCategoryType());
-    }
-
-    /**
-     * Check if this is an enlisted category
-     */
-    public boolean isEnlistedCategory() {
-        return "ENLISTED".equals(getMilitaryCategoryType());
-    }
-
-    /**
-     * Check if this is an active duty category
-     */
-    public boolean isActiveDuty() {
-        String type = getMilitaryCategoryType();
-        return "OFFICER".equals(type) || "NCO".equals(type) || "ENLISTED".equals(type) || 
-               "SPECIALIST".equals(type) || "MEDICAL".equals(type);
-    }
-
-    /**
-     * Get military hierarchy level
-     */
-    public String getHierarchyLevel() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER" -> "COMMISSIONED";
-            case "NCO" -> "NON_COMMISSIONED";
-            case "ENLISTED" -> "ENLISTED";
-            case "SPECIALIST" -> "TECHNICAL";
-            case "MEDICAL" -> "PROFESSIONAL";
-            case "ADMINISTRATIVE" -> "CIVILIAN";
-            case "RESERVE" -> "RESERVE";
-            case "CADET" -> "TRAINEE";
-            case "RETIRED" -> "VETERAN";
-            default -> "GENERAL";
-        };
-    }
-
-    /**
-     * Get command authority level
-     */
-    public String getCommandAuthority() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER" -> "FULL_COMMAND";
-            case "NCO" -> "LIMITED_COMMAND";
-            case "ENLISTED" -> "NO_COMMAND";
-            case "SPECIALIST" -> "TECHNICAL_AUTHORITY";
-            case "MEDICAL" -> "PROFESSIONAL_AUTHORITY";
-            case "ADMINISTRATIVE" -> "ADMINISTRATIVE_AUTHORITY";
-            case "RESERVE" -> "CONDITIONAL_COMMAND";
-            case "CADET" -> "NO_COMMAND";
-            case "RETIRED" -> "NO_COMMAND";
-            default -> "NO_COMMAND";
-        };
-    }
-
-    /**
-     * Get category priority for military hierarchy
-     */
-    public int getCategoryPriority() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER" -> 1;
-            case "NCO" -> 2;
-            case "SPECIALIST" -> 3;
-            case "MEDICAL" -> 4;
-            case "ENLISTED" -> 5;
-            case "ADMINISTRATIVE" -> 6;
-            case "CADET" -> 7;
-            case "RESERVE" -> 8;
-            case "RETIRED" -> 9;
-            default -> 10;
-        };
-    }
-
-    /**
-     * Get service branch compatibility
-     */
-    public String[] getServiceBranches() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER", "NCO", "ENLISTED" -> new String[]{"ARMY", "NAVY", "AIR_FORCE", "GENDARMERIE"};
-            case "SPECIALIST" -> new String[]{"ARMY", "NAVY", "AIR_FORCE"};
-            case "MEDICAL" -> new String[]{"ARMY", "NAVY", "AIR_FORCE", "MEDICAL_SERVICE"};
-            case "ADMINISTRATIVE" -> new String[]{"ALL_BRANCHES"};
-            case "RESERVE" -> new String[]{"ARMY", "NAVY", "AIR_FORCE", "RESERVES"};
-            case "CADET" -> new String[]{"MILITARY_ACADEMY"};
-            case "RETIRED" -> new String[]{"ALL_BRANCHES"};
-            default -> new String[]{"GENERAL"};
-        };
-    }
-
-    /**
-     * Get training requirements
-     */
-    public String getTrainingRequirement() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER" -> "MILITARY_ACADEMY";
-            case "NCO" -> "NCO_SCHOOL";
-            case "ENLISTED" -> "BASIC_TRAINING";
-            case "SPECIALIST" -> "TECHNICAL_SCHOOL";
-            case "MEDICAL" -> "MEDICAL_TRAINING";
-            case "ADMINISTRATIVE" -> "ADMINISTRATIVE_TRAINING";
-            case "RESERVE" -> "RESERVE_TRAINING";
-            case "CADET" -> "ACADEMY_PROGRAM";
-            case "RETIRED" -> "NONE";
-            default -> "BASIC_TRAINING";
-        };
-    }
-
-    /**
-     * Check if category requires security clearance
-     */
-    public boolean requiresSecurityClearance() {
-        String type = getMilitaryCategoryType();
-        return "OFFICER".equals(type) || "NCO".equals(type) || "SPECIALIST".equals(type);
-    }
-
-    /**
-     * Get deployment eligibility
-     */
-    public String getDeploymentEligibility() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER", "NCO", "ENLISTED" -> "FULL_DEPLOYMENT";
-            case "SPECIALIST" -> "TECHNICAL_DEPLOYMENT";
-            case "MEDICAL" -> "MEDICAL_DEPLOYMENT";
-            case "ADMINISTRATIVE" -> "LIMITED_DEPLOYMENT";
-            case "RESERVE" -> "RESERVE_DEPLOYMENT";
-            case "CADET" -> "NO_DEPLOYMENT";
-            case "RETIRED" -> "NO_DEPLOYMENT";
-            default -> "LIMITED_DEPLOYMENT";
+        return switch (type) {
+            case "ARMY", "NAVY", "AIR_FORCE" -> "SERVICE_BRANCH";
+            case "GENDARMERIE", "REPUBLICAN_GUARD" -> "PARAMILITARY";
+            case "SECURITY", "INTELLIGENCE" -> "SPECIAL_FORCES";
+            case "MEDICAL", "LOGISTICS", "COMMUNICATIONS" -> "SUPPORT_SERVICES";
+            default -> "AUXILIARY";
         };
     }
 
     /**
      * Create simplified DTO for dropdowns
      */
-    public static MilitaryCategoryDTO createSimple(Long id, String designationFr) {
+    public static MilitaryCategoryDTO createSimple(Long id, String designationFr, String abbreviationFr) {
         return MilitaryCategoryDTO.builder()
                 .id(id)
                 .designationFr(designationFr)
+                .abbreviationFr(abbreviationFr)
                 .build();
     }
 
@@ -375,19 +342,19 @@ public class MilitaryCategoryDTO {
      * Validate required fields are present
      */
     public boolean isValid() {
-        return designationFr != null && !designationFr.trim().isEmpty();
+        return designationFr != null && !designationFr.trim().isEmpty() && 
+               abbreviationFr != null && !abbreviationFr.trim().isEmpty();
     }
 
     /**
-     * Get short display for lists
+     * Get short display for lists (abbreviation - designation)
      */
     public String getShortDisplay() {
-        return designationFr != null && designationFr.length() > 20 ? 
-                designationFr.substring(0, 20) + "..." : designationFr;
+        return getDisplayAbbreviation() + " - " + getDisplayText();
     }
 
     /**
-     * Get full display with all languages
+     * Get full display with all languages and category type
      */
     public String getFullDisplay() {
         StringBuilder sb = new StringBuilder();
@@ -401,65 +368,194 @@ public class MilitaryCategoryDTO {
             sb.append(" / ").append(designationAr);
         }
         
+        sb.append(" (").append(abbreviationFr).append(")");
+        
+        String categoryType = getCategoryType();
+        if (!"OTHER".equals(categoryType)) {
+            sb.append(" - ").append(categoryType.replace("_", " "));
+        }
+        
         return sb.toString();
     }
 
     /**
-     * Get comparison key for sorting (by French designation)
+     * Get comparison key for sorting (by priority, then designation)
      */
     public String getComparisonKey() {
-        return designationFr != null ? designationFr.toLowerCase() : "";
+        Integer priority = getCategoryPriority();
+        return String.format("%02d_%s", priority, designationFr != null ? designationFr.toLowerCase() : "zzz");
     }
 
     /**
      * Get display with category type
      */
     public String getDisplayWithType() {
-        return designationFr + " (" + getMilitaryCategoryType().replace("_", " ").toLowerCase() + ")";
+        String categoryType = getCategoryType();
+        String typeDisplay = categoryType.replace("_", " ").toLowerCase();
+        return getDisplayText() + " (" + typeDisplay + ")";
     }
 
     /**
-     * Get category abbreviation
+     * Get display with abbreviation and type
      */
-    public String getCategoryAbbreviation() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER" -> "OFF";
-            case "NCO" -> "NCO";
-            case "ENLISTED" -> "ENL";
-            case "SPECIALIST" -> "SPC";
-            case "MEDICAL" -> "MED";
-            case "ADMINISTRATIVE" -> "ADM";
-            case "RESERVE" -> "RES";
-            case "CADET" -> "CDT";
-            case "RETIRED" -> "RET";
-            default -> "GEN";
+    public String getDisplayWithAbbreviationAndType() {
+        String categoryType = getCategoryType();
+        String typeDisplay = categoryType.replace("_", " ").toLowerCase();
+        return getDisplayAbbreviation() + " - " + getDisplayText() + " (" + typeDisplay + ")";
+    }
+
+    /**
+     * Get formal military display
+     */
+    public String getFormalMilitaryDisplay() {
+        return getDisplayAbbreviation() + " (" + getDisplayText() + ")";
+    }
+
+    /**
+     * Get command structure level
+     */
+    public String getCommandStructureLevel() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY", "NAVY", "AIR_FORCE" -> "STRATEGIC";
+            case "GENDARMERIE", "REPUBLICAN_GUARD" -> "OPERATIONAL";
+            case "SECURITY", "INTELLIGENCE" -> "TACTICAL";
+            default -> "SUPPORT";
         };
     }
 
     /**
-     * Check if category has operational role
+     * Get personnel size category (estimated)
      */
-    public boolean hasOperationalRole() {
-        String type = getMilitaryCategoryType();
-        return "OFFICER".equals(type) || "NCO".equals(type) || "ENLISTED".equals(type) || 
-               "SPECIALIST".equals(type);
+    public String getPersonnelSizeCategory() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY" -> "LARGE"; // >50,000
+            case "NAVY", "AIR_FORCE" -> "MEDIUM"; // 10,000-50,000
+            case "GENDARMERIE" -> "MEDIUM";
+            case "REPUBLICAN_GUARD" -> "SMALL"; // <10,000
+            default -> "SMALL";
+        };
     }
 
     /**
-     * Get personnel classification
+     * Get deployment type
      */
-    public String getPersonnelClassification() {
-        return switch (getMilitaryCategoryType()) {
-            case "OFFICER" -> "COMMISSIONED_PERSONNEL";
-            case "NCO" -> "NON_COMMISSIONED_PERSONNEL";
-            case "ENLISTED" -> "ENLISTED_PERSONNEL";
-            case "SPECIALIST" -> "TECHNICAL_PERSONNEL";
-            case "MEDICAL" -> "MEDICAL_PERSONNEL";
-            case "ADMINISTRATIVE" -> "CIVILIAN_PERSONNEL";
-            case "RESERVE" -> "RESERVE_PERSONNEL";
-            case "CADET" -> "STUDENT_PERSONNEL";
-            case "RETIRED" -> "VETERAN_PERSONNEL";
-            default -> "GENERAL_PERSONNEL";
+    public String getDeploymentType() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY" -> "GROUND_OPERATIONS";
+            case "NAVY" -> "NAVAL_OPERATIONS";
+            case "AIR_FORCE" -> "AIR_OPERATIONS";
+            case "GENDARMERIE" -> "LAW_ENFORCEMENT";
+            case "REPUBLICAN_GUARD" -> "CEREMONIAL_SECURITY";
+            case "SECURITY" -> "PROTECTIVE_SERVICES";
+            case "INTELLIGENCE" -> "INFORMATION_OPERATIONS";
+            case "MEDICAL" -> "HEALTHCARE_SUPPORT";
+            case "LOGISTICS" -> "SUPPLY_SUPPORT";
+            case "COMMUNICATIONS" -> "SIGNAL_SUPPORT";
+            default -> "GENERAL_SUPPORT";
+        };
+    }
+
+    /**
+     * Get typical headquarters location type
+     */
+    public String getHeadquartersType() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY", "NAVY", "AIR_FORCE" -> "MINISTRY_LEVEL";
+            case "GENDARMERIE", "REPUBLICAN_GUARD" -> "NATIONAL_DIRECTORATE";
+            case "SECURITY", "INTELLIGENCE" -> "CLASSIFIED_LOCATION";
+            default -> "REGIONAL_CENTER";
+        };
+    }
+
+    /**
+     * Get recruitment profile
+     */
+    public String getRecruitmentProfile() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY" -> "GENERAL_MILITARY";
+            case "NAVY" -> "MARITIME_SPECIALIST";
+            case "AIR_FORCE" -> "AVIATION_TECHNICAL";
+            case "GENDARMERIE" -> "LAW_ENFORCEMENT";
+            case "REPUBLICAN_GUARD" -> "ELITE_CEREMONIAL";
+            case "SECURITY" -> "PROTECTIVE_SPECIALIST";
+            case "INTELLIGENCE" -> "ANALYTICAL_SPECIALIST";
+            case "MEDICAL" -> "HEALTHCARE_PROFESSIONAL";
+            case "LOGISTICS" -> "SUPPLY_SPECIALIST";
+            case "COMMUNICATIONS" -> "TECHNICAL_SPECIALIST";
+            default -> "GENERAL_SUPPORT";
+        };
+    }
+
+    /**
+     * Get training emphasis
+     */
+    public String getTrainingEmphasis() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY" -> "COMBAT_OPERATIONS";
+            case "NAVY" -> "MARITIME_WARFARE";
+            case "AIR_FORCE" -> "AEROSPACE_OPERATIONS";
+            case "GENDARMERIE" -> "LAW_ENFORCEMENT";
+            case "REPUBLICAN_GUARD" -> "CEREMONIAL_PROTOCOL";
+            case "SECURITY" -> "PROTECTIVE_TACTICS";
+            case "INTELLIGENCE" -> "INFORMATION_ANALYSIS";
+            case "MEDICAL" -> "MEDICAL_TRAINING";
+            case "LOGISTICS" -> "SUPPLY_MANAGEMENT";
+            case "COMMUNICATIONS" -> "SIGNAL_OPERATIONS";
+            default -> "BASIC_MILITARY";
+        };
+    }
+
+    /**
+     * Get category description
+     */
+    public String getCategoryDescription() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY" -> "Land-based military forces responsible for ground operations and territorial defense";
+            case "NAVY" -> "Maritime military forces responsible for naval operations and coastal defense";
+            case "AIR_FORCE" -> "Aviation military forces responsible for air operations and aerospace defense";
+            case "GENDARMERIE" -> "Paramilitary law enforcement force with both military and civilian duties";
+            case "REPUBLICAN_GUARD" -> "Elite ceremonial and protective force for high-level government security";
+            case "SECURITY" -> "Specialized security forces for critical infrastructure and personnel protection";
+            case "INTELLIGENCE" -> "Military intelligence services for information gathering and analysis";
+            case "MEDICAL" -> "Military medical services providing healthcare support to armed forces";
+            case "LOGISTICS" -> "Military supply and logistics services ensuring operational readiness";
+            case "COMMUNICATIONS" -> "Military communications and signal services for command and control";
+            default -> "Other military organizational units and support services";
+        };
+    }
+
+    /**
+     * Get uniform color scheme (traditional)
+     */
+    public String getUniformColorScheme() {
+        String type = getCategoryType();
+        
+        return switch (type) {
+            case "ARMY" -> "OLIVE_GREEN";
+            case "NAVY" -> "NAVY_BLUE";
+            case "AIR_FORCE" -> "AIR_FORCE_BLUE";
+            case "GENDARMERIE" -> "DARK_BLUE";
+            case "REPUBLICAN_GUARD" -> "CEREMONIAL_RED";
+            case "SECURITY" -> "BLACK";
+            case "INTELLIGENCE" -> "CIVILIAN_DRESS";
+            case "MEDICAL" -> "WHITE_CROSS";
+            case "LOGISTICS" -> "BROWN";
+            case "COMMUNICATIONS" -> "SIGNAL_YELLOW";
+            default -> "STANDARD_MILITARY";
         };
     }
 }
