@@ -38,7 +38,7 @@ public class ItemDistribution {
 	private Long id;
 	
 	@Column(name="F_01")
-	private float Quantity;
+	private float quantity;
 	
 	@ManyToOne
     @JoinColumn(name="F_02", foreignKey=@ForeignKey(name="T_02_02_09_FK_01"), nullable=false)

@@ -32,8 +32,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity(name="BudgetModification")
-@Table(name="T_02_02_07", uniqueConstraints = { @UniqueConstraint(name = "T_02_02_07_UK_01", columnNames = { "F_03" }), 
-											 	@UniqueConstraint(name = "T_02_02_07_UK_02", columnNames = { "F_06" })})
+@Table(name="T_02_02_07", uniqueConstraints = { @UniqueConstraint(name = "T_02_02_07_UK_01", columnNames = { "F_03", "F_04" }) })
 public class BudgetModification {
 	
 	@Id

@@ -14,7 +14,11 @@
 package dz.mdn.raas.common.administration.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.*;
+
+import dz.mdn.raas.common.administration.model.Structure;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -102,7 +106,7 @@ public class StructureDTO {
     /**
      * Create DTO from entity
      */
-    public static StructureDTO fromEntity(dz.mdn.raas.common.administration.model.Structure structure) {
+    public static StructureDTO fromEntity(Structure structure) {
         if (structure == null) return null;
         
         StructureTypeInfo typeInfo = null;
@@ -151,9 +155,8 @@ public class StructureDTO {
     /**
      * Convert to entity (without setting foreign key relationships - use service for that)
      */
-    public dz.mdn.raas.common.administration.model.Structure toEntity() {
-        dz.mdn.raas.common.administration.model.Structure structure = 
-            new dz.mdn.raas.common.administration.model.Structure();
+    public Structure toEntity() {
+        Structure structure = new Structure();
         structure.setId(this.id);
         structure.setDesignationAr(this.designationAr);
         structure.setDesignationEn(this.designationEn);
