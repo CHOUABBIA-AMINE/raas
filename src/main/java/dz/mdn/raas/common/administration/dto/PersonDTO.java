@@ -18,6 +18,7 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import dz.mdn.raas.common.administration.model.Person;
 import dz.mdn.raas.system.utility.dto.FileDTO;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -74,7 +75,7 @@ public class PersonDTO {
     /**
      * Create DTO from entity
      */
-    public static PersonDTO fromEntity(dz.mdn.raas.common.administration.model.Person person) {
+    public static PersonDTO fromEntity(Person person) {
         if (person == null) return null;
         
         StateDTO birthStateDTO = null;
@@ -113,9 +114,8 @@ public class PersonDTO {
     /**
      * Convert to entity (without setting foreign key relationships - use service for that)
      */
-    public dz.mdn.raas.common.administration.model.Person toEntity() {
-        dz.mdn.raas.common.administration.model.Person person = 
-            new dz.mdn.raas.common.administration.model.Person();
+    public Person toEntity() {
+        Person person = new Person();
         person.setId(this.id);
         person.setFirstnameAr(this.firstnameAr);
         person.setLastnameAr(this.lastnameAr);
@@ -131,7 +131,7 @@ public class PersonDTO {
     /**
      * Update entity from DTO (without updating foreign key relationships - use service for that)
      */
-    public void updateEntity(dz.mdn.raas.common.administration.model.Person person) {
+    public void updateEntity(Person person) {
         if (this.firstnameAr != null) {
             person.setFirstnameAr(this.firstnameAr);
         }

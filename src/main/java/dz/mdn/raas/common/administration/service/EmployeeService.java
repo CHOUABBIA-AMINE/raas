@@ -13,34 +13,28 @@
 
 package dz.mdn.raas.common.administration.service;
 
-import dz.mdn.raas.common.administration.model.Employee;
-import dz.mdn.raas.common.administration.model.Person;
-import dz.mdn.raas.common.administration.model.MilitaryRank;
-import dz.mdn.raas.common.administration.model.Job;
-import dz.mdn.raas.common.administration.repository.EmployeeRepository;
-import dz.mdn.raas.common.administration.repository.PersonRepository;
-import dz.mdn.raas.common.administration.repository.MilitaryRankRepository;
-import dz.mdn.raas.common.administration.repository.JobRepository;
-import dz.mdn.raas.common.administration.dto.EmployeeDTO;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.Optional;
+import dz.mdn.raas.common.administration.dto.EmployeeDTO;
+import dz.mdn.raas.common.administration.model.Employee;
+import dz.mdn.raas.common.administration.repository.EmployeeRepository;
+import dz.mdn.raas.common.administration.repository.JobRepository;
+import dz.mdn.raas.common.administration.repository.MilitaryRankRepository;
+import dz.mdn.raas.common.administration.repository.PersonRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Employee Service with CRUD operations
- * Handles employee management operations with military personnel administration
- * Based on exact field names: F_01=serial, F_02=hiringDate, F_03=person, F_04=militaryRank, F_05=job
- * F_03 (person) is required foreign key
- * F_04 (militaryRank) is required foreign key
- * F_05 (job) is optional foreign key
- * F_01 (serial) and F_02 (hiringDate) are optional
+ * Handles employee management operations with military hierarchy integration and career tracking
+ * Based on exact field names and business rules for military personnel management
  */
 @Service
 @RequiredArgsConstructor
@@ -49,6 +43,8 @@ import java.util.Optional;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
+    
+    // Repository beans for related entities (injected as needed)
     private final PersonRepository personRepository;
     private final MilitaryRankRepository militaryRankRepository;
     private final JobRepository jobRepository;
@@ -59,37 +55,27 @@ public class EmployeeService {
      * Create new employee
      */
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) {
-        log.info("Creating employee with serial: {}, Person ID: {}, Rank ID: {}, Job ID: {}, Hiring Date: {}", 
-                employeeDTO.getSerial(), employeeDTO.getPersonId(), 
-                employeeDTO.getMilitaryRankId(), employeeDTO.getJobId(),
-                employeeDTO.getHiringDate());
+        log.info("Creating employee for person ID: {}, military rank ID: {}", 
+                employeeDTO.getPersonId(), employeeDTO.getMilitaryRankId());
 
-        // Validate required fields
+        // Validate required fields and business rules
         validateRequiredFields(employeeDTO, "create");
+        validateBusinessRules(employeeDTO, "create");
 
-        // Validate foreign key relationships
-        Person person = validateAndGetPerson(employeeDTO.getPersonId());
-        MilitaryRank militaryRank = validateAndGetMilitaryRank(employeeDTO.getMilitaryRankId());
-        Job job = null;
-        if (employeeDTO.getJobId() != null) {
-            job = validateAndGetJob(employeeDTO.getJobId());
-        }
-
-        // Check for unique constraints
+        // Check for unique constraints and business validations
         validateUniqueConstraints(employeeDTO, null);
 
         // Create entity with exact field mapping
         Employee employee = new Employee();
-        employee.setSerial(employeeDTO.getSerial()); // F_01
-        employee.setHiringDate(employeeDTO.getHiringDate()); // F_02
-        employee.setPerson(person); // F_03
-        employee.setMilitaryRank(militaryRank); // F_04
-        employee.setJob(job); // F_05
+        mapDtoToEntity(employeeDTO, employee);
+
+        // Handle foreign key relationships
+        setEntityRelationships(employeeDTO, employee);
 
         Employee savedEmployee = employeeRepository.save(employee);
         log.info("Successfully created employee with ID: {}", savedEmployee.getId());
 
-        return EmployeeDTO.fromEntity(savedEmployee);
+        return EmployeeDTO.fromEntityWithRelations(savedEmployee);
     }
 
     // ========== READ OPERATIONS ==========
@@ -104,7 +90,7 @@ public class EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with ID: " + id));
 
-        return EmployeeDTO.fromEntity(employee);
+        return EmployeeDTO.fromEntityWithRelations(employee);
     }
 
     /**
@@ -117,79 +103,13 @@ public class EmployeeService {
     }
 
     /**
-     * Find employee by serial (F_01)
-     */
-    @Transactional(readOnly = true)
-    public Optional<EmployeeDTO> findBySerial(String serial) {
-        log.debug("Finding employee with serial: {}", serial);
-
-        return employeeRepository.findBySerial(serial)
-                .map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employee by person ID (F_03)
-     */
-    @Transactional(readOnly = true)
-    public Optional<EmployeeDTO> findByPersonId(Long personId) {
-        log.debug("Finding employee with person ID: {}", personId);
-
-        return employeeRepository.findByPersonId(personId)
-                .map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employees by hiring date (F_02)
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByHiringDate(Date hiringDate, Pageable pageable) {
-        log.debug("Finding employees with hiring date: {}", hiringDate);
-
-        Page<Employee> employees = employeeRepository.findByHiringDate(hiringDate, pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employees by military rank ID (F_04)
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByMilitaryRankId(Long militaryRankId, Pageable pageable) {
-        log.debug("Finding employees with military rank ID: {}", militaryRankId);
-
-        Page<Employee> employees = employeeRepository.findByMilitaryRankId(militaryRankId, pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employees by job ID (F_05)
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByJobId(Long jobId, Pageable pageable) {
-        log.debug("Finding employees with job ID: {}", jobId);
-
-        Page<Employee> employees = employeeRepository.findByJobId(jobId, pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
      * Get all employees with pagination
      */
     @Transactional(readOnly = true)
     public Page<EmployeeDTO> getAllEmployees(Pageable pageable) {
         log.debug("Getting all employees with pagination");
 
-        Page<Employee> employees = employeeRepository.findAllOrderByPersonName(pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Get all employees ordered by rank and name
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> getAllEmployeesOrderedByRank(Pageable pageable) {
-        log.debug("Getting all employees ordered by rank and name");
-
-        Page<Employee> employees = employeeRepository.findAllOrderByRankAndName(pageable);
+        Page<Employee> employees = employeeRepository.findAllOrderByHiringDate(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
@@ -201,223 +121,284 @@ public class EmployeeService {
         log.debug("Finding employee by ID: {}", id);
 
         return employeeRepository.findById(id)
+                .map(EmployeeDTO::fromEntityWithRelations);
+    }
+
+    /**
+     * Find employee by serial number
+     */
+    @Transactional(readOnly = true)
+    public Optional<EmployeeDTO> findBySerial(String serial) {
+        log.debug("Finding employee by serial: {}", serial);
+
+        return employeeRepository.findBySerial(serial)
                 .map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Search employees by name or serial
+     * Search employees by person name
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> searchEmployees(String searchTerm, Pageable pageable) {
-        log.debug("Searching employees with term: {}", searchTerm);
+    public Page<EmployeeDTO> searchEmployeesByPersonName(String searchTerm, Pageable pageable) {
+        log.debug("Searching employees by person name with term: {}", searchTerm);
 
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return getAllEmployees(pageable);
         }
 
-        Page<Employee> employees = employeeRepository.searchByPersonNameOrSerial(searchTerm.trim(), pageable);
+        Page<Employee> employees = employeeRepository.searchByPersonName(searchTerm.trim(), pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Search employees with comprehensive context
+     * Search employees by serial number
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> searchEmployeesWithContext(String searchTerm, Pageable pageable) {
-        log.debug("Searching employees with context for term: {}", searchTerm);
+    public Page<EmployeeDTO> searchEmployeesBySerial(String searchTerm, Pageable pageable) {
+        log.debug("Searching employees by serial with term: {}", searchTerm);
 
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return getAllEmployees(pageable);
         }
 
-        Page<Employee> employees = employeeRepository.searchWithComprehensiveContext(searchTerm.trim(), pageable);
+        Page<Employee> employees = employeeRepository.searchBySerial(searchTerm.trim(), pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find employees by hiring year
+     * Search employees by any field
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByHiringYear(Integer year, Pageable pageable) {
-        log.debug("Finding employees hired in year: {}", year);
+    public Page<EmployeeDTO> searchEmployeesByAnyField(String searchTerm, Pageable pageable) {
+        log.debug("Searching employees by any field with term: {}", searchTerm);
 
-        Page<Employee> employees = employeeRepository.findByHiringYear(year, pageable);
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getAllEmployees(pageable);
+        }
+
+        Page<Employee> employees = employeeRepository.searchByAnyField(searchTerm.trim(), pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find employees by hiring date range
+     * Get employees by military rank
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByHiringDateRange(Date startDate, Date endDate, Pageable pageable) {
-        log.debug("Finding employees hired between {} and {}", startDate, endDate);
+    public Page<EmployeeDTO> getEmployeesByMilitaryRank(Long militaryRankId, Pageable pageable) {
+        log.debug("Getting employees for military rank ID: {}", militaryRankId);
 
-        Page<Employee> employees = employeeRepository.findByHiringDateBetween(startDate, endDate, pageable);
+        Page<Employee> employees = employeeRepository.findByMilitaryRank(militaryRankId, pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find employees by years of service range
+     * Get employees by job
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByYearsOfServiceRange(Integer minYears, Integer maxYears, Pageable pageable) {
-        log.debug("Finding employees with {} to {} years of service", minYears, maxYears);
+    public Page<EmployeeDTO> getEmployeesByJob(Long jobId, Pageable pageable) {
+        log.debug("Getting employees for job ID: {}", jobId);
 
-        Page<Employee> employees = employeeRepository.findByYearsOfServiceRange(minYears, maxYears, pageable);
+        Page<Employee> employees = employeeRepository.findByJob(jobId, pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find retirement eligible employees
+     * Get employees without job assignment
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findRetirementEligible(Pageable pageable) {
-        log.debug("Finding retirement eligible employees");
+    public Page<EmployeeDTO> getEmployeesWithoutJob(Pageable pageable) {
+        log.debug("Getting employees without job assignment");
 
-        Page<Employee> employees = employeeRepository.findRetirementEligible(pageable);
+        Page<Employee> employees = employeeRepository.findWithoutJob(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find new recruits
+     * Get employees with job assignment
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findNewRecruits(Pageable pageable) {
-        log.debug("Finding new recruit employees");
+    public Page<EmployeeDTO> getEmployeesWithJob(Pageable pageable) {
+        log.debug("Getting employees with job assignment");
 
-        Page<Employee> employees = employeeRepository.findNewRecruits(pageable);
+        Page<Employee> employees = employeeRepository.findWithJob(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find veteran employees
+     * Get employees by military hierarchy level
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findVeteranEmployees(Pageable pageable) {
-        log.debug("Finding veteran employees");
+    public Page<EmployeeDTO> getGeneralOfficers(Pageable pageable) {
+        log.debug("Getting general officer employees");
+
+        Page<Employee> employees = employeeRepository.findGeneralOfficers(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getSeniorOfficers(Pageable pageable) {
+        log.debug("Getting senior officer employees");
+
+        Page<Employee> employees = employeeRepository.findSeniorOfficers(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getCompanyGradeOfficers(Pageable pageable) {
+        log.debug("Getting company grade officer employees");
+
+        Page<Employee> employees = employeeRepository.findCompanyGradeOfficers(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getNonCommissionedOfficers(Pageable pageable) {
+        log.debug("Getting non-commissioned officer employees");
+
+        Page<Employee> employees = employeeRepository.findNonCommissionedOfficers(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getEnlisted(Pageable pageable) {
+        log.debug("Getting enlisted employees");
+
+        Page<Employee> employees = employeeRepository.findEnlisted(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getCommissionedOfficers(Pageable pageable) {
+        log.debug("Getting commissioned officer employees");
+
+        Page<Employee> employees = employeeRepository.findCommissionedOfficers(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    /**
+     * Get employees by service branch
+     */
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getArmyEmployees(Pageable pageable) {
+        log.debug("Getting army employees");
+
+        Page<Employee> employees = employeeRepository.findArmyEmployees(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getNavyEmployees(Pageable pageable) {
+        log.debug("Getting navy employees");
+
+        Page<Employee> employees = employeeRepository.findNavyEmployees(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getAirForceEmployees(Pageable pageable) {
+        log.debug("Getting air force employees");
+
+        Page<Employee> employees = employeeRepository.findAirForceEmployees(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getGendarmerieEmployees(Pageable pageable) {
+        log.debug("Getting gendarmerie employees");
+
+        Page<Employee> employees = employeeRepository.findGendarmerieEmployees(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    /**
+     * Get employees by service category
+     */
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getVeteranEmployees(Pageable pageable) {
+        log.debug("Getting veteran employees (25+ years)");
 
         Page<Employee> employees = employeeRepository.findVeteranEmployees(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
-    /**
-     * Find employees without job assignment
-     */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findWithoutJobAssignment(Pageable pageable) {
-        log.debug("Finding employees without job assignment");
+    public Page<EmployeeDTO> getSeniorEmployees(Pageable pageable) {
+        log.debug("Getting senior employees (15-25 years)");
 
-        Page<Employee> employees = employeeRepository.findWithoutJobAssignment(pageable);
+        Page<Employee> employees = employeeRepository.findSeniorEmployees(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getExperiencedEmployees(Pageable pageable) {
+        log.debug("Getting experienced employees (5-15 years)");
+
+        Page<Employee> employees = employeeRepository.findExperiencedEmployees(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getJuniorEmployees(Pageable pageable) {
+        log.debug("Getting junior employees (1-5 years)");
+
+        Page<Employee> employees = employeeRepository.findJuniorEmployees(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getProbationaryEmployees(Pageable pageable) {
+        log.debug("Getting probationary employees (<1 year)");
+
+        Page<Employee> employees = employeeRepository.findProbationaryEmployees(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find employees with job assignment
+     * Get employees with complete/incomplete profiles
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findWithJobAssignment(Pageable pageable) {
-        log.debug("Finding employees with job assignment");
+    public Page<EmployeeDTO> getEmployeesWithCompleteProfile(Pageable pageable) {
+        log.debug("Getting employees with complete profiles");
 
-        Page<Employee> employees = employeeRepository.findWithJobAssignment(pageable);
+        Page<Employee> employees = employeeRepository.findWithCompleteProfile(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getEmployeesWithIncompleteProfile(Pageable pageable) {
+        log.debug("Getting employees with incomplete profiles");
+
+        Page<Employee> employees = employeeRepository.findWithIncompleteProfile(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find officers
+     * Get retirement-related employees
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findOfficers(Pageable pageable) {
-        log.debug("Finding officer employees");
+    public Page<EmployeeDTO> getRetirementEligibleEmployees(Pageable pageable) {
+        log.debug("Getting retirement eligible employees (30+ years)");
 
-        Page<Employee> employees = employeeRepository.findOfficers(pageable);
+        Page<Employee> employees = employeeRepository.findRetirementEligible(pageable);
+        return employees.map(EmployeeDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> getApproachingRetirementEmployees(Pageable pageable) {
+        log.debug("Getting employees approaching retirement (25-30 years)");
+
+        Page<Employee> employees = employeeRepository.findApproachingRetirement(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
     /**
-     * Find enlisted personnel
+     * Get command-eligible employees
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findEnlistedPersonnel(Pageable pageable) {
-        log.debug("Finding enlisted personnel");
+    public Page<EmployeeDTO> getCommandEligibleEmployees(Pageable pageable) {
+        log.debug("Getting command-eligible employees");
 
-        Page<Employee> employees = employeeRepository.findEnlistedPersonnel(pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find NCOs
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findNCOs(Pageable pageable) {
-        log.debug("Finding NCO employees");
-
-        Page<Employee> employees = employeeRepository.findNCOs(pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find promotion eligible employees
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findPromotionEligible(Pageable pageable) {
-        log.debug("Finding promotion eligible employees");
-
-        Page<Employee> employees = employeeRepository.findPromotionEligible(pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employees with incomplete profiles
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findWithIncompleteProfiles(Pageable pageable) {
-        log.debug("Finding employees with incomplete profiles");
-
-        Page<Employee> employees = employeeRepository.findWithIncompleteProfiles(pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employees hired this year
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findHiredThisYear(Pageable pageable) {
-        log.debug("Finding employees hired this year");
-
-        Page<Employee> employees = employeeRepository.findHiredThisYear(pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find service anniversaries this month
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findServiceAnniversariesThisMonth(Pageable pageable) {
-        log.debug("Finding service anniversaries this month");
-
-        Page<Employee> employees = employeeRepository.findServiceAnniversariesThisMonth(pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employees by military rank designation
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByMilitaryRankDesignation(String rankDesignation, Pageable pageable) {
-        log.debug("Finding employees by military rank designation: {}", rankDesignation);
-
-        Page<Employee> employees = employeeRepository.findByMilitaryRankDesignation(rankDesignation, pageable);
-        return employees.map(EmployeeDTO::fromEntity);
-    }
-
-    /**
-     * Find employees by job designation
-     */
-    @Transactional(readOnly = true)
-    public Page<EmployeeDTO> findByJobDesignation(String jobDesignation, Pageable pageable) {
-        log.debug("Finding employees by job designation: {}", jobDesignation);
-
-        Page<Employee> employees = employeeRepository.findByJobDesignation(jobDesignation, pageable);
+        Page<Employee> employees = employeeRepository.findCommandEligible(pageable);
         return employees.map(EmployeeDTO::fromEntity);
     }
 
@@ -431,43 +412,23 @@ public class EmployeeService {
 
         Employee existingEmployee = getEmployeeEntityById(id);
 
-        // Validate required fields
+        // Validate required fields and business rules
         validateRequiredFields(employeeDTO, "update");
-
-        // Validate foreign key relationships if being updated
-        Person person = null;
-        if (employeeDTO.getPersonId() != null) {
-            person = validateAndGetPerson(employeeDTO.getPersonId());
-        }
-
-        MilitaryRank militaryRank = null;
-        if (employeeDTO.getMilitaryRankId() != null) {
-            militaryRank = validateAndGetMilitaryRank(employeeDTO.getMilitaryRankId());
-        }
-
-        Job job = null;
-        if (employeeDTO.getJobId() != null) {
-            job = validateAndGetJob(employeeDTO.getJobId());
-        }
+        validateBusinessRules(employeeDTO, "update");
 
         // Check for unique constraints (excluding current record)
         validateUniqueConstraints(employeeDTO, id);
 
         // Update fields with exact field mapping
-        existingEmployee.setSerial(employeeDTO.getSerial()); // F_01
-        existingEmployee.setHiringDate(employeeDTO.getHiringDate()); // F_02
-        if (person != null) {
-            existingEmployee.setPerson(person); // F_03
-        }
-        if (militaryRank != null) {
-            existingEmployee.setMilitaryRank(militaryRank); // F_04
-        }
-        existingEmployee.setJob(job); // F_05 (can be null)
+        mapDtoToEntity(employeeDTO, existingEmployee);
+
+        // Handle foreign key relationships
+        setEntityRelationships(employeeDTO, existingEmployee);
 
         Employee updatedEmployee = employeeRepository.save(existingEmployee);
         log.info("Successfully updated employee with ID: {}", id);
 
-        return EmployeeDTO.fromEntity(updatedEmployee);
+        return EmployeeDTO.fromEntityWithRelations(updatedEmployee);
     }
 
     // ========== DELETE OPERATIONS ==========
@@ -509,6 +470,14 @@ public class EmployeeService {
     }
 
     /**
+     * Check if person is already an employee
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByPersonId(Long personId) {
+        return employeeRepository.existsByPersonId(personId);
+    }
+
+    /**
      * Check if serial exists
      */
     @Transactional(readOnly = true)
@@ -517,126 +486,144 @@ public class EmployeeService {
     }
 
     /**
-     * Get total count of employees
+     * Get statistics counts
      */
     @Transactional(readOnly = true)
-    public Long getTotalCount() {
-        return employeeRepository.countAllEmployees();
+    public Long countEmployeesByMilitaryRank(Long militaryRankId) {
+        return employeeRepository.countByMilitaryRank(militaryRankId);
+    }
+
+    @Transactional(readOnly = true)
+    public Long countEmployeesByJob(Long jobId) {
+        return employeeRepository.countByJob(jobId);
+    }
+
+    @Transactional(readOnly = true)
+    public Long countEmployeesWithoutJob() {
+        return employeeRepository.countWithoutJob();
+    }
+
+    @Transactional(readOnly = true)
+    public Long countEmployeesWithJob() {
+        return employeeRepository.countWithJob();
+    }
+
+    @Transactional(readOnly = true)
+    public Long countGeneralOfficers() {
+        return employeeRepository.countGeneralOfficers();
+    }
+
+    @Transactional(readOnly = true)
+    public Long countCommissionedOfficers() {
+        return employeeRepository.countCommissionedOfficers();
+    }
+
+    @Transactional(readOnly = true)
+    public Long countTotalEmployees() {
+        return employeeRepository.countTotalEmployees();
+    }
+
+    // ========== PRIVATE HELPER METHODS ==========
+
+    /**
+     * Map DTO fields to entity (exact field mapping)
+     */
+    private void mapDtoToEntity(EmployeeDTO dto, Employee entity) {
+        entity.setSerial(dto.getSerial()); // F_01
+        entity.setHiringDate(dto.getHiringDate()); // F_02
     }
 
     /**
-     * Get count by military rank
+     * Set entity foreign key relationships
      */
-    @Transactional(readOnly = true)
-    public Long getCountByMilitaryRank(Long militaryRankId) {
-        return employeeRepository.countByMilitaryRankId(militaryRankId);
-    }
+    private void setEntityRelationships(EmployeeDTO dto, Employee entity) {
+        // F_03 - Person (required)
+        if (dto.getPersonId() != null) {
+            entity.setPerson(personRepository.findById(dto.getPersonId())
+                    .orElseThrow(() -> new RuntimeException("Person not found with ID: " + dto.getPersonId())));
+        }
 
-    /**
-     * Get count by job
-     */
-    @Transactional(readOnly = true)
-    public Long getCountByJob(Long jobId) {
-        return employeeRepository.countByJobId(jobId);
-    }
+        // F_04 - MilitaryRank (required)
+        if (dto.getMilitaryRankId() != null) {
+            entity.setMilitaryRank(militaryRankRepository.findById(dto.getMilitaryRankId())
+                    .orElseThrow(() -> new RuntimeException("Military rank not found with ID: " + dto.getMilitaryRankId())));
+        }
 
-    /**
-     * Get count of new recruits
-     */
-    @Transactional(readOnly = true)
-    public Long getNewRecruitsCount() {
-        return employeeRepository.countNewRecruits();
+        // F_05 - Job (optional)
+        if (dto.getJobId() != null) {
+            entity.setJob(jobRepository.findById(dto.getJobId())
+                    .orElseThrow(() -> new RuntimeException("Job not found with ID: " + dto.getJobId())));
+        } else {
+            entity.setJob(null);
+        }
     }
-
-    /**
-     * Get count of veteran employees
-     */
-    @Transactional(readOnly = true)
-    public Long getVeteranEmployeesCount() {
-        return employeeRepository.countVeteranEmployees();
-    }
-
-    /**
-     * Get count of retirement eligible
-     */
-    @Transactional(readOnly = true)
-    public Long getRetirementEligibleCount() {
-        return employeeRepository.countRetirementEligible();
-    }
-
-    /**
-     * Get count without job assignment
-     */
-    @Transactional(readOnly = true)
-    public Long getCountWithoutJobAssignment() {
-        return employeeRepository.countWithoutJobAssignment();
-    }
-
-    // ========== VALIDATION METHODS ==========
 
     /**
      * Validate required fields
      */
-    private void validateRequiredFields(EmployeeDTO employeeDTO, String operation) {
-        if (employeeDTO.getPersonId() == null) {
+    private void validateRequiredFields(EmployeeDTO dto, String operation) {
+        if (dto.getPersonId() == null) {
             throw new RuntimeException("Person is required for " + operation);
         }
-        if (employeeDTO.getMilitaryRankId() == null) {
+        if (dto.getMilitaryRankId() == null) {
             throw new RuntimeException("Military rank is required for " + operation);
         }
     }
 
     /**
-     * Validate unique constraints
+     * Validate business rules
      */
-    private void validateUniqueConstraints(EmployeeDTO employeeDTO, Long excludeId) {
-        // Check serial uniqueness if provided
-        if (employeeDTO.getSerial() != null && !employeeDTO.getSerial().trim().isEmpty()) {
+    private void validateBusinessRules(EmployeeDTO dto, String operation) {
+        // Hiring date cannot be in the future (more than 1 day to account for timezone)
+        if (dto.getHiringDate() != null) {
+            Date tomorrow = new Date(System.currentTimeMillis() + (24 * 60 * 60 * 1000));
+            if (dto.getHiringDate().after(tomorrow)) {
+                throw new RuntimeException("Hiring date cannot be in the future for " + operation);
+            }
+        }
+
+        // Serial number format validation (if provided)
+        if (dto.getSerial() != null && !dto.getSerial().trim().isEmpty()) {
+            String serial = dto.getSerial().trim();
+            if (serial.length() < 3) {
+                throw new RuntimeException("Serial number must be at least 3 characters long for " + operation);
+            }
+            // Additional serial format validation can be added here
+        }
+    }
+
+    /**
+     * Validate unique constraints and business validations
+     */
+    private void validateUniqueConstraints(EmployeeDTO dto, Long excludeId) {
+        // Check if person is already an employee (one person = one employee)
+        if (dto.getPersonId() != null) {
             if (excludeId == null) {
-                if (employeeRepository.existsBySerial(employeeDTO.getSerial())) {
-                    throw new RuntimeException("Employee with serial '" + employeeDTO.getSerial() + "' already exists");
+                if (employeeRepository.existsByPersonId(dto.getPersonId())) {
+                    throw new RuntimeException("Person with ID " + dto.getPersonId() + " is already an employee");
                 }
             } else {
-                if (employeeRepository.existsBySerialAndIdNot(employeeDTO.getSerial(), excludeId)) {
-                    throw new RuntimeException("Another employee with serial '" + employeeDTO.getSerial() + "' already exists");
+                // For updates, check if the person belongs to another employee
+                List<Employee> existingEmployees = employeeRepository.findByPerson(dto.getPersonId());
+                boolean hasOtherEmployee = existingEmployees.stream()
+                        .anyMatch(emp -> !emp.getId().equals(excludeId));
+                if (hasOtherEmployee) {
+                    throw new RuntimeException("Person with ID " + dto.getPersonId() + " is already associated with another employee");
                 }
             }
         }
 
-        // Check person uniqueness - one person can only have one employee record
-        if (excludeId == null) {
-            if (employeeRepository.findByPersonId(employeeDTO.getPersonId()).isPresent()) {
-                throw new RuntimeException("Person with ID " + employeeDTO.getPersonId() + " already has an employee record");
-            }
-        } else {
-            Optional<Employee> existingEmployee = employeeRepository.findByPersonId(employeeDTO.getPersonId());
-            if (existingEmployee.isPresent() && !existingEmployee.get().getId().equals(excludeId)) {
-                throw new RuntimeException("Another employee record exists for person ID " + employeeDTO.getPersonId());
+        // Check serial number uniqueness (if provided)
+        if (dto.getSerial() != null && !dto.getSerial().trim().isEmpty()) {
+            if (excludeId == null) {
+                if (employeeRepository.existsBySerial(dto.getSerial())) {
+                    throw new RuntimeException("Employee with serial '" + dto.getSerial() + "' already exists");
+                }
+            } else {
+                if (employeeRepository.existsBySerialAndIdNot(dto.getSerial(), excludeId)) {
+                    throw new RuntimeException("Another employee with serial '" + dto.getSerial() + "' already exists");
+                }
             }
         }
-    }
-
-    /**
-     * Validate and get person
-     */
-    private Person validateAndGetPerson(Long personId) {
-        return personRepository.findById(personId)
-                .orElseThrow(() -> new RuntimeException("Person not found with ID: " + personId));
-    }
-
-    /**
-     * Validate and get military rank
-     */
-    private MilitaryRank validateAndGetMilitaryRank(Long militaryRankId) {
-        return militaryRankRepository.findById(militaryRankId)
-                .orElseThrow(() -> new RuntimeException("Military rank not found with ID: " + militaryRankId));
-    }
-
-    /**
-     * Validate and get job
-     */
-    private Job validateAndGetJob(Long jobId) {
-        return jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
     }
 }

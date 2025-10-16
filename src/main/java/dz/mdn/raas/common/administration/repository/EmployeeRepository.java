@@ -22,264 +22,307 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Employee Repository with essential CRUD operations
- * Based on exact field names: F_00=id, F_01=serial, F_02=hiringDate, F_03=person, F_04=militaryRank, F_05=job
- * F_03 (person) is required foreign key
- * F_04 (militaryRank) is required foreign key
- * F_05 (job) is optional foreign key
- * F_01 (serial) and F_02 (hiringDate) are optional
+ * Based on exact field names: F_00=id, F_01=serial, F_02=hiringDate, 
+ * F_03=person, F_04=militaryRank, F_05=job
  */
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     /**
-     * Find employee by serial (F_01)
+     * Find employee by serial number
      */
     @Query("SELECT e FROM Employee e WHERE e.serial = :serial")
     Optional<Employee> findBySerial(@Param("serial") String serial);
 
     /**
-     * Find employees by hiring date (F_02)
+     * Find all employees ordered by hiring date (most recent first)
      */
-    @Query("SELECT e FROM Employee e WHERE e.hiringDate = :hiringDate")
-    Page<Employee> findByHiringDate(@Param("hiringDate") Date hiringDate, Pageable pageable);
+    @Query("SELECT e FROM Employee e ORDER BY e.hiringDate DESC NULLS LAST")
+    Page<Employee> findAllOrderByHiringDate(Pageable pageable);
 
     /**
-     * Find employee by person ID (F_03)
+     * Find employees by person
      */
     @Query("SELECT e FROM Employee e WHERE e.person.id = :personId")
-    Optional<Employee> findByPersonId(@Param("personId") Long personId);
+    List<Employee> findByPerson(@Param("personId") Long personId);
 
     /**
-     * Find employees by military rank ID (F_04)
+     * Find employees by military rank
      */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.id = :militaryRankId ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findByMilitaryRankId(@Param("militaryRankId") Long militaryRankId, Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.militaryRank.id = :militaryRankId ORDER BY e.hiringDate DESC")
+    Page<Employee> findByMilitaryRank(@Param("militaryRankId") Long militaryRankId, Pageable pageable);
 
     /**
-     * Find employees by job ID (F_05)
+     * Find employees by job
      */
-    @Query("SELECT e FROM Employee e WHERE e.job.id = :jobId ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findByJobId(@Param("jobId") Long jobId, Pageable pageable);
-
-    /**
-     * Find all employees with pagination ordered by person name
-     */
-    @Query("SELECT e FROM Employee e ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC, e.person.firstnameAr ASC, e.person.lastnameAr ASC")
-    Page<Employee> findAllOrderByPersonName(Pageable pageable);
-
-    /**
-     * Find all employees ordered by military rank level then name
-     */
-    @Query("SELECT e FROM Employee e ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findAllOrderByRankAndName(Pageable pageable);
-
-    /**
-     * Search employees by person name or serial
-     */
-    @Query("SELECT e FROM Employee e WHERE " +
-           "e.person.firstnameAr LIKE %:search% OR " +
-           "e.person.lastnameAr LIKE %:search% OR " +
-           "e.person.firstnameLt LIKE %:search% OR " +
-           "e.person.lastnameLt LIKE %:search% OR " +
-           "e.serial LIKE %:search%")
-    Page<Employee> searchByPersonNameOrSerial(@Param("search") String search, Pageable pageable);
-
-    /**
-     * Find employees by hiring year
-     */
-    @Query("SELECT e FROM Employee e WHERE YEAR(e.hiringDate) = :year")
-    Page<Employee> findByHiringYear(@Param("year") Integer year, Pageable pageable);
-
-    /**
-     * Find employees by hiring date range
-     */
-    @Query("SELECT e FROM Employee e WHERE e.hiringDate BETWEEN :startDate AND :endDate")
-    Page<Employee> findByHiringDateBetween(@Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
-
-    /**
-     * Find employees by years of service range
-     */
-    @Query("SELECT e FROM Employee e WHERE " +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END " +
-           "BETWEEN :minYears AND :maxYears")
-    Page<Employee> findByYearsOfServiceRange(@Param("minYears") Integer minYears, @Param("maxYears") Integer maxYears, Pageable pageable);
-
-    /**
-     * Find employees eligible for retirement (30+ years or age 60+)
-     */
-    @Query("SELECT e FROM Employee e WHERE " +
-           "(" +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END >= 30" +
-           ") OR (" +
-           "YEAR(CURRENT_DATE) - YEAR(e.person.birthDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.person.birthDate) OR (MONTH(CURRENT_DATE) = MONTH(e.person.birthDate) AND DAY(CURRENT_DATE) < DAY(e.person.birthDate)) THEN 1 ELSE 0 END >= 60" +
-           ")")
-    Page<Employee> findRetirementEligible(Pageable pageable);
-
-    /**
-     * Find new recruits (less than 2 years service)
-     */
-    @Query("SELECT e FROM Employee e WHERE " +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END < 2")
-    Page<Employee> findNewRecruits(Pageable pageable);
-
-    /**
-     * Find veteran employees (20+ years service)
-     */
-    @Query("SELECT e FROM Employee e WHERE " +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END >= 20")
-    Page<Employee> findVeteranEmployees(Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.job.id = :jobId ORDER BY e.hiringDate DESC")
+    Page<Employee> findByJob(@Param("jobId") Long jobId, Pageable pageable);
 
     /**
      * Find employees without job assignment
      */
-    @Query("SELECT e FROM Employee e WHERE e.job IS NULL ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findWithoutJobAssignment(Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.job IS NULL ORDER BY e.hiringDate DESC")
+    Page<Employee> findWithoutJob(Pageable pageable);
 
     /**
      * Find employees with job assignment
      */
-    @Query("SELECT e FROM Employee e WHERE e.job IS NOT NULL ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findWithJobAssignment(Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.job IS NOT NULL ORDER BY e.hiringDate DESC")
+    Page<Employee> findWithJob(Pageable pageable);
 
     /**
-     * Find employees without serial
+     * Search employees by person name (first name or last name)
      */
-    @Query("SELECT e FROM Employee e WHERE e.serial IS NULL OR e.serial = '' ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findWithoutSerial(Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.person.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.lastName) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Employee> searchByPersonName(@Param("search") String search, Pageable pageable);
 
     /**
-     * Find employees without hiring date
+     * Search employees by serial number
      */
-    @Query("SELECT e FROM Employee e WHERE e.hiringDate IS NULL ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findWithoutHiringDate(Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.serial LIKE %:search%")
+    Page<Employee> searchBySerial(@Param("search") String search, Pageable pageable);
 
     /**
-     * Count total employees
+     * Search employees by any field
      */
-    @Query("SELECT COUNT(e) FROM Employee e")
-    Long countAllEmployees();
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.serial LIKE %:search% OR " +
+           "LOWER(e.person.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.person.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(e.militaryRank.abbreviationFr) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Employee> searchByAnyField(@Param("search") String search, Pageable pageable);
+
+    /**
+     * Find employees hired within date range
+     */
+    @Query("SELECT e FROM Employee e WHERE e.hiringDate BETWEEN :startDate AND :endDate ORDER BY e.hiringDate DESC")
+    Page<Employee> findByHiringDateRange(@Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
+
+    /**
+     * Find employees hired after specific date
+     */
+    @Query("SELECT e FROM Employee e WHERE e.hiringDate >= :date ORDER BY e.hiringDate DESC")
+    Page<Employee> findHiredAfter(@Param("date") Date date, Pageable pageable);
+
+    /**
+     * Find employees hired before specific date
+     */
+    @Query("SELECT e FROM Employee e WHERE e.hiringDate <= :date ORDER BY e.hiringDate DESC")
+    Page<Employee> findHiredBefore(@Param("date") Date date, Pageable pageable);
+
+    /**
+     * Find general officer employees
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%général%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%amiral%'")
+    Page<Employee> findGeneralOfficers(Pageable pageable);
+
+    /**
+     * Find senior officer employees
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%colonel%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%capitaine de vaisseau%'")
+    Page<Employee> findSeniorOfficers(Pageable pageable);
+
+    /**
+     * Find company grade officer employees
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%commandant%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%capitaine%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%lieutenant%'")
+    Page<Employee> findCompanyGradeOfficers(Pageable pageable);
+
+    /**
+     * Find non-commissioned officer employees
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%sous-officier%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%sergent%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%adjudant%'")
+    Page<Employee> findNonCommissionedOfficers(Pageable pageable);
+
+    /**
+     * Find enlisted employees
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%soldat%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%matelot%'")
+    Page<Employee> findEnlisted(Pageable pageable);
+
+    /**
+     * Find commissioned officer employees
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%général%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%amiral%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%colonel%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%commandant%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%capitaine%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%lieutenant%'")
+    Page<Employee> findCommissionedOfficers(Pageable pageable);
+
+    /**
+     * Find army employees (based on military category)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.militaryCategory.designationFr) LIKE '%terre%' OR " +
+           "LOWER(e.militaryRank.militaryCategory.designationEn) LIKE '%army%'")
+    Page<Employee> findArmyEmployees(Pageable pageable);
+
+    /**
+     * Find navy employees (based on military category)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.militaryCategory.designationFr) LIKE '%marine%' OR " +
+           "LOWER(e.militaryRank.militaryCategory.designationEn) LIKE '%navy%'")
+    Page<Employee> findNavyEmployees(Pageable pageable);
+
+    /**
+     * Find air force employees (based on military category)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.militaryCategory.designationFr) LIKE '%air%'")
+    Page<Employee> findAirForceEmployees(Pageable pageable);
+
+    /**
+     * Find gendarmerie employees (based on military category)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.militaryCategory.designationFr) LIKE '%gendarmerie%'")
+    Page<Employee> findGendarmerieEmployees(Pageable pageable);
+
+    /**
+     * Find employees by service years (calculated from hiring date)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) >= :minDays AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) <= :maxDays")
+    Page<Employee> findByServiceDays(@Param("minDays") Integer minDays, @Param("maxDays") Integer maxDays, Pageable pageable);
+
+    /**
+     * Find veteran employees (25+ years of service)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) >= 9125") // 25 * 365 days
+    Page<Employee> findVeteranEmployees(Pageable pageable);
+
+    /**
+     * Find senior employees (15+ years of service)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) >= 5475 AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) < 9125") // 15-25 years
+    Page<Employee> findSeniorEmployees(Pageable pageable);
+
+    /**
+     * Find experienced employees (5-15 years of service)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) >= 1825 AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) < 5475") // 5-15 years
+    Page<Employee> findExperiencedEmployees(Pageable pageable);
+
+    /**
+     * Find junior employees (1-5 years of service)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) >= 365 AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) < 1825") // 1-5 years
+    Page<Employee> findJuniorEmployees(Pageable pageable);
+
+    /**
+     * Find probationary employees (less than 1 year of service)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) < 365") // Less than 1 year
+    Page<Employee> findProbationaryEmployees(Pageable pageable);
+
+    /**
+     * Find employees with complete profile
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.person IS NOT NULL AND " +
+           "e.militaryRank IS NOT NULL AND " +
+           "e.hiringDate IS NOT NULL AND " +
+           "e.serial IS NOT NULL AND e.serial != ''")
+    Page<Employee> findWithCompleteProfile(Pageable pageable);
+
+    /**
+     * Find employees with incomplete profile
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.person IS NULL OR " +
+           "e.militaryRank IS NULL OR " +
+           "e.hiringDate IS NULL OR " +
+           "e.serial IS NULL OR e.serial = ''")
+    Page<Employee> findWithIncompleteProfile(Pageable pageable);
 
     /**
      * Count employees by military rank
      */
     @Query("SELECT COUNT(e) FROM Employee e WHERE e.militaryRank.id = :militaryRankId")
-    Long countByMilitaryRankId(@Param("militaryRankId") Long militaryRankId);
+    Long countByMilitaryRank(@Param("militaryRankId") Long militaryRankId);
 
     /**
      * Count employees by job
      */
     @Query("SELECT COUNT(e) FROM Employee e WHERE e.job.id = :jobId")
-    Long countByJobId(@Param("jobId") Long jobId);
+    Long countByJob(@Param("jobId") Long jobId);
 
     /**
-     * Count employees by service years range
-     */
-    @Query("SELECT COUNT(e) FROM Employee e WHERE " +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END " +
-           "BETWEEN :minYears AND :maxYears")
-    Long countByYearsOfServiceRange(@Param("minYears") Integer minYears, @Param("maxYears") Integer maxYears);
-
-    /**
-     * Count new recruits
-     */
-    @Query("SELECT COUNT(e) FROM Employee e WHERE " +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END < 2")
-    Long countNewRecruits();
-
-    /**
-     * Count veteran employees
-     */
-    @Query("SELECT COUNT(e) FROM Employee e WHERE " +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END >= 20")
-    Long countVeteranEmployees();
-
-    /**
-     * Count retirement eligible employees
-     */
-    @Query("SELECT COUNT(e) FROM Employee e WHERE " +
-           "(" +
-           "YEAR(CURRENT_DATE) - YEAR(e.hiringDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.hiringDate) OR (MONTH(CURRENT_DATE) = MONTH(e.hiringDate) AND DAY(CURRENT_DATE) < DAY(e.hiringDate)) THEN 1 ELSE 0 END >= 30" +
-           ") OR (" +
-           "YEAR(CURRENT_DATE) - YEAR(e.person.birthDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.person.birthDate) OR (MONTH(CURRENT_DATE) = MONTH(e.person.birthDate) AND DAY(CURRENT_DATE) < DAY(e.person.birthDate)) THEN 1 ELSE 0 END >= 60" +
-           ")")
-    Long countRetirementEligible();
-
-    /**
-     * Count employees without job assignment
+     * Count employees without job
      */
     @Query("SELECT COUNT(e) FROM Employee e WHERE e.job IS NULL")
-    Long countWithoutJobAssignment();
+    Long countWithoutJob();
 
     /**
-     * Find employees with join fetch for person, rank and job
+     * Count employees with job
      */
-    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.person LEFT JOIN FETCH e.militaryRank LEFT JOIN FETCH e.job ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findAllWithPersonRankAndJob(Pageable pageable);
+    @Query("SELECT COUNT(e) FROM Employee e WHERE e.job IS NOT NULL")
+    Long countWithJob();
 
     /**
-     * Find employees by military rank designation
+     * Count general officer employees
      */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.designationFr = :rankDesignation ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findByMilitaryRankDesignation(@Param("rankDesignation") String rankDesignation, Pageable pageable);
+    @Query("SELECT COUNT(e) FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%général%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%amiral%'")
+    Long countGeneralOfficers();
 
     /**
-     * Find employees by military rank category
+     * Count commissioned officer employees
      */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory = :rankCategory ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
-    Page<Employee> findByMilitaryRankCategory(@Param("rankCategory") String rankCategory, Pageable pageable);
+    @Query("SELECT COUNT(e) FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%général%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%amiral%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%colonel%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%commandant%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%capitaine%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%lieutenant%'")
+    Long countCommissionedOfficers();
 
     /**
-     * Find employees by job designation
+     * Check if person is already an employee
      */
-    @Query("SELECT e FROM Employee e WHERE e.job.designationFr = :jobDesignation ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findByJobDesignation(@Param("jobDesignation") String jobDesignation, Pageable pageable);
-
-    /**
-     * Find employees by job structure
-     */
-    @Query("SELECT e FROM Employee e WHERE e.job.structure.designationFr = :structureDesignation ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findByJobStructureDesignation(@Param("structureDesignation") String structureDesignation, Pageable pageable);
-
-    /**
-     * Search employees with comprehensive context
-     */
-    @Query("SELECT e FROM Employee e LEFT JOIN e.person p LEFT JOIN e.militaryRank mr LEFT JOIN e.job j LEFT JOIN j.structure s WHERE " +
-           "(p.firstnameAr LIKE %:search% OR p.lastnameAr LIKE %:search% OR " +
-           "p.firstnameLt LIKE %:search% OR p.lastnameLt LIKE %:search% OR " +
-           "e.serial LIKE %:search% OR " +
-           "mr.designationFr LIKE %:search% OR mr.abbreviationFr LIKE %:search% OR " +
-           "j.designationFr LIKE %:search% OR " +
-           "s.designationFr LIKE %:search% OR s.acronymFr LIKE %:search%) " +
-           "ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> searchWithComprehensiveContext(@Param("search") String search, Pageable pageable);
-
-    /**
-     * Find officers (rank category = 'OFFICER' or 'SENIOR_OFFICER')
-     */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory IN ('OFFICER', 'SENIOR_OFFICER') ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
-    Page<Employee> findOfficers(Pageable pageable);
-
-    /**
-     * Find enlisted personnel (rank category = 'ENLISTED')
-     */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory = 'ENLISTED' ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
-    Page<Employee> findEnlistedPersonnel(Pageable pageable);
-
-    /**
-     * Find NCOs (rank category = 'NCO')
-     */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory = 'NCO' ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
-    Page<Employee> findNCOs(Pageable pageable);
-
-    /**
-     * Find employees by serial pattern
-     */
-    @Query("SELECT e FROM Employee e WHERE e.serial LIKE %:pattern%")
-    Page<Employee> findBySerialContaining(@Param("pattern") String pattern, Pageable pageable);
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Employee e WHERE e.person.id = :personId")
+    boolean existsByPersonId(@Param("personId") Long personId);
 
     /**
      * Check if serial exists
@@ -294,47 +337,99 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     boolean existsBySerialAndIdNot(@Param("serial") String serial, @Param("id") Long id);
 
     /**
-     * Find employees hired in current year
+     * Find employees by multiple military ranks
      */
-    @Query("SELECT e FROM Employee e WHERE YEAR(e.hiringDate) = YEAR(CURRENT_DATE)")
-    Page<Employee> findHiredThisYear(Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.militaryRank.id IN :militaryRankIds ORDER BY e.hiringDate DESC")
+    Page<Employee> findByMilitaryRanks(@Param("militaryRankIds") List<Long> militaryRankIds, Pageable pageable);
 
     /**
-     * Find employees with service anniversaries this month
+     * Find employees by multiple jobs
      */
-    @Query("SELECT e FROM Employee e WHERE MONTH(e.hiringDate) = MONTH(CURRENT_DATE)")
-    Page<Employee> findServiceAnniversariesThisMonth(Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.job.id IN :jobIds ORDER BY e.hiringDate DESC")
+    Page<Employee> findByJobs(@Param("jobIds") List<Long> jobIds, Pageable pageable);
 
     /**
-     * Find employees by birth state (from person)
+     * Find recently hired employees (within last N days)
      */
-    @Query("SELECT e FROM Employee e WHERE e.person.birthState.id = :stateId ORDER BY e.person.firstnameLt ASC, e.person.lastnameLt ASC")
-    Page<Employee> findByPersonBirthStateId(@Param("stateId") Long stateId, Pageable pageable);
+    @Query("SELECT e FROM Employee e WHERE e.hiringDate >= :sinceDate ORDER BY e.hiringDate DESC")
+    Page<Employee> findRecentlyHired(@Param("sinceDate") Date sinceDate, Pageable pageable);
 
     /**
-     * Find employees by age range (from person)
+     * Get employee statistics by military rank
+     */
+    @Query("SELECT e.militaryRank.designationFr, COUNT(e) FROM Employee e GROUP BY e.militaryRank.designationFr ORDER BY COUNT(e) DESC")
+    List<Object[]> getEmployeeStatisticsByRank();
+
+    /**
+     * Get employee statistics by service branch
+     */
+    @Query("SELECT e.militaryRank.militaryCategory.designationFr, COUNT(e) FROM Employee e GROUP BY e.militaryRank.militaryCategory.designationFr ORDER BY COUNT(e) DESC")
+    List<Object[]> getEmployeeStatisticsByServiceBranch();
+
+    /**
+     * Get employee statistics by hiring year
+     */
+    @Query("SELECT YEAR(e.hiringDate), COUNT(e) FROM Employee e WHERE e.hiringDate IS NOT NULL GROUP BY YEAR(e.hiringDate) ORDER BY YEAR(e.hiringDate) DESC")
+    List<Object[]> getEmployeeStatisticsByHiringYear();
+
+    /**
+     * Find employees eligible for retirement (30+ years of service)
      */
     @Query("SELECT e FROM Employee e WHERE " +
-           "YEAR(CURRENT_DATE) - YEAR(e.person.birthDate) - CASE WHEN MONTH(CURRENT_DATE) < MONTH(e.person.birthDate) OR (MONTH(CURRENT_DATE) = MONTH(e.person.birthDate) AND DAY(CURRENT_DATE) < DAY(e.person.birthDate)) THEN 1 ELSE 0 END " +
-           "BETWEEN :minAge AND :maxAge")
-    Page<Employee> findByPersonAgeRange(@Param("minAge") Integer minAge, @Param("maxAge") Integer maxAge, Pageable pageable);
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) >= 10950") // 30 * 365 days
+    Page<Employee> findRetirementEligible(Pageable pageable);
 
     /**
-     * Find employees with incomplete profiles
-     */
-    @Query("SELECT e FROM Employee e WHERE e.serial IS NULL OR e.serial = '' OR e.hiringDate IS NULL OR e.job IS NULL")
-    Page<Employee> findWithIncompleteProfiles(Pageable pageable);
-
-    /**
-     * Find promotion eligible employees
+     * Find employees approaching retirement (25-30 years of service)
      */
     @Query("SELECT e FROM Employee e WHERE " +
-           "(" +
-           "(e.militaryRank.militaryCategory = 'ENLISTED' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 2) OR " +
-           "(e.militaryRank.militaryCategory = 'NCO' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 4) OR " +
-           "(e.militaryRank.militaryCategory = 'OFFICER' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 3) OR " +
-           "(e.militaryRank.militaryCategory = 'SENIOR_OFFICER' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 5)" +
-           ") " +
-           "ORDER BY e.militaryRank.rankLevel ASC, e.hiringDate ASC")
-    Page<Employee> findPromotionEligible(Pageable pageable);
+           "e.hiringDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) >= 9125 AND " +
+           "DATEDIFF(CURRENT_DATE, e.hiringDate) < 10950") // 25-30 years
+    Page<Employee> findApproachingRetirement(Pageable pageable);
+
+    /**
+     * Find command-eligible employees (officers who can command units)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%général%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%amiral%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%colonel%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%commandant%' OR " +
+           "LOWER(e.militaryRank.designationFr) LIKE '%capitaine%'")
+    Page<Employee> findCommandEligible(Pageable pageable);
+
+    /**
+     * Find employees by age range (through person birth date)
+     */
+    @Query("SELECT e FROM Employee e WHERE " +
+           "e.person.birthDate IS NOT NULL AND " +
+           "DATEDIFF(CURRENT_DATE, e.person.birthDate) >= :minAgeDays AND " +
+           "DATEDIFF(CURRENT_DATE, e.person.birthDate) <= :maxAgeDays")
+    Page<Employee> findByAgeRange(@Param("minAgeDays") Integer minAgeDays, @Param("maxAgeDays") Integer maxAgeDays, Pageable pageable);
+
+    /**
+     * Find most senior employees (by hiring date)
+     */
+    @Query("SELECT e FROM Employee e WHERE e.hiringDate IS NOT NULL ORDER BY e.hiringDate ASC")
+    Page<Employee> findMostSeniorEmployees(Pageable pageable);
+
+    /**
+     * Find newest employees (by hiring date)
+     */
+    @Query("SELECT e FROM Employee e WHERE e.hiringDate IS NOT NULL ORDER BY e.hiringDate DESC")
+    Page<Employee> findNewestEmployees(Pageable pageable);
+
+    /**
+     * Count total employees
+     */
+    @Query("SELECT COUNT(e) FROM Employee e")
+    Long countTotalEmployees();
+
+    /**
+     * Find duplicate employees (same person with multiple employee records)
+     */
+    @Query("SELECT e1 FROM Employee e1, Employee e2 WHERE e1.id != e2.id AND e1.person.id = e2.person.id")
+    List<Employee> findDuplicateEmployees();
 }

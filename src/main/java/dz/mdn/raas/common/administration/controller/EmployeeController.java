@@ -24,24 +24,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-
 /**
  * Employee REST Controller
  * Handles employee operations: create, get metadata, delete, get all
- * Based on exact Employee model: F_00=id, F_01=serial, F_02=hiringDate, F_03=person, F_04=militaryRank, F_05=job
- * F_03 (person) is required foreign key
- * F_04 (militaryRank) is required foreign key
- * F_05 (job) is optional foreign key
- * F_01 (serial) and F_02 (hiringDate) are optional
+ * Based on exact Employee model: F_00=id, F_01=serial, F_02=hiringDate, 
+ * F_03=personId, F_04=militaryRankId, F_05=jobId
  */
 @RestController
-@RequestMapping("/employee")
+@RequestMapping("/api/v1/employees")
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeController {
@@ -52,14 +46,12 @@ public class EmployeeController {
 
     /**
      * Create new employee
-     * Creates military employee with person assignment, rank designation, and optional job assignment
+     * Creates employee with military hierarchy integration and career tracking
      */
     @PostMapping
     public ResponseEntity<EmployeeDTO> createEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) {
-        log.info("Creating employee with serial: {}, Person ID: {}, Rank ID: {}, Job ID: {}, Hiring Date: {}", 
-                employeeDTO.getSerial(), employeeDTO.getPersonId(), 
-                employeeDTO.getMilitaryRankId(), employeeDTO.getJobId(),
-                employeeDTO.getHiringDate());
+        log.info("Creating employee for person ID: {}, military rank ID: {}", 
+                employeeDTO.getPersonId(), employeeDTO.getMilitaryRankId());
         
         EmployeeDTO createdEmployee = employeeService.createEmployee(employeeDTO);
         
@@ -70,7 +62,7 @@ public class EmployeeController {
 
     /**
      * Get employee metadata by ID
-     * Returns employee information with person details, military rank, job assignment, and service record
+     * Returns employee information with military hierarchy details and career analysis
      */
     @GetMapping("/{id}")
     public ResponseEntity<EmployeeDTO> getEmployeeMetadata(@PathVariable Long id) {
@@ -81,86 +73,11 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeMetadata);
     }
 
-    /**
-     * Get employee by serial (F_01)
-     */
-    @GetMapping("/serial/{serial}")
-    public ResponseEntity<EmployeeDTO> getEmployeeBySerial(@PathVariable String serial) {
-        log.debug("Getting employee by serial: {}", serial);
-        
-        return employeeService.findBySerial(serial)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    /**
-     * Get employee by person ID (F_03)
-     */
-    @GetMapping("/person/{personId}")
-    public ResponseEntity<EmployeeDTO> getEmployeeByPersonId(@PathVariable Long personId) {
-        log.debug("Getting employee by person ID: {}", personId);
-        
-        return employeeService.findByPersonId(personId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    /**
-     * Get employees by hiring date (F_02)
-     */
-    @GetMapping("/hiring-date/{hiringDate}")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByHiringDate(
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date hiringDate,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees by hiring date: {}", hiringDate);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findByHiringDate(hiringDate, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * Get employees by military rank ID (F_04)
-     */
-    @GetMapping("/military-rank/{militaryRankId}")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByMilitaryRank(
-            @PathVariable Long militaryRankId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees by military rank ID: {}", militaryRankId);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findByMilitaryRankId(militaryRankId, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * Get employees by job ID (F_05)
-     */
-    @GetMapping("/job/{jobId}")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByJob(
-            @PathVariable Long jobId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees by job ID: {}", jobId);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findByJobId(jobId, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
     // ========== DELETE ONE ==========
 
     /**
      * Delete employee by ID
-     * Removes employee from the military personnel system
+     * Removes employee from the military personnel management system
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
@@ -175,14 +92,14 @@ public class EmployeeController {
 
     /**
      * Get all employees with pagination
-     * Returns list of all military personnel ordered by person name
+     * Returns list of all employees ordered by hiring date (most recent first)
      */
     @GetMapping
     public ResponseEntity<Page<EmployeeDTO>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "person.firstnameLt,person.lastnameLt") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(defaultValue = "hiringDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
         
         log.debug("Getting all employees - page: {}, size: {}, sortBy: {}, sortDir: {}", 
                   page, size, sortBy, sortDir);
@@ -190,26 +107,9 @@ public class EmployeeController {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? 
                 Sort.Direction.DESC : Sort.Direction.ASC;
         
-        String[] sortFields = sortBy.split(",");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortFields));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
         Page<EmployeeDTO> employees = employeeService.getAllEmployees(pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * Get all employees ordered by military rank and name
-     */
-    @GetMapping("/ordered-by-rank")
-    public ResponseEntity<Page<EmployeeDTO>> getAllEmployeesOrderedByRank(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting all employees ordered by rank and name");
-        
-        Pageable pageable = PageRequest.of(page, size);
-        Page<EmployeeDTO> employees = employeeService.getAllEmployeesOrderedByRank(pageable);
         
         return ResponseEntity.ok(employees);
     }
@@ -217,229 +117,106 @@ public class EmployeeController {
     // ========== SEARCH ENDPOINTS ==========
 
     /**
-     * Search employees by name or serial
+     * Search employees by person name
      */
-    @GetMapping("/search")
-    public ResponseEntity<Page<EmployeeDTO>> searchEmployees(
-            @RequestParam String query,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "person.firstnameLt,person.lastnameLt") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        log.debug("Searching employees with query: {}", query);
-        
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? 
-                Sort.Direction.DESC : Sort.Direction.ASC;
-        
-        String[] sortFields = sortBy.split(",");
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortFields));
-        
-        Page<EmployeeDTO> employees = employeeService.searchEmployees(query, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * Search employees with comprehensive context
-     */
-    @GetMapping("/search/context")
-    public ResponseEntity<Page<EmployeeDTO>> searchEmployeesWithContext(
+    @GetMapping("/search/person-name")
+    public ResponseEntity<Page<EmployeeDTO>> searchEmployeesByPersonName(
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Searching employees with context for query: {}", query);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.searchEmployeesWithContext(query, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    // ========== SERVICE-BASED ENDPOINTS ==========
-
-    /**
-     * Get employees by hiring year
-     */
-    @GetMapping("/hiring-year/{year}")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByHiringYear(
-            @PathVariable Integer year,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees hired in year: {}", year);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findByHiringYear(year, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * Get employees by hiring date range
-     */
-    @GetMapping("/hiring-date-range")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByHiringDateRange(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees hired between {} and {}", startDate, endDate);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findByHiringDateRange(startDate, endDate, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * Get employees by years of service range
-     */
-    @GetMapping("/years-of-service")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByYearsOfService(
-            @RequestParam Integer minYears,
-            @RequestParam Integer maxYears,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees with {} to {} years of service", minYears, maxYears);
+        log.debug("Searching employees by person name with query: {}", query);
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findByYearsOfServiceRange(minYears, maxYears, pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    // ========== MILITARY CLASSIFICATION ENDPOINTS ==========
-
-    /**
-     * Get retirement eligible employees
-     */
-    @GetMapping("/retirement-eligible")
-    public ResponseEntity<Page<EmployeeDTO>> getRetirementEligibleEmployees(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting retirement eligible employees");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findRetirementEligible(pageable);
+        Page<EmployeeDTO> employees = employeeService.searchEmployeesByPersonName(query, pageable);
         
         return ResponseEntity.ok(employees);
     }
 
     /**
-     * Get new recruit employees
+     * Search employees by serial number
      */
-    @GetMapping("/new-recruits")
-    public ResponseEntity<Page<EmployeeDTO>> getNewRecruitEmployees(
+    @GetMapping("/search/serial")
+    public ResponseEntity<Page<EmployeeDTO>> searchEmployeesBySerial(
+            @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting new recruit employees");
+        log.debug("Searching employees by serial with query: {}", query);
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findNewRecruits(pageable);
+        Page<EmployeeDTO> employees = employeeService.searchEmployeesBySerial(query, pageable);
         
         return ResponseEntity.ok(employees);
     }
 
     /**
-     * Get veteran employees
+     * Advanced search employees by any field
      */
-    @GetMapping("/veterans")
-    public ResponseEntity<Page<EmployeeDTO>> getVeteranEmployees(
+    @GetMapping("/search/advanced")
+    public ResponseEntity<Page<EmployeeDTO>> searchEmployeesByAnyField(
+            @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting veteran employees");
+        log.debug("Advanced searching employees with query: {}", query);
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findVeteranEmployees(pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.searchEmployeesByAnyField(query, pageable);
         
         return ResponseEntity.ok(employees);
     }
+
+    // ========== MILITARY RANK SPECIFIC ENDPOINTS ==========
 
     /**
-     * Get officers
+     * Get employees by military rank
      */
-    @GetMapping("/officers")
-    public ResponseEntity<Page<EmployeeDTO>> getOfficerEmployees(
+    @GetMapping("/military-rank/{militaryRankId}")
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByMilitaryRank(
+            @PathVariable Long militaryRankId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting officer employees");
+        log.debug("Getting employees for military rank ID: {}", militaryRankId);
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "militaryRank.rankLevel"));
-        Page<EmployeeDTO> employees = employeeService.findOfficers(pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getEmployeesByMilitaryRank(militaryRankId, pageable);
         
         return ResponseEntity.ok(employees);
     }
+
+    // ========== JOB SPECIFIC ENDPOINTS ==========
 
     /**
-     * Get enlisted personnel
+     * Get employees by job
      */
-    @GetMapping("/enlisted")
-    public ResponseEntity<Page<EmployeeDTO>> getEnlistedPersonnel(
+    @GetMapping("/job/{jobId}")
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByJob(
+            @PathVariable Long jobId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting enlisted personnel");
+        log.debug("Getting employees for job ID: {}", jobId);
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "militaryRank.rankLevel"));
-        Page<EmployeeDTO> employees = employeeService.findEnlistedPersonnel(pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * Get NCOs
-     */
-    @GetMapping("/ncos")
-    public ResponseEntity<Page<EmployeeDTO>> getNCOEmployees(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting NCO employees");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "militaryRank.rankLevel"));
-        Page<EmployeeDTO> employees = employeeService.findNCOs(pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getEmployeesByJob(jobId, pageable);
         
         return ResponseEntity.ok(employees);
     }
-
-    /**
-     * Get promotion eligible employees
-     */
-    @GetMapping("/promotion-eligible")
-    public ResponseEntity<Page<EmployeeDTO>> getPromotionEligibleEmployees(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting promotion eligible employees");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findPromotionEligible(pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    // ========== JOB ASSIGNMENT ENDPOINTS ==========
 
     /**
      * Get employees without job assignment
      */
     @GetMapping("/without-job")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesWithoutJobAssignment(
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeesWithoutJob(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
         log.debug("Getting employees without job assignment");
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findWithoutJobAssignment(pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getEmployeesWithoutJob(pageable);
         
         return ResponseEntity.ok(employees);
     }
@@ -448,14 +225,294 @@ public class EmployeeController {
      * Get employees with job assignment
      */
     @GetMapping("/with-job")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesWithJobAssignment(
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeesWithJob(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
         log.debug("Getting employees with job assignment");
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findWithJobAssignment(pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getEmployeesWithJob(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    // ========== MILITARY HIERARCHY ENDPOINTS ==========
+
+    /**
+     * Get general officer employees
+     */
+    @GetMapping("/hierarchy/general-officers")
+    public ResponseEntity<Page<EmployeeDTO>> getGeneralOfficers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting general officer employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getGeneralOfficers(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get senior officer employees
+     */
+    @GetMapping("/hierarchy/senior-officers")
+    public ResponseEntity<Page<EmployeeDTO>> getSeniorOfficers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting senior officer employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getSeniorOfficers(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get company grade officer employees
+     */
+    @GetMapping("/hierarchy/company-officers")
+    public ResponseEntity<Page<EmployeeDTO>> getCompanyGradeOfficers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting company grade officer employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getCompanyGradeOfficers(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get non-commissioned officer employees
+     */
+    @GetMapping("/hierarchy/nco")
+    public ResponseEntity<Page<EmployeeDTO>> getNonCommissionedOfficers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting non-commissioned officer employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getNonCommissionedOfficers(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get enlisted employees
+     */
+    @GetMapping("/hierarchy/enlisted")
+    public ResponseEntity<Page<EmployeeDTO>> getEnlisted(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting enlisted employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getEnlisted(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get commissioned officer employees
+     */
+    @GetMapping("/hierarchy/commissioned-officers")
+    public ResponseEntity<Page<EmployeeDTO>> getCommissionedOfficers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting commissioned officer employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getCommissionedOfficers(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get command-eligible employees
+     */
+    @GetMapping("/hierarchy/command-eligible")
+    public ResponseEntity<Page<EmployeeDTO>> getCommandEligibleEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting command-eligible employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getCommandEligibleEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    // ========== SERVICE BRANCH ENDPOINTS ==========
+
+    /**
+     * Get army employees
+     */
+    @GetMapping("/branch/army")
+    public ResponseEntity<Page<EmployeeDTO>> getArmyEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting army employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getArmyEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get navy employees
+     */
+    @GetMapping("/branch/navy")
+    public ResponseEntity<Page<EmployeeDTO>> getNavyEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting navy employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getNavyEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get air force employees
+     */
+    @GetMapping("/branch/air-force")
+    public ResponseEntity<Page<EmployeeDTO>> getAirForceEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting air force employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getAirForceEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get gendarmerie employees
+     */
+    @GetMapping("/branch/gendarmerie")
+    public ResponseEntity<Page<EmployeeDTO>> getGendarmerieEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting gendarmerie employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getGendarmerieEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    // ========== SERVICE CATEGORY ENDPOINTS ==========
+
+    /**
+     * Get veteran employees (25+ years of service)
+     */
+    @GetMapping("/service/veteran")
+    public ResponseEntity<Page<EmployeeDTO>> getVeteranEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting veteran employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getVeteranEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get senior employees (15-25 years of service)
+     */
+    @GetMapping("/service/senior")
+    public ResponseEntity<Page<EmployeeDTO>> getSeniorEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting senior employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getSeniorEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get experienced employees (5-15 years of service)
+     */
+    @GetMapping("/service/experienced")
+    public ResponseEntity<Page<EmployeeDTO>> getExperiencedEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting experienced employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getExperiencedEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get junior employees (1-5 years of service)
+     */
+    @GetMapping("/service/junior")
+    public ResponseEntity<Page<EmployeeDTO>> getJuniorEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting junior employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getJuniorEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Get probationary employees (less than 1 year of service)
+     */
+    @GetMapping("/service/probationary")
+    public ResponseEntity<Page<EmployeeDTO>> getProbationaryEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting probationary employees");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getProbationaryEmployees(pageable);
+        
+        return ResponseEntity.ok(employees);
+    }
+
+    // ========== PROFILE COMPLETENESS ENDPOINTS ==========
+
+    /**
+     * Get employees with complete profiles
+     */
+    @GetMapping("/profile/complete")
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeesWithCompleteProfile(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        log.debug("Getting employees with complete profiles");
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getEmployeesWithCompleteProfile(pageable);
         
         return ResponseEntity.ok(employees);
     }
@@ -463,87 +520,65 @@ public class EmployeeController {
     /**
      * Get employees with incomplete profiles
      */
-    @GetMapping("/incomplete-profiles")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesWithIncompleteProfiles(
+    @GetMapping("/profile/incomplete")
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeesWithIncompleteProfile(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
         log.debug("Getting employees with incomplete profiles");
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findWithIncompleteProfiles(pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    // ========== TEMPORAL ENDPOINTS ==========
-
-    /**
-     * Get employees hired this year
-     */
-    @GetMapping("/hired-this-year")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesHiredThisYear(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees hired this year");
-        
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findHiredThisYear(pageable);
+        Page<EmployeeDTO> employees = employeeService.getEmployeesWithIncompleteProfile(pageable);
         
         return ResponseEntity.ok(employees);
     }
 
+    // ========== RETIREMENT ENDPOINTS ==========
+
     /**
-     * Get service anniversaries this month
+     * Get retirement eligible employees (30+ years of service)
      */
-    @GetMapping("/anniversaries-this-month")
-    public ResponseEntity<Page<EmployeeDTO>> getServiceAnniversariesThisMonth(
+    @GetMapping("/retirement/eligible")
+    public ResponseEntity<Page<EmployeeDTO>> getRetirementEligibleEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting service anniversaries this month");
+        log.debug("Getting retirement eligible employees");
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
-        Page<EmployeeDTO> employees = employeeService.findServiceAnniversariesThisMonth(pageable);
-        
-        return ResponseEntity.ok(employees);
-    }
-
-    // ========== DESIGNATION-BASED ENDPOINTS ==========
-
-    /**
-     * Get employees by military rank designation
-     */
-    @GetMapping("/rank-designation/{rankDesignation}")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByMilitaryRankDesignation(
-            @PathVariable String rankDesignation,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting employees by military rank designation: {}", rankDesignation);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findByMilitaryRankDesignation(rankDesignation, pageable);
+        Page<EmployeeDTO> employees = employeeService.getRetirementEligibleEmployees(pageable);
         
         return ResponseEntity.ok(employees);
     }
 
     /**
-     * Get employees by job designation
+     * Get employees approaching retirement (25-30 years of service)
      */
-    @GetMapping("/job-designation/{jobDesignation}")
-    public ResponseEntity<Page<EmployeeDTO>> getEmployeesByJobDesignation(
-            @PathVariable String jobDesignation,
+    @GetMapping("/retirement/approaching")
+    public ResponseEntity<Page<EmployeeDTO>> getApproachingRetirementEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Getting employees by job designation: {}", jobDesignation);
+        log.debug("Getting employees approaching retirement");
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "person.firstnameLt"));
-        Page<EmployeeDTO> employees = employeeService.findByJobDesignation(jobDesignation, pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "hiringDate"));
+        Page<EmployeeDTO> employees = employeeService.getApproachingRetirementEmployees(pageable);
         
         return ResponseEntity.ok(employees);
+    }
+
+    // ========== LOOKUP ENDPOINTS ==========
+
+    /**
+     * Find employee by serial number
+     */
+    @GetMapping("/serial/{serial}")
+    public ResponseEntity<EmployeeDTO> getEmployeeBySerial(@PathVariable String serial) {
+        log.debug("Getting employee by serial: {}", serial);
+        
+        return employeeService.findBySerial(serial)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // ========== UPDATE ENDPOINTS ==========
@@ -578,11 +613,23 @@ public class EmployeeController {
     }
 
     /**
+     * Check if person is already an employee
+     */
+    @GetMapping("/exists/person/{personId}")
+    public ResponseEntity<Boolean> checkPersonIsEmployee(@PathVariable Long personId) {
+        log.debug("Checking if person ID: {} is already an employee", personId);
+        
+        boolean exists = employeeService.existsByPersonId(personId);
+        
+        return ResponseEntity.ok(exists);
+    }
+
+    /**
      * Check if serial exists
      */
     @GetMapping("/exists/serial/{serial}")
-    public ResponseEntity<Boolean> checkEmployeeExistsBySerial(@PathVariable String serial) {
-        log.debug("Checking existence by serial: {}", serial);
+    public ResponseEntity<Boolean> checkSerialExists(@PathVariable String serial) {
+        log.debug("Checking if serial exists: {}", serial);
         
         boolean exists = employeeService.existsBySerial(serial);
         
@@ -592,85 +639,85 @@ public class EmployeeController {
     // ========== STATISTICS ENDPOINTS ==========
 
     /**
-     * Get total count of employees
+     * Get count of employees by military rank
      */
-    @GetMapping("/count")
-    public ResponseEntity<Long> getEmployeesCount() {
-        log.debug("Getting total count of employees");
+    @GetMapping("/military-rank/{militaryRankId}/count")
+    public ResponseEntity<Long> countEmployeesByMilitaryRank(@PathVariable Long militaryRankId) {
+        log.debug("Getting count of employees for military rank ID: {}", militaryRankId);
         
-        Long count = employeeService.getTotalCount();
+        Long count = employeeService.countEmployeesByMilitaryRank(militaryRankId);
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count by military rank
+     * Get count of employees by job
      */
-    @GetMapping("/count/military-rank/{militaryRankId}")
-    public ResponseEntity<Long> getCountByMilitaryRank(@PathVariable Long militaryRankId) {
-        log.debug("Getting count for military rank ID: {}", militaryRankId);
+    @GetMapping("/job/{jobId}/count")
+    public ResponseEntity<Long> countEmployeesByJob(@PathVariable Long jobId) {
+        log.debug("Getting count of employees for job ID: {}", jobId);
         
-        Long count = employeeService.getCountByMilitaryRank(militaryRankId);
+        Long count = employeeService.countEmployeesByJob(jobId);
         
         return ResponseEntity.ok(count);
     }
 
     /**
-     * Get count by job
-     */
-    @GetMapping("/count/job/{jobId}")
-    public ResponseEntity<Long> getCountByJob(@PathVariable Long jobId) {
-        log.debug("Getting count for job ID: {}", jobId);
-        
-        Long count = employeeService.getCountByJob(jobId);
-        
-        return ResponseEntity.ok(count);
-    }
-
-    /**
-     * Get count of new recruits
-     */
-    @GetMapping("/count/new-recruits")
-    public ResponseEntity<Long> getNewRecruitsCount() {
-        log.debug("Getting count of new recruits");
-        
-        Long count = employeeService.getNewRecruitsCount();
-        
-        return ResponseEntity.ok(count);
-    }
-
-    /**
-     * Get count of veteran employees
-     */
-    @GetMapping("/count/veterans")
-    public ResponseEntity<Long> getVeteranEmployeesCount() {
-        log.debug("Getting count of veteran employees");
-        
-        Long count = employeeService.getVeteranEmployeesCount();
-        
-        return ResponseEntity.ok(count);
-    }
-
-    /**
-     * Get count of retirement eligible
-     */
-    @GetMapping("/count/retirement-eligible")
-    public ResponseEntity<Long> getRetirementEligibleCount() {
-        log.debug("Getting count of retirement eligible employees");
-        
-        Long count = employeeService.getRetirementEligibleCount();
-        
-        return ResponseEntity.ok(count);
-    }
-
-    /**
-     * Get count without job assignment
+     * Get count of employees without job
      */
     @GetMapping("/count/without-job")
-    public ResponseEntity<Long> getCountWithoutJobAssignment() {
-        log.debug("Getting count of employees without job assignment");
+    public ResponseEntity<Long> countEmployeesWithoutJob() {
+        log.debug("Getting count of employees without job");
         
-        Long count = employeeService.getCountWithoutJobAssignment();
+        Long count = employeeService.countEmployeesWithoutJob();
+        
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get count of employees with job
+     */
+    @GetMapping("/count/with-job")
+    public ResponseEntity<Long> countEmployeesWithJob() {
+        log.debug("Getting count of employees with job");
+        
+        Long count = employeeService.countEmployeesWithJob();
+        
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get count of general officer employees
+     */
+    @GetMapping("/count/general-officers")
+    public ResponseEntity<Long> countGeneralOfficers() {
+        log.debug("Getting count of general officer employees");
+        
+        Long count = employeeService.countGeneralOfficers();
+        
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get count of commissioned officer employees
+     */
+    @GetMapping("/count/commissioned-officers")
+    public ResponseEntity<Long> countCommissionedOfficers() {
+        log.debug("Getting count of commissioned officer employees");
+        
+        Long count = employeeService.countCommissionedOfficers();
+        
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get total count of employees
+     */
+    @GetMapping("/count/total")
+    public ResponseEntity<Long> countTotalEmployees() {
+        log.debug("Getting total count of employees");
+        
+        Long count = employeeService.countTotalEmployees();
         
         return ResponseEntity.ok(count);
     }
@@ -688,33 +735,33 @@ public class EmployeeController {
                         EmployeeInfoResponse response = EmployeeInfoResponse.builder()
                                 .employeeMetadata(employeeDTO)
                                 .displayName(employeeDTO.getDisplayName())
-                                .fullNameAr(employeeDTO.getFullNameAr())
-                                .fullNameLt(employeeDTO.getFullNameLt())
-                                .militaryRankDesignation(employeeDTO.getMilitaryRankDesignation())
-                                .militaryRankAbbreviation(employeeDTO.getMilitaryRankAbbreviation())
-                                .jobDesignation(employeeDTO.getJobDesignation())
-                                .jobStructure(employeeDTO.getJobStructure())
-                                .yearsOfService(employeeDTO.getYearsOfService())
-                                .hiringYear(employeeDTO.getHiringYear())
-                                .serviceCategory(employeeDTO.getServiceCategory())
-                                .isEligibleForRetirement(employeeDTO.isEligibleForRetirement())
-                                .employeeStatus(employeeDTO.getEmployeeStatus())
-                                .promotionEligibility(employeeDTO.getPromotionEligibility())
-                                .hasCompleteProfile(employeeDTO.hasCompleteProfile())
-                                .profileCompleteness(employeeDTO.getProfileCompleteness())
-                                .employeeClassification(employeeDTO.getEmployeeClassification())
-                                .commandAuthority(employeeDTO.getCommandAuthority())
-                                .shortDisplay(employeeDTO.getShortDisplay())
                                 .fullDisplay(employeeDTO.getFullDisplay())
-                                .displayWithRank(employeeDTO.getDisplayWithRank())
-                                .displayWithJob(employeeDTO.getDisplayWithJob())
-                                .formalMilitaryDisplay(employeeDTO.getFormalMilitaryDisplay())
-                                .serviceRecordSummary(employeeDTO.getServiceRecordSummary())
-                                .needsProfileUpdate(employeeDTO.needsProfileUpdate())
-                                .yearsToRetirement(employeeDTO.getYearsToRetirement())
-                                .nextPromotionTimeline(employeeDTO.getNextPromotionTimeline())
-                                .employeeSummary(employeeDTO.getEmployeeSummary())
-                                .comparisonKey(employeeDTO.getComparisonKey())
+                                .militaryDisplay(employeeDTO.getMilitaryDisplay())
+                                .yearsOfService(employeeDTO.getYearsOfService())
+                                .monthsOfService(employeeDTO.getMonthsOfService())
+                                .daysOfService(employeeDTO.getDaysOfService())
+                                .serviceCategory(employeeDTO.getServiceCategory())
+                                .rankLevel(employeeDTO.getRankLevel())
+                                .authorityLevel(employeeDTO.getAuthorityLevel())
+                                .serviceBranch(employeeDTO.getServiceBranch())
+                                .canCommandUnits(employeeDTO.canCommandUnits())
+                                .isCommissionedOfficer(employeeDTO.isCommissionedOfficer())
+                                .employeeStatus(employeeDTO.getEmployeeStatus())
+                                .retirementEligibility(employeeDTO.getRetirementEligibility())
+                                .promotionEligibility(employeeDTO.getPromotionEligibility())
+                                .age(employeeDTO.getAge())
+                                .hasCompleteProfile(employeeDTO.hasCompleteProfile())
+                                .hasJobAssignment(employeeDTO.hasJobAssignment())
+                                .completenessPercentage(employeeDTO.getCompletenessPercentage())
+                                .shortDisplay(employeeDTO.getShortDisplay())
+                                .officialDisplay(employeeDTO.getOfficialDisplay())
+                                .careerSummary(employeeDTO.getCareerSummary())
+                                .contactInfo(employeeDTO.getContactInfo())
+                                .militaryClassification(employeeDTO.getMilitaryClassification())
+                                .nextPromotionEstimate(employeeDTO.getNextPromotionEstimate())
+                                .securityClearanceLevel(employeeDTO.getSecurityClearanceLevel())
+                                .trainingRequirements(employeeDTO.getTrainingRequirements())
+                                .performanceEvaluationPeriod(employeeDTO.getPerformanceEvaluationPeriod())
                                 .build();
                         
                         return ResponseEntity.ok(response);
@@ -736,32 +783,32 @@ public class EmployeeController {
     public static class EmployeeInfoResponse {
         private EmployeeDTO employeeMetadata;
         private String displayName;
-        private String fullNameAr;
-        private String fullNameLt;
-        private String militaryRankDesignation;
-        private String militaryRankAbbreviation;
-        private String jobDesignation;
-        private String jobStructure;
-        private Integer yearsOfService;
-        private Integer hiringYear;
-        private String serviceCategory;
-        private Boolean isEligibleForRetirement;
-        private String employeeStatus;
-        private String promotionEligibility;
-        private Boolean hasCompleteProfile;
-        private Double profileCompleteness;
-        private String employeeClassification;
-        private String commandAuthority;
-        private String shortDisplay;
         private String fullDisplay;
-        private String displayWithRank;
-        private String displayWithJob;
-        private String formalMilitaryDisplay;
-        private String serviceRecordSummary;
-        private Boolean needsProfileUpdate;
-        private Integer yearsToRetirement;
-        private String nextPromotionTimeline;
-        private String employeeSummary;
-        private String comparisonKey;
+        private String militaryDisplay;
+        private Long yearsOfService;
+        private Long monthsOfService;
+        private Long daysOfService;
+        private String serviceCategory;
+        private String rankLevel;
+        private String authorityLevel;
+        private String serviceBranch;
+        private Boolean canCommandUnits;
+        private Boolean isCommissionedOfficer;
+        private String employeeStatus;
+        private String retirementEligibility;
+        private String promotionEligibility;
+        private Integer age;
+        private Boolean hasCompleteProfile;
+        private Boolean hasJobAssignment;
+        private Integer completenessPercentage;
+        private String shortDisplay;
+        private String officialDisplay;
+        private String careerSummary;
+        private String contactInfo;
+        private String militaryClassification;
+        private String nextPromotionEstimate;
+        private String securityClearanceLevel;
+        private String trainingRequirements;
+        private String performanceEvaluationPeriod;
     }
 }
