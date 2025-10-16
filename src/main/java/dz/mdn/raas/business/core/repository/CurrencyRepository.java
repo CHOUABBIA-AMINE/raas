@@ -189,8 +189,8 @@ public interface CurrencyRepository extends JpaRepository<Currency, Long> {
     /**
      * Check if Latin code follows ISO 4217 pattern (3 uppercase letters)
      */
-    @Query("SELECT c FROM Currency c WHERE c.codeLt REGEXP '^[A-Z]{3}$'")
-    Page<Currency> findISOStandardCurrencies(Pageable pageable);
+    /*@Query("SELECT c FROM Currency c WHERE c.codeLt REGEXP '^[A-Z]{3}$'")
+    Page<Currency> findISOStandardCurrencies(Pageable pageable);*/
 
     /**
      * Find currencies with specific code length

@@ -14,7 +14,10 @@
 package dz.mdn.raas.common.administration.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.*;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,11 +25,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * Military Rank Data Transfer Object
- * Maps exactly to MilitaryRank model fields: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr, F_07=militaryCategory
- * F_03 (designationFr) has unique constraint and is required
- * F_06 (abbreviationFr) is required
- * F_07 (militaryCategory) is required foreign key
- * F_01, F_02, F_04, F_05 are optional
+ * Maps exactly to MilitaryRank model fields: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, 
+ * F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr, F_07=militaryCategoryId
  */
 @Data
 @Builder
@@ -45,7 +45,7 @@ public class MilitaryRankDTO {
 
     @NotBlank(message = "French designation is required")
     @Size(max = 50, message = "French designation must not exceed 50 characters")
-    private String designationFr; // F_03 - required and unique
+    private String designationFr; // F_03 - required, unique
 
     @Size(max = 10, message = "Arabic abbreviation must not exceed 10 characters")
     private String abbreviationAr; // F_04 - optional
@@ -58,9 +58,9 @@ public class MilitaryRankDTO {
     private String abbreviationFr; // F_06 - required
 
     @NotNull(message = "Military category is required")
-    private Long militaryCategoryId; // F_07 - required foreign key
+    private Long militaryCategoryId; // F_07 - MilitaryCategory foreign key (required)
 
-    // Nested military category information for display purposes
+    // Related entity DTO for display (populated when needed)
     private MilitaryCategoryDTO militaryCategory;
 
     /**
@@ -69,112 +69,42 @@ public class MilitaryRankDTO {
     public static MilitaryRankDTO fromEntity(dz.mdn.raas.common.administration.model.MilitaryRank militaryRank) {
         if (militaryRank == null) return null;
         
-        MilitaryCategoryDTO militaryCategoryDTO = null;
-        if (militaryRank.getMilitaryCategory() != null) {
-            militaryCategoryDTO = MilitaryCategoryDTO.fromEntity(militaryRank.getMilitaryCategory());
-        }
-        
-        return MilitaryRankDTO.builder()
+        MilitaryRankDTO.MilitaryRankDTOBuilder builder = MilitaryRankDTO.builder()
                 .id(militaryRank.getId())
                 .designationAr(militaryRank.getDesignationAr())
                 .designationEn(militaryRank.getDesignationEn())
                 .designationFr(militaryRank.getDesignationFr())
                 .abbreviationAr(militaryRank.getAbbreviationAr())
                 .abbreviationEn(militaryRank.getAbbreviationEn())
-                .abbreviationFr(militaryRank.getAbbreviationFr())
-                .militaryCategoryId(militaryRank.getMilitaryCategory() != null ? militaryRank.getMilitaryCategory().getId() : null)
-                .militaryCategory(militaryCategoryDTO)
-                .build();
+                .abbreviationFr(militaryRank.getAbbreviationFr());
+
+        // Handle foreign key relationship
+        if (militaryRank.getMilitaryCategory() != null) {
+            builder.militaryCategoryId(militaryRank.getMilitaryCategory().getId());
+        }
+
+        return builder.build();
     }
 
     /**
-     * Convert to entity (without setting MilitaryCategory - use service for that)
+     * Create DTO from entity with related objects
      */
-    public dz.mdn.raas.common.administration.model.MilitaryRank toEntity() {
-        dz.mdn.raas.common.administration.model.MilitaryRank militaryRank = 
-            new dz.mdn.raas.common.administration.model.MilitaryRank();
-        militaryRank.setId(this.id);
-        militaryRank.setDesignationAr(this.designationAr);
-        militaryRank.setDesignationEn(this.designationEn);
-        militaryRank.setDesignationFr(this.designationFr);
-        militaryRank.setAbbreviationAr(this.abbreviationAr);
-        militaryRank.setAbbreviationEn(this.abbreviationEn);
-        militaryRank.setAbbreviationFr(this.abbreviationFr);
-        // Note: militaryCategory should be set by the service layer
-        return militaryRank;
+    public static MilitaryRankDTO fromEntityWithRelations(dz.mdn.raas.common.administration.model.MilitaryRank militaryRank) {
+        MilitaryRankDTO dto = fromEntity(militaryRank);
+        if (dto == null) return null;
+
+        // Populate related DTOs
+        if (militaryRank.getMilitaryCategory() != null) {
+            dto.setMilitaryCategory(MilitaryCategoryDTO.fromEntity(militaryRank.getMilitaryCategory()));
+        }
+
+        return dto;
     }
 
     /**
-     * Update entity from DTO (without updating MilitaryCategory - use service for that)
-     */
-    public void updateEntity(dz.mdn.raas.common.administration.model.MilitaryRank militaryRank) {
-        if (this.designationAr != null) {
-            militaryRank.setDesignationAr(this.designationAr);
-        }
-        if (this.designationEn != null) {
-            militaryRank.setDesignationEn(this.designationEn);
-        }
-        if (this.designationFr != null) {
-            militaryRank.setDesignationFr(this.designationFr);
-        }
-        if (this.abbreviationAr != null) {
-            militaryRank.setAbbreviationAr(this.abbreviationAr);
-        }
-        if (this.abbreviationEn != null) {
-            militaryRank.setAbbreviationEn(this.abbreviationEn);
-        }
-        if (this.abbreviationFr != null) {
-            militaryRank.setAbbreviationFr(this.abbreviationFr);
-        }
-        // Note: militaryCategory should be updated by the service layer
-    }
-
-    /**
-     * Get default designation (French as it's required)
+     * Get default designation (French first, then English, then Arabic)
      */
     public String getDefaultDesignation() {
-        return designationFr;
-    }
-
-    /**
-     * Get default abbreviation (French as it's required)
-     */
-    public String getDefaultAbbreviation() {
-        return abbreviationFr;
-    }
-
-    /**
-     * Get designation by language preference
-     */
-    public String getDesignationByLanguage(String language) {
-        if (language == null) return designationFr;
-        
-        return switch (language.toLowerCase()) {
-            case "ar", "arabic" -> designationAr != null ? designationAr : designationFr;
-            case "en", "english" -> designationEn != null ? designationEn : designationFr;
-            case "fr", "french" -> designationFr;
-            default -> designationFr;
-        };
-    }
-
-    /**
-     * Get abbreviation by language preference
-     */
-    public String getAbbreviationByLanguage(String language) {
-        if (language == null) return abbreviationFr;
-        
-        return switch (language.toLowerCase()) {
-            case "ar", "arabic" -> abbreviationAr != null ? abbreviationAr : abbreviationFr;
-            case "en", "english" -> abbreviationEn != null ? abbreviationEn : abbreviationFr;
-            case "fr", "french" -> abbreviationFr;
-            default -> abbreviationFr;
-        };
-    }
-
-    /**
-     * Get display text with priority: French designation > English designation > Arabic designation
-     */
-    public String getDisplayText() {
         if (designationFr != null && !designationFr.trim().isEmpty()) {
             return designationFr;
         }
@@ -188,9 +118,9 @@ public class MilitaryRankDTO {
     }
 
     /**
-     * Get display abbreviation
+     * Get default abbreviation (French first, then English, then Arabic)
      */
-    public String getDisplayAbbreviation() {
+    public String getDefaultAbbreviation() {
         if (abbreviationFr != null && !abbreviationFr.trim().isEmpty()) {
             return abbreviationFr;
         }
@@ -204,13 +134,27 @@ public class MilitaryRankDTO {
     }
 
     /**
+     * Get display text with priority: French designation > English designation > Arabic designation
+     */
+    public String getDisplayText() {
+        return getDefaultDesignation();
+    }
+
+    /**
+     * Get display abbreviation
+     */
+    public String getDisplayAbbreviation() {
+        return getDefaultAbbreviation();
+    }
+
+    /**
      * Check if military rank has multiple language support
      */
     public boolean isMultilingual() {
         int languageCount = 0;
-        if (designationAr != null && !designationAr.trim().isEmpty()) languageCount++;
-        if (designationEn != null && !designationEn.trim().isEmpty()) languageCount++;
         if (designationFr != null && !designationFr.trim().isEmpty()) languageCount++;
+        if (designationEn != null && !designationEn.trim().isEmpty()) languageCount++;
+        if (designationAr != null && !designationAr.trim().isEmpty()) languageCount++;
         return languageCount > 1;
     }
 
@@ -220,171 +164,225 @@ public class MilitaryRankDTO {
     public String[] getAvailableLanguages() {
         java.util.List<String> languages = new java.util.ArrayList<>();
         
-        if (designationAr != null && !designationAr.trim().isEmpty()) {
-            languages.add("arabic");
+        if (designationFr != null && !designationFr.trim().isEmpty()) {
+            languages.add("french");
         }
         if (designationEn != null && !designationEn.trim().isEmpty()) {
             languages.add("english");
         }
-        if (designationFr != null && !designationFr.trim().isEmpty()) {
-            languages.add("french");
+        if (designationAr != null && !designationAr.trim().isEmpty()) {
+            languages.add("arabic");
         }
         
         return languages.stream().toArray(String[]::new);
     }
 
     /**
-     * Get rank level based on French designation analysis
+     * Get rank level based on military category and designation
      */
-    public Integer getRankLevel() {
-        if (designationFr == null) return null;
-        
-        String designation = designationFr.toLowerCase();
-        
-        // General/Admiral level (highest)
-        if (designation.contains("général") || designation.contains("amiral")) {
-            if (designation.contains("major")) return 12; // Général-Major
-            if (designation.contains("corps")) return 11; // Général de Corps d'Armée
-            if (designation.contains("division")) return 10; // Général de Division
-            if (designation.contains("brigade")) return 9; // Général de Brigade
-            return 10; // Default General
+    public String getRankLevel() {
+        if (militaryCategory != null) {
+            //String categoryType = militaryCategory.getCategoryType();
+            String designation = getDefaultDesignation().toLowerCase();
+            
+            // Analyze rank level based on designation keywords
+            if (designation.contains("général") || designation.contains("general") || 
+                designation.contains("amiral") || designation.contains("admiral") ||
+                designation.contains("عميد") || designation.contains("لواء")) {
+                return "GENERAL_OFFICER";
+            }
+            if (designation.contains("colonel") || designation.contains("عقيد") ||
+                designation.contains("capitaine de vaisseau") || designation.contains("نقيب")) {
+                return "SENIOR_OFFICER";
+            }
+            if (designation.contains("commandant") || designation.contains("major") ||
+                designation.contains("capitaine") || designation.contains("captain") ||
+                designation.contains("lieutenant") || designation.contains("ملازم")) {
+                return "COMPANY_OFFICER";
+            }
+            if (designation.contains("sous-officier") || designation.contains("sergent") ||
+                designation.contains("adjudant") || designation.contains("رقيب")) {
+                return "NON_COMMISSIONED_OFFICER";
+            }
+            if (designation.contains("soldat") || designation.contains("matelot") ||
+                designation.contains("جندي") || designation.contains("بحار")) {
+                return "ENLISTED";
+            }
         }
-        
-        // Colonel level
-        if (designation.contains("colonel")) {
-            if (designation.contains("lieutenant")) return 7; // Lieutenant-Colonel
-            return 8; // Colonel
-        }
-        
-        // Major/Commandant
-        if (designation.contains("commandant") || designation.contains("major")) {
-            return 6;
-        }
-        
-        // Captain level
-        if (designation.contains("capitaine")) {
-            return 5;
-        }
-        
-        // Lieutenant level
-        if (designation.contains("lieutenant")) {
-            if (designation.contains("sous")) return 3; // Sous-Lieutenant
-            return 4; // Lieutenant
-        }
-        
-        // Sous-officiers (NCO)
-        if (designation.contains("adjudant")) {
-            if (designation.contains("chef")) return 2; // Adjudant-Chef
-            return 1; // Adjudant
-        }
-        
-        if (designation.contains("sergent")) {
-            if (designation.contains("chef")) return 1; // Sergent-Chef
-            return 0; // Sergent
-        }
-        
-        if (designation.contains("caporal")) {
-            if (designation.contains("chef")) return -1; // Caporal-Chef
-            return -2; // Caporal
-        }
-        
-        // Soldats (Enlisted)
-        if (designation.contains("soldat")) {
-            if (designation.contains("première")) return -3; // Soldat de 1ère Classe
-            return -4; // Soldat
-        }
-        
-        return 0; // Default
+        return "UNKNOWN_RANK";
     }
 
     /**
-     * Get rank category based on designation analysis
+     * Get rank precedence (lower number = higher rank)
      */
-    public String getRankCategory() {
-        if (designationFr == null) return "UNKNOWN";
+    public Integer getRankPrecedence() {
+        String level = getRankLevel();
         
-        String designation = designationFr.toLowerCase();
-        
-        // Senior Officers
-        if (designation.contains("général") || designation.contains("amiral") || 
-            designation.contains("colonel")) {
-            return "SENIOR_OFFICER";
+        switch (level) {
+            case "GENERAL_OFFICER":
+                // Further analyze for specific general ranks
+                String designation = getDefaultDesignation().toLowerCase();
+                if (designation.contains("général de corps d'armée") || designation.contains("فريق")) return 1;
+                if (designation.contains("général de division") || designation.contains("لواء")) return 2;
+                if (designation.contains("général de brigade") || designation.contains("عميد")) return 3;
+                return 1; // Default for general officers
+                
+            case "SENIOR_OFFICER":
+                return 10;
+                
+            case "COMPANY_OFFICER":
+                String companyDesignation = getDefaultDesignation().toLowerCase();
+                if (companyDesignation.contains("commandant") || companyDesignation.contains("major")) return 20;
+                if (companyDesignation.contains("capitaine")) return 21;
+                if (companyDesignation.contains("lieutenant")) return 22;
+                return 20;
+                
+            case "NON_COMMISSIONED_OFFICER":
+                return 30;
+                
+            case "ENLISTED":
+                return 40;
+                
+            default:
+                return 99;
         }
-        
-        // Officers
-        if (designation.contains("commandant") || designation.contains("capitaine") || 
-            designation.contains("lieutenant") || designation.contains("major")) {
-            return "OFFICER";
-        }
-        
-        // Non-Commissioned Officers
-        if (designation.contains("adjudant") || designation.contains("sergent")) {
-            return "NCO";
-        }
-        
-        // Enlisted
-        if (designation.contains("caporal") || designation.contains("soldat")) {
-            return "ENLISTED";
-        }
-        
-        return "OTHER";
     }
 
     /**
-     * Get military category designation if available
+     * Get military service branch based on category
      */
-    public String getMilitaryCategoryDesignation() {
-        return militaryCategory != null ? militaryCategory.getDesignationFr() : null;
+    public String getServiceBranch() {
+        if (militaryCategory != null) {
+            String categoryDesignation = militaryCategory.getDefaultDesignation().toLowerCase();
+            
+            if (categoryDesignation.contains("terre") || categoryDesignation.contains("army") || 
+                categoryDesignation.contains("جيش") || categoryDesignation.contains("برية")) {
+                return "ARMY";
+            }
+            if (categoryDesignation.contains("marine") || categoryDesignation.contains("navy") ||
+                categoryDesignation.contains("بحرية")) {
+                return "NAVY";
+            }
+            if (categoryDesignation.contains("air") || categoryDesignation.contains("جوية")) {
+                return "AIR_FORCE";
+            }
+            if (categoryDesignation.contains("gendarmerie") || categoryDesignation.contains("درك")) {
+                return "GENDARMERIE";
+            }
+        }
+        return "UNKNOWN_BRANCH";
     }
 
     /**
-     * Get seniority level (0-100, higher is more senior)
+     * Get rank authority level
      */
-    public Integer getSeniorityLevel() {
-        Integer rankLevel = getRankLevel();
-        if (rankLevel == null) return 0;
+    public String getAuthorityLevel() {
+        String level = getRankLevel();
         
-        // Convert rank level to seniority (0-100 scale)
-        int baseSeniority = Math.max(0, (rankLevel + 5) * 5);
-        return Math.min(100, baseSeniority);
-    }
-
-    /**
-     * Check if rank has command authority
-     */
-    public boolean hasCommandAuthority() {
-        String category = getRankCategory();
-        Integer level = getRankLevel();
-        
-        return "SENIOR_OFFICER".equals(category) || 
-               ("OFFICER".equals(category) && level != null && level >= 5) ||
-               ("NCO".equals(category) && level != null && level >= 1);
-    }
-
-    /**
-     * Get promotion requirements
-     */
-    public String getPromotionRequirements() {
-        String category = getRankCategory();
-        
-        return switch (category) {
-            case "ENLISTED" -> "TRAINING_COMPLETION";
-            case "NCO" -> "LEADERSHIP_TRAINING";
-            case "OFFICER" -> "COMMAND_EXPERIENCE";
-            case "SENIOR_OFFICER" -> "STRATEGIC_LEADERSHIP";
-            default -> "EVALUATION_REQUIRED";
+        return switch (level) {
+            case "GENERAL_OFFICER" -> "STRATEGIC_COMMAND";
+            case "SENIOR_OFFICER" -> "OPERATIONAL_COMMAND";
+            case "COMPANY_OFFICER" -> "TACTICAL_COMMAND";
+            case "NON_COMMISSIONED_OFFICER" -> "SUPERVISORY";
+            case "ENLISTED" -> "OPERATIONAL";
+            default -> "UNDEFINED";
         };
+    }
+
+    /**
+     * Check if rank can command units
+     */
+    public boolean canCommandUnits() {
+        String level = getRankLevel();
+        return "GENERAL_OFFICER".equals(level) || 
+               "SENIOR_OFFICER".equals(level) || 
+               "COMPANY_OFFICER".equals(level);
+    }
+
+    /**
+     * Check if rank is commissioned officer
+     */
+    public boolean isCommissionedOfficer() {
+        String level = getRankLevel();
+        return "GENERAL_OFFICER".equals(level) || 
+               "SENIOR_OFFICER".equals(level) || 
+               "COMPANY_OFFICER".equals(level);
+    }
+
+    /**
+     * Get short display for lists (abbreviation - designation)
+     */
+    public String getShortDisplay() {
+        String abbr = getDefaultAbbreviation();
+        String designation = getDisplayText();
+        return !"N/A".equals(abbr) ? abbr + " - " + designation : designation;
+    }
+
+    /**
+     * Get full display with all available information
+     */
+    public String getFullDisplay() {
+        StringBuilder sb = new StringBuilder();
+        
+        if (designationFr != null && !designationFr.trim().isEmpty()) {
+            sb.append(designationFr);
+        }
+        
+        if (designationEn != null && !designationEn.trim().isEmpty()) {
+            if (sb.length() > 0) sb.append(" / ");
+            sb.append(designationEn);
+        }
+        
+        if (designationAr != null && !designationAr.trim().isEmpty()) {
+            if (sb.length() > 0) sb.append(" / ");
+            sb.append(designationAr);
+        }
+        
+        String abbr = getDefaultAbbreviation();
+        if (!"N/A".equals(abbr)) {
+            sb.append(" (").append(abbr).append(")");
+        }
+        
+        if (militaryCategory != null) {
+            sb.append(" - ").append(militaryCategory.getDisplayText());
+        }
+        
+        return sb.toString();
+    }
+
+    /**
+     * Get military display with rank level and service branch
+     */
+    public String getMilitaryDisplay() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getDisplayText());
+        
+        String abbr = getDefaultAbbreviation();
+        if (!"N/A".equals(abbr)) {
+            sb.append(" (").append(abbr).append(")");
+        }
+        
+        String branch = getServiceBranch();
+        if (!"UNKNOWN_BRANCH".equals(branch)) {
+            sb.append(" - ").append(branch.replace("_", " "));
+        }
+        
+        String level = getRankLevel();
+        if (!"UNKNOWN_RANK".equals(level)) {
+            sb.append(" [").append(level.replace("_", " ")).append("]");
+        }
+        
+        return sb.toString();
     }
 
     /**
      * Create simplified DTO for dropdowns
      */
-    public static MilitaryRankDTO createSimple(Long id, String designationFr, String abbreviationFr, Long militaryCategoryId) {
+    public static MilitaryRankDTO createSimple(Long id, String designationFr, String abbreviationFr) {
         return MilitaryRankDTO.builder()
                 .id(id)
                 .designationFr(designationFr)
                 .abbreviationFr(abbreviationFr)
-                .militaryCategoryId(militaryCategoryId)
                 .build();
     }
 
@@ -398,177 +396,200 @@ public class MilitaryRankDTO {
     }
 
     /**
-     * Get short display for lists (abbreviation - designation)
+     * Get validation errors
      */
-    public String getShortDisplay() {
-        return getDisplayAbbreviation() + " - " + getDisplayText();
+    public java.util.List<String> getValidationErrors() {
+        java.util.List<String> errors = new java.util.ArrayList<>();
+        
+        if (designationFr == null || designationFr.trim().isEmpty()) {
+            errors.add("French designation is required");
+        }
+        
+        if (abbreviationFr == null || abbreviationFr.trim().isEmpty()) {
+            errors.add("French abbreviation is required");
+        }
+        
+        if (militaryCategoryId == null) {
+            errors.add("Military category is required");
+        }
+        
+        return errors;
     }
 
     /**
-     * Get full display with all languages and category context
-     */
-    public String getFullDisplay() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(designationFr);
-        
-        if (designationEn != null && !designationEn.equals(designationFr)) {
-            sb.append(" / ").append(designationEn);
-        }
-        
-        if (designationAr != null) {
-            sb.append(" / ").append(designationAr);
-        }
-        
-        sb.append(" (").append(abbreviationFr).append(")");
-        
-        if (militaryCategory != null && militaryCategory.getDesignationFr() != null) {
-            sb.append(" - ").append(militaryCategory.getDesignationFr());
-        }
-        
-        return sb.toString();
-    }
-
-    /**
-     * Get comparison key for sorting (by rank level descending, then designation)
+     * Get comparison key for sorting (by precedence, then by designation)
      */
     public String getComparisonKey() {
-        Integer level = getRankLevel();
-        String levelStr = level != null ? String.format("%03d", 100 - level) : "999";
-        return levelStr + "_" + (designationFr != null ? designationFr.toLowerCase() : "zzz");
+        Integer precedence = getRankPrecedence();
+        String designation = getDisplayText();
+        return String.format("%03d_%s", precedence, designation.toLowerCase());
     }
 
     /**
-     * Get display with rank category
+     * Get formal display for official documents
      */
-    public String getDisplayWithCategory() {
-        return getDisplayText() + " (" + getRankCategory().replace("_", " ").toLowerCase() + ")";
-    }
-
-    /**
-     * Get display with abbreviation and category
-     */
-    public String getDisplayWithAbbreviationAndCategory() {
-        return getDisplayAbbreviation() + " - " + getDisplayText() + " (" + getRankCategory().replace("_", " ").toLowerCase() + ")";
-    }
-
-    /**
-     * Get formal military display
-     */
-    public String getFormalMilitaryDisplay() {
+    public String getFormalDisplay() {
         StringBuilder sb = new StringBuilder();
         
-        if (militaryCategory != null && militaryCategory.getDesignationFr() != null) {
-            sb.append(militaryCategory.getDesignationFr()).append("-");
+        if (designationFr != null && !designationFr.trim().isEmpty()) {
+            sb.append(designationFr);
         }
         
-        sb.append(getDisplayAbbreviation()).append(" (").append(getDisplayText()).append(")");
+        String abbr = getDefaultAbbreviation();
+        if (!"N/A".equals(abbr)) {
+            sb.append(" (").append(abbr).append(")");
+        }
+        
+        if (militaryCategory != null) {
+            sb.append(" - ").append(militaryCategory.getFormalMilitaryDisplay());
+        }
         
         return sb.toString();
     }
 
     /**
-     * Check if rank is commissioned officer
+     * Get rank classification for reports
      */
-    public boolean isCommissionedOfficer() {
-        String category = getRankCategory();
-        return "OFFICER".equals(category) || "SENIOR_OFFICER".equals(category);
-    }
-
-    /**
-     * Check if rank is non-commissioned officer
-     */
-    public boolean isNonCommissionedOfficer() {
-        return "NCO".equals(getRankCategory());
-    }
-
-    /**
-     * Check if rank is enlisted personnel
-     */
-    public boolean isEnlistedPersonnel() {
-        return "ENLISTED".equals(getRankCategory());
-    }
-
-    /**
-     * Get minimum years for promotion
-     */
-    public Integer getMinimumYearsForPromotion() {
-        String category = getRankCategory();
-        Integer level = getRankLevel();
+    public String getRankClassification() {
+        StringBuilder sb = new StringBuilder();
         
-        return switch (category) {
-            case "ENLISTED" -> 2;
-            case "NCO" -> level != null && level >= 1 ? 4 : 3;
-            case "OFFICER" -> level != null && level >= 6 ? 4 : 3;
-            case "SENIOR_OFFICER" -> 5;
-            default -> 3;
+        sb.append("Rank: ").append(getDisplayText()).append("\n");
+        sb.append("Abbreviation: ").append(getDefaultAbbreviation()).append("\n");
+        sb.append("Level: ").append(getRankLevel().replace("_", " ")).append("\n");
+        sb.append("Authority: ").append(getAuthorityLevel().replace("_", " ")).append("\n");
+        sb.append("Service Branch: ").append(getServiceBranch().replace("_", " ")).append("\n");
+        sb.append("Precedence: ").append(getRankPrecedence()).append("\n");
+        sb.append("Command Authority: ").append(canCommandUnits() ? "Yes" : "No").append("\n");
+        sb.append("Commissioned: ").append(isCommissionedOfficer() ? "Yes" : "No");
+        
+        return sb.toString();
+    }
+
+    /**
+     * Get promotion eligibility based on rank level
+     */
+    public String getPromotionEligibility() {
+        String level = getRankLevel();
+        Integer precedence = getRankPrecedence();
+        
+        if ("ENLISTED".equals(level)) {
+            return "ELIGIBLE_FOR_NCO";
+        }
+        if ("NON_COMMISSIONED_OFFICER".equals(level)) {
+            return "ELIGIBLE_FOR_OFFICER";
+        }
+        if ("COMPANY_OFFICER".equals(level)) {
+            return "ELIGIBLE_FOR_SENIOR_OFFICER";
+        }
+        if ("SENIOR_OFFICER".equals(level)) {
+            return "ELIGIBLE_FOR_GENERAL";
+        }
+        if ("GENERAL_OFFICER".equals(level) && precedence > 1) {
+            return "ELIGIBLE_FOR_HIGHER_GENERAL";
+        }
+        
+        return "MAX_RANK_REACHED";
+    }
+
+    /**
+     * Get operational responsibility scope
+     */
+    public String getResponsibilityScope() {
+        String level = getRankLevel();
+        
+        return switch (level) {
+            case "GENERAL_OFFICER" -> "Army/Division/Brigade command and strategic planning";
+            case "SENIOR_OFFICER" -> "Regiment/Battalion command and operational planning";
+            case "COMPANY_OFFICER" -> "Company/Platoon command and tactical operations";
+            case "NON_COMMISSIONED_OFFICER" -> "Squad/Section leadership and training";
+            case "ENLISTED" -> "Individual specialist tasks and support";
+            default -> "Scope undefined";
         };
     }
 
     /**
-     * Get rank insignia description
+     * Get typical unit command based on rank
      */
-    public String getRankInsigniaDescription() {
-        String category = getRankCategory();
-        Integer level = getRankLevel();
+    public String getTypicalUnitCommand() {
+        String designation = getDefaultDesignation().toLowerCase();
         
-        if (level == null) return "Standard insignia";
+        if (designation.contains("général de corps") || designation.contains("فريق")) {
+            return "CORPS";
+        }
+        if (designation.contains("général de division") || designation.contains("لواء")) {
+            return "DIVISION";
+        }
+        if (designation.contains("général de brigade") || designation.contains("عميد")) {
+            return "BRIGADE";
+        }
+        if (designation.contains("colonel") || designation.contains("عقيد")) {
+            return "REGIMENT";
+        }
+        if (designation.contains("commandant") || designation.contains("major")) {
+            return "BATTALION";
+        }
+        if (designation.contains("capitaine") && !designation.contains("vaisseau")) {
+            return "COMPANY";
+        }
+        if (designation.contains("lieutenant")) {
+            return "PLATOON";
+        }
         
-        return switch (category) {
-            case "SENIOR_OFFICER" -> level >= 10 ? "Stars and eagle" : "Stars";
-            case "OFFICER" -> level >= 6 ? "Crown and bars" : "Bars";
-            case "NCO" -> level >= 1 ? "Chevrons with crown" : "Chevrons";
-            case "ENLISTED" -> level >= -2 ? "Stripes" : "No insignia";
-            default -> "Standard insignia";
+        return "NONE";
+    }
+
+    /**
+     * Get equivalent civilian rank for comparison
+     */
+    public String getCivilianEquivalent() {
+        String level = getRankLevel();
+        
+        return switch (level) {
+            case "GENERAL_OFFICER" -> "EXECUTIVE_DIRECTOR";
+            case "SENIOR_OFFICER" -> "DEPARTMENT_DIRECTOR";
+            case "COMPANY_OFFICER" -> "DIVISION_MANAGER";
+            case "NON_COMMISSIONED_OFFICER" -> "SECTION_SUPERVISOR";
+            case "ENLISTED" -> "SPECIALIST_EMPLOYEE";
+            default -> "NO_EQUIVALENT";
         };
     }
 
     /**
-     * Get command span description
+     * Get years of service requirement estimate
      */
-    public String getCommandSpanDescription() {
-        Integer level = getRankLevel();
-        if (level == null) return "Individual";
+    public String getServiceRequirement() {
+        String level = getRankLevel();
         
-        if (level >= 12) return "Army/Service level";
-        if (level >= 10) return "Corps/Division level";
-        if (level >= 8) return "Brigade/Regiment level";
-        if (level >= 6) return "Battalion level";
-        if (level >= 4) return "Company level";
-        if (level >= 1) return "Platoon/Squad level";
-        if (level >= -2) return "Team level";
-        return "Individual";
-    }
-
-    /**
-     * Get typical assignment description
-     */
-    public String getTypicalAssignment() {
-        String category = getRankCategory();
-        Integer level = getRankLevel();
-        
-        if (level == null) return "Various positions";
-        
-        return switch (category) {
-            case "SENIOR_OFFICER" -> level >= 10 ? "High command positions" : "Senior staff positions";
-            case "OFFICER" -> level >= 6 ? "Battalion/Company command" : "Platoon leadership";
-            case "NCO" -> level >= 1 ? "Squad/Section leadership" : "Team leadership";
-            case "ENLISTED" -> level >= -2 ? "Specialist roles" : "Basic military duties";
-            default -> "Various positions";
+        return switch (level) {
+            case "GENERAL_OFFICER" -> "25-30+ years";
+            case "SENIOR_OFFICER" -> "18-25 years";
+            case "COMPANY_OFFICER" -> "8-18 years";
+            case "NON_COMMISSIONED_OFFICER" -> "4-12 years";
+            case "ENLISTED" -> "0-6 years";
+            default -> "Variable";
         };
     }
 
     /**
-     * Get retirement eligibility description
+     * Check if rank requires military academy graduation
      */
-    public String getRetirementEligibility() {
-        String category = getRankCategory();
+    public boolean requiresAcademyGraduation() {
+        return isCommissionedOfficer();
+    }
+
+    /**
+     * Get security clearance level typically required
+     */
+    public String getSecurityClearanceLevel() {
+        String level = getRankLevel();
         
-        return switch (category) {
-            case "SENIOR_OFFICER" -> "30 years or age 60";
-            case "OFFICER" -> "25 years or age 58";
-            case "NCO" -> "20 years or age 55";
-            case "ENLISTED" -> "15 years or age 50";
-            default -> "Standard military retirement";
+        return switch (level) {
+            case "GENERAL_OFFICER" -> "TOP_SECRET";
+            case "SENIOR_OFFICER" -> "SECRET";
+            case "COMPANY_OFFICER" -> "CONFIDENTIAL";
+            case "NON_COMMISSIONED_OFFICER" -> "RESTRICTED";
+            case "ENLISTED" -> "UNCLASSIFIED";
+            default -> "UNCLASSIFIED";
         };
     }
 }

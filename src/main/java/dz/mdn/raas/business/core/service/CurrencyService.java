@@ -234,13 +234,13 @@ public class CurrencyService {
     /**
      * Get ISO standard currencies (3-letter codes)
      */
-    @Transactional(readOnly = true)
+    /*@Transactional(readOnly = true)
     public Page<CurrencyDTO> getISOStandardCurrencies(Pageable pageable) {
         log.debug("Getting ISO standard currencies");
 
         Page<Currency> currencies = currencyRepository.findISOStandardCurrencies(pageable);
         return currencies.map(CurrencyDTO::fromEntity);
-    }
+    }*/
 
     // ========== UPDATE OPERATIONS ==========
 

@@ -272,7 +272,7 @@ public class CurrencyController {
     /**
      * Get ISO standard currencies (3-letter Latin codes)
      */
-    @GetMapping("/iso-standard")
+    /*@GetMapping("/iso-standard")
     public ResponseEntity<Page<CurrencyDTO>> getISOStandardCurrencies(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -283,7 +283,7 @@ public class CurrencyController {
         Page<CurrencyDTO> currencies = currencyService.getISOStandardCurrencies(pageable);
         
         return ResponseEntity.ok(currencies);
-    }
+    }*/
 
     // ========== UPDATE ENDPOINTS ==========
 

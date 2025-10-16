@@ -229,7 +229,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     /**
      * Find employees by military rank category
      */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.rankCategory = :rankCategory ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
+    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory = :rankCategory ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
     Page<Employee> findByMilitaryRankCategory(@Param("rankCategory") String rankCategory, Pageable pageable);
 
     /**
@@ -260,19 +260,19 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     /**
      * Find officers (rank category = 'OFFICER' or 'SENIOR_OFFICER')
      */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.rankCategory IN ('OFFICER', 'SENIOR_OFFICER') ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
+    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory IN ('OFFICER', 'SENIOR_OFFICER') ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
     Page<Employee> findOfficers(Pageable pageable);
 
     /**
      * Find enlisted personnel (rank category = 'ENLISTED')
      */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.rankCategory = 'ENLISTED' ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
+    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory = 'ENLISTED' ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
     Page<Employee> findEnlistedPersonnel(Pageable pageable);
 
     /**
      * Find NCOs (rank category = 'NCO')
      */
-    @Query("SELECT e FROM Employee e WHERE e.militaryRank.rankCategory = 'NCO' ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
+    @Query("SELECT e FROM Employee e WHERE e.militaryRank.militaryCategory = 'NCO' ORDER BY e.militaryRank.rankLevel DESC, e.person.firstnameLt ASC")
     Page<Employee> findNCOs(Pageable pageable);
 
     /**
@@ -330,10 +330,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
      */
     @Query("SELECT e FROM Employee e WHERE " +
            "(" +
-           "(e.militaryRank.rankCategory = 'ENLISTED' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 2) OR " +
-           "(e.militaryRank.rankCategory = 'NCO' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 4) OR " +
-           "(e.militaryRank.rankCategory = 'OFFICER' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 3) OR " +
-           "(e.militaryRank.rankCategory = 'SENIOR_OFFICER' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 5)" +
+           "(e.militaryRank.militaryCategory = 'ENLISTED' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 2) OR " +
+           "(e.militaryRank.militaryCategory = 'NCO' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 4) OR " +
+           "(e.militaryRank.militaryCategory = 'OFFICER' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 3) OR " +
+           "(e.militaryRank.militaryCategory = 'SENIOR_OFFICER' AND YEAR(CURRENT_DATE) - YEAR(e.hiringDate) >= 5)" +
            ") " +
            "ORDER BY e.militaryRank.rankLevel ASC, e.hiringDate ASC")
     Page<Employee> findPromotionEligible(Pageable pageable);
