@@ -190,7 +190,7 @@ public class AmendmentDTO {
         StringBuilder sb = new StringBuilder();
         sb.append(getDisplayText());
         if (amount != null) sb.append(" | Amount: ").append(amount);
-        if (currency != null) sb.append(" ").append(currency.getCodeLt());
+        if (currency != null) sb.append(" ").append(currency.getAcronymFr());
         if (contract != null) sb.append(" | Contract: ").append(contract.getShortDisplay());
         return sb.toString();
     }

@@ -52,3 +52,19 @@ public class MailType {
 	private String designationFr;
 	
 }
+
+/*
+INSERT INTO T_01_02_02 (F_00, F_01, F_02, F_03) VALUES
+(1, 'مرسوم', 'Decree', 'Décret'),
+(2, 'قرار', 'Administrative Decree', 'Arrété'),
+(3, 'أمر﻿', 'Order', 'Ordonnance'),
+(4, 'منشور﻿', 'Circular', 'Circulaire'),
+(5, 'توجيهة', 'Directive', 'Directive'),
+(6, 'تعليمة', 'Instruction', 'Instruction'),
+(7, 'لائحة', 'Note', 'Note'),
+(8, 'مقرر', 'Decision', 'Décision'),
+(9, 'إرسالية', 'Dispatch', 'Envoi'),
+(10, 'فاكس', 'Fax', 'Fax'),
+(11, 'جدول إرسال', 'Dispatch Sheet', 'Bordereau d\'Envoi'),
+(12, 'برقية', 'Telegram', 'Message');
+*/

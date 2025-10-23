@@ -62,7 +62,7 @@ public class LocalityController {
     }
 
     @GetMapping("/code/{code}")
-    public ResponseEntity<LocalityDTO> getLocalityByCode(@PathVariable String code) {
+    public ResponseEntity<LocalityDTO> getLocalityByCode(@PathVariable int code) {
         log.debug("Getting locality by code: {}", code);
         
         return localityService.findByCode(code)
@@ -233,7 +233,7 @@ public class LocalityController {
     }
 
     @GetMapping("/exists/code/{code}")
-    public ResponseEntity<Boolean> checkLocalityExistsByCode(@PathVariable String code) {
+    public ResponseEntity<Boolean> checkLocalityExistsByCode(@PathVariable int code) {
         log.debug("Checking existence by code: {}", code);
         
         boolean exists = localityService.existsByCode(code);
@@ -297,7 +297,7 @@ public class LocalityController {
                     .map(localityDTO -> {
                         LocalityInfoResponse response = LocalityInfoResponse.builder()
                                 .localityMetadata(localityDTO)
-                                .hasCode(localityDTO.getCode() != null && !localityDTO.getCode().trim().isEmpty())
+                                .hasCode(localityDTO.getCode() != 0)
                                 .hasArabicDesignation(localityDTO.getDesignationAr() != null && !localityDTO.getDesignationAr().trim().isEmpty())
                                 .hasLatinDesignation(localityDTO.getDesignationLt() != null && !localityDTO.getDesignationLt().trim().isEmpty())
                                 .hasStateReference(localityDTO.getStateId() != null)
@@ -324,7 +324,7 @@ public class LocalityController {
     private String[] getAvailableLanguages(LocalityDTO locality) {
         java.util.List<String> languages = new java.util.ArrayList<>();
         
-        if (locality.getCode() != null && !locality.getCode().trim().isEmpty()) {
+        if (locality.getCode() != 0 ) {
             languages.add("code");
         }
         if (locality.getDesignationAr() != null && !locality.getDesignationAr().trim().isEmpty()) {

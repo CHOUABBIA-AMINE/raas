@@ -14,7 +14,11 @@
 package dz.mdn.raas.common.administration.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.*;
+
+import dz.mdn.raas.common.administration.model.Locality;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +35,7 @@ public class LocalityDTO {
 
     @NotBlank(message = "Code is required")
     @Size(max = 100, message = "Code must not exceed 100 characters")
-    private String code; // F_01 - required and unique
+    private int code; // F_01 - required and unique
 
     @NotBlank(message = "Arabic designation is required")
     @Size(max = 100, message = "Arabic designation must not exceed 100 characters")
@@ -45,12 +49,12 @@ public class LocalityDTO {
     private Long stateId; // F_04 - foreign key to State (required)
 
     // Additional fields for display purposes
-    private String stateCode;
+    private int stateCode;
     private String stateDesignationAr;
     private String stateDesignationLt;
     private String stateDisplayText;
 
-    public static LocalityDTO fromEntity(dz.mdn.raas.common.administration.model.Locality locality) {
+    public static LocalityDTO fromEntity(Locality locality) {
         if (locality == null) return null;
         
         LocalityDTO.LocalityDTOBuilder builder = LocalityDTO.builder()
@@ -71,8 +75,8 @@ public class LocalityDTO {
         return builder.build();
     }
 
-    public dz.mdn.raas.common.administration.model.Locality toEntity() {
-        dz.mdn.raas.common.administration.model.Locality locality = new dz.mdn.raas.common.administration.model.Locality();
+    public Locality toEntity() {
+        Locality locality = new Locality();
         locality.setId(this.id);
         locality.setCode(this.code);
         locality.setDesignationAr(this.designationAr);
@@ -81,8 +85,8 @@ public class LocalityDTO {
         return locality;
     }
 
-    public void updateEntity(dz.mdn.raas.common.administration.model.Locality locality) {
-        if (this.code != null) {
+    public void updateEntity(Locality locality) {
+        if (this.code != 0) {
             locality.setCode(this.code);
         }
         if (this.designationAr != null) {
@@ -124,20 +128,20 @@ public class LocalityDTO {
     }
 
     public String getFullDisplayTextAr() {
-        if (stateDesignationAr != null && stateCode != null) {
+        if (stateDesignationAr != null && stateCode != 0) {
             return String.format("%s (%s - %s)", getDisplayTextAr(), stateCode, stateDesignationAr);
         }
         return getDisplayTextAr();
     }
 
     public boolean isComplete() {
-        return code != null && !code.trim().isEmpty() &&
+        return code != 0 &&
                designationAr != null && !designationAr.trim().isEmpty() &&
                designationLt != null && !designationLt.trim().isEmpty() &&
                stateId != null;
     }
 
-    public static LocalityDTO createSimple(Long id, String code, String designationAr, String designationLt, Long stateId) {
+    public static LocalityDTO createSimple(Long id, int code, String designationAr, String designationLt, Long stateId) {
         return LocalityDTO.builder()
                 .id(id)
                 .code(code)

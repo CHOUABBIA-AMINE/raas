@@ -129,10 +129,10 @@ public class StateService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StateDTO> searchByCode(String code, Pageable pageable) {
+    public Page<StateDTO> searchByCode(int code, Pageable pageable) {
         log.debug("Searching states by code: {}", code);
 
-        Page<State> states = stateRepository.findByCodeContaining(code, pageable);
+        Page<State> states = stateRepository.findByCode(code, pageable);
         return states.map(StateDTO::fromEntity);
     }
 
@@ -182,10 +182,7 @@ public class StateService {
         State existingState = getStateEntityById(id);
 
         // Update only non-null fields
-        if (stateDTO.getCode() != null) {
-            if (stateDTO.getCode().trim().isEmpty()) {
-                throw new RuntimeException("Code cannot be empty");
-            }
+        if (stateDTO.getCode() != 0) {
             if (stateRepository.existsByCodeAndIdNot(stateDTO.getCode(), id)) {
                 throw new RuntimeException("State with code '" + stateDTO.getCode() + "' already exists");
             }
@@ -248,7 +245,7 @@ public class StateService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByCode(String code) {
+    public boolean existsByCode(int code) {
         return stateRepository.existsByCode(code);
     }
 
@@ -270,7 +267,7 @@ public class StateService {
     // ========== VALIDATION METHODS ==========
 
     private void validateRequiredFields(StateDTO stateDTO, String operation) {
-        if (stateDTO.getCode() == null || stateDTO.getCode().trim().isEmpty()) {
+        if (stateDTO.getCode() == 0 ) {
             throw new RuntimeException("Code is required for " + operation);
         }
 

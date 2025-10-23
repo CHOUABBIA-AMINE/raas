@@ -14,7 +14,10 @@
 package dz.mdn.raas.common.administration.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.*;
+
+import dz.mdn.raas.common.administration.model.State;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +34,7 @@ public class StateDTO {
 
     @NotBlank(message = "Code is required")
     @Size(max = 100, message = "Code must not exceed 100 characters")
-    private String code; // F_01 - required and unique
+    private int code; // F_01 - required and unique
 
     @NotBlank(message = "Arabic designation is required")
     @Size(max = 100, message = "Arabic designation must not exceed 100 characters")
@@ -41,7 +44,7 @@ public class StateDTO {
     @Size(max = 100, message = "Latin designation must not exceed 100 characters")
     private String designationLt; // F_03 - required and unique
 
-    public static StateDTO fromEntity(dz.mdn.raas.common.administration.model.State state) {
+    public static StateDTO fromEntity(State state) {
         if (state == null) return null;
         
         return StateDTO.builder()
@@ -52,8 +55,8 @@ public class StateDTO {
                 .build();
     }
 
-    public dz.mdn.raas.common.administration.model.State toEntity() {
-        dz.mdn.raas.common.administration.model.State state = new dz.mdn.raas.common.administration.model.State();
+    public State toEntity() {
+        State state = new State();
         state.setId(this.id);
         state.setCode(this.code);
         state.setDesignationAr(this.designationAr);
@@ -61,8 +64,8 @@ public class StateDTO {
         return state;
     }
 
-    public void updateEntity(dz.mdn.raas.common.administration.model.State state) {
-        if (this.code != null) {
+    public void updateEntity(State state) {
+        if (this.code != 0) {
             state.setCode(this.code);
         }
         if (this.designationAr != null) {
@@ -96,7 +99,7 @@ public class StateDTO {
     }
 
     public boolean isComplete() {
-        return code != null && !code.trim().isEmpty() &&
+        return code != 0 &&
                designationAr != null && !designationAr.trim().isEmpty() &&
                designationLt != null && !designationLt.trim().isEmpty();
     }

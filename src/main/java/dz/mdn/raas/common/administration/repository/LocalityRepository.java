@@ -29,7 +29,7 @@ import java.util.Optional;
 public interface LocalityRepository extends JpaRepository<Locality, Long> {
 
     @Query("SELECT l FROM Locality l WHERE l.code = :code")
-    Optional<Locality> findByCode(@Param("code") String code);
+    Optional<Locality> findByCode(@Param("code") int code);
 
     @Query("SELECT l FROM Locality l WHERE l.designationAr = :designationAr")
     Optional<Locality> findByDesignationAr(@Param("designationAr") String designationAr);
@@ -47,7 +47,7 @@ public interface LocalityRepository extends JpaRepository<Locality, Long> {
     List<Locality> findByStateIdOrderByCode(@Param("stateId") Long stateId);
 
     @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM Locality l WHERE l.code = :code")
-    boolean existsByCode(@Param("code") String code);
+    boolean existsByCode(@Param("code") int code);
 
     @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM Locality l WHERE l.designationAr = :designationAr")
     boolean existsByDesignationAr(@Param("designationAr") String designationAr);
@@ -56,7 +56,7 @@ public interface LocalityRepository extends JpaRepository<Locality, Long> {
     boolean existsByDesignationLt(@Param("designationLt") String designationLt);
 
     @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM Locality l WHERE l.code = :code AND l.id != :id")
-    boolean existsByCodeAndIdNot(@Param("code") String code, @Param("id") Long id);
+    boolean existsByCodeAndIdNot(@Param("code") int code, @Param("id") Long id);
 
     @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM Locality l WHERE l.designationAr = :designationAr AND l.id != :id")
     boolean existsByDesignationArAndIdNot(@Param("designationAr") String designationAr, @Param("id") Long id);
@@ -66,9 +66,6 @@ public interface LocalityRepository extends JpaRepository<Locality, Long> {
 
     Page<Locality> findAll(Pageable pageable);
 
-    @Query("SELECT l FROM Locality l WHERE l.code LIKE %:code%")
-    Page<Locality> findByCodeContaining(@Param("code") String code, Pageable pageable);
-
     @Query("SELECT l FROM Locality l WHERE l.designationAr LIKE %:designationAr%")
     Page<Locality> findByDesignationArContaining(@Param("designationAr") String designationAr, Pageable pageable);
 
@@ -76,13 +73,11 @@ public interface LocalityRepository extends JpaRepository<Locality, Long> {
     Page<Locality> findByDesignationLtContaining(@Param("designationLt") String designationLt, Pageable pageable);
 
     @Query("SELECT l FROM Locality l WHERE " +
-           "l.code LIKE %:search% OR " +
            "l.designationAr LIKE %:search% OR " +
            "l.designationLt LIKE %:search%")
     Page<Locality> searchByAnyField(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT l FROM Locality l WHERE l.state.id = :stateId AND (" +
-           "l.code LIKE %:search% OR " +
            "l.designationAr LIKE %:search% OR " +
            "l.designationLt LIKE %:search%)")
     Page<Locality> searchByAnyFieldAndStateId(@Param("search") String search, @Param("stateId") Long stateId, Pageable pageable);

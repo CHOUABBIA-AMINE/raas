@@ -51,13 +51,16 @@ public class MilitaryCategory {
 	@Column(name="F_03", length=50, nullable=false)
 	private String designationFr;
 	
-	@Column(name="F_04", length=10)
-	private String abbreviationAr;
-	
-	@Column(name="F_05", length=10)
-	private String abbreviationEn;
-	
-	@Column(name="F_06", length=10, nullable=false)
-	private String abbreviationFr;
-	
 }
+
+/*
+
+INSERT INTO T_01_04_04 (f_00, F_01, F_02, F_03) VALUES
+(1,'الضباط العامون','General Officers','Officiers Généraux'),
+(2,'الضباط السامون','Senior Officers','Officiers Supérieurs'),
+(3,'الضباط المرؤوسون','Junior Officers','Officiers Subalternes'),
+(4,'ضباط صف','Non-Commissioned Officers (NCOs)','Sous-Officiers'),
+(5,'رجال الصف','Enlisted Personnel','Hommes du Rang'),
+(6,'مستخدمون مدنيون','Civilian Personnel','Personnel Civile');
+
+*/

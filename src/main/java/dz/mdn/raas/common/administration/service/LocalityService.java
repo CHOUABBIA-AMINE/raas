@@ -13,21 +13,21 @@
 
 package dz.mdn.raas.common.administration.service;
 
-import dz.mdn.raas.common.administration.model.Locality;
-import dz.mdn.raas.common.administration.model.State;
-import dz.mdn.raas.common.administration.repository.LocalityRepository;
-import dz.mdn.raas.common.administration.repository.StateRepository;
-import dz.mdn.raas.common.administration.dto.LocalityDTO;
+import java.util.List;
+import java.util.Optional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import dz.mdn.raas.common.administration.dto.LocalityDTO;
+import dz.mdn.raas.common.administration.model.Locality;
+import dz.mdn.raas.common.administration.model.State;
+import dz.mdn.raas.common.administration.repository.LocalityRepository;
+import dz.mdn.raas.common.administration.repository.StateRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -85,7 +85,7 @@ public class LocalityService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<LocalityDTO> findByCode(String code) {
+    public Optional<LocalityDTO> findByCode(int code) {
         log.debug("Finding locality with code: {}", code);
 
         return localityRepository.findByCode(code)
@@ -209,10 +209,7 @@ public class LocalityService {
         boolean updated = false;
 
         // Update only non-null fields
-        if (localityDTO.getCode() != null) {
-            if (localityDTO.getCode().trim().isEmpty()) {
-                throw new RuntimeException("Code cannot be empty");
-            }
+        if (localityDTO.getCode() != 0) {
             if (localityRepository.existsByCodeAndIdNot(localityDTO.getCode(), id)) {
                 throw new RuntimeException("Locality with code '" + localityDTO.getCode() + "' already exists");
             }
@@ -288,7 +285,7 @@ public class LocalityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByCode(String code) {
+    public boolean existsByCode(int code) {
         return localityRepository.existsByCode(code);
     }
 
@@ -320,7 +317,7 @@ public class LocalityService {
     // ========== VALIDATION METHODS ==========
 
     private void validateRequiredFields(LocalityDTO localityDTO, String operation) {
-        if (localityDTO.getCode() == null || localityDTO.getCode().trim().isEmpty()) {
+        if (localityDTO.getCode() == 0 ) {
             throw new RuntimeException("Code is required for " + operation);
         }
 

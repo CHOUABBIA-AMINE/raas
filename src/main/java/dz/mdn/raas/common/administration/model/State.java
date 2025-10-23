@@ -36,14 +36,13 @@ public class State {
   	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(name="F_01", length=100, nullable=false)
-	private String code;
+	@Column(name="F_01", nullable=false)
+	private int code;
 	
 	@Column(name="F_02", length=100, nullable=false)
 	private String designationAr;
 
 	@Column(name="F_03", length=100, nullable=false)
 	private String designationLt;
-
 
 }

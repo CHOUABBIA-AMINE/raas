@@ -143,7 +143,7 @@ public class StateController {
 
     @GetMapping("/search/code")
     public ResponseEntity<Page<StateDTO>> searchByCode(
-            @RequestParam String code,
+            @RequestParam int code,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
@@ -217,7 +217,7 @@ public class StateController {
     }
 
     @GetMapping("/exists/code/{code}")
-    public ResponseEntity<Boolean> checkStateExistsByCode(@PathVariable String code) {
+    public ResponseEntity<Boolean> checkStateExistsByCode(@PathVariable int code) {
         log.debug("Checking existence by code: {}", code);
         
         boolean exists = stateService.existsByCode(code);
@@ -261,7 +261,7 @@ public class StateController {
                     .map(stateDTO -> {
                         StateInfoResponse response = StateInfoResponse.builder()
                                 .stateMetadata(stateDTO)
-                                .hasCode(stateDTO.getCode() != null && !stateDTO.getCode().trim().isEmpty())
+                                .hasCode(stateDTO.getCode() != 0 )
                                 .hasArabicDesignation(stateDTO.getDesignationAr() != null && !stateDTO.getDesignationAr().trim().isEmpty())
                                 .hasLatinDesignation(stateDTO.getDesignationLt() != null && !stateDTO.getDesignationLt().trim().isEmpty())
                                 .isComplete(stateDTO.isComplete())
@@ -285,7 +285,7 @@ public class StateController {
     private String[] getAvailableLanguages(StateDTO state) {
         java.util.List<String> languages = new java.util.ArrayList<>();
         
-        if (state.getCode() != null && !state.getCode().trim().isEmpty()) {
+        if (state.getCode() != 0) {
             languages.add("code");
         }
         if (state.getDesignationAr() != null && !state.getDesignationAr().trim().isEmpty()) {

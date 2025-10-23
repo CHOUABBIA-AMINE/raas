@@ -36,7 +36,7 @@ public interface StateRepository extends JpaRepository<State, Long> {
     Optional<State> findByDesignationLt(@Param("designationLt") String designationLt);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM State s WHERE s.code = :code")
-    boolean existsByCode(@Param("code") String code);
+    boolean existsByCode(@Param("code") int code);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM State s WHERE s.designationAr = :designationAr")
     boolean existsByDesignationAr(@Param("designationAr") String designationAr);
@@ -45,7 +45,7 @@ public interface StateRepository extends JpaRepository<State, Long> {
     boolean existsByDesignationLt(@Param("designationLt") String designationLt);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM State s WHERE s.code = :code AND s.id != :id")
-    boolean existsByCodeAndIdNot(@Param("code") String code, @Param("id") Long id);
+    boolean existsByCodeAndIdNot(@Param("code") int code, @Param("id") Long id);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM State s WHERE s.designationAr = :designationAr AND s.id != :id")
     boolean existsByDesignationArAndIdNot(@Param("designationAr") String designationAr, @Param("id") Long id);
@@ -55,8 +55,8 @@ public interface StateRepository extends JpaRepository<State, Long> {
 
     Page<State> findAll(Pageable pageable);
 
-    @Query("SELECT s FROM State s WHERE s.code LIKE %:code%")
-    Page<State> findByCodeContaining(@Param("code") String code, Pageable pageable);
+    @Query("SELECT s FROM State s WHERE s.code =:code")
+    Page<State> findByCode(@Param("code") int code, Pageable pageable);
 
     @Query("SELECT s FROM State s WHERE s.designationAr LIKE %:designationAr%")
     Page<State> findByDesignationArContaining(@Param("designationAr") String designationAr, Pageable pageable);
@@ -65,7 +65,6 @@ public interface StateRepository extends JpaRepository<State, Long> {
     Page<State> findByDesignationLtContaining(@Param("designationLt") String designationLt, Pageable pageable);
 
     @Query("SELECT s FROM State s WHERE " +
-           "s.code LIKE %:search% OR " +
            "s.designationAr LIKE %:search% OR " +
            "s.designationLt LIKE %:search%")
     Page<State> searchByAnyField(@Param("search") String search, Pageable pageable);

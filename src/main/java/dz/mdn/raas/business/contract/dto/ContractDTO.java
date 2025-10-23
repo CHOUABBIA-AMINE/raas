@@ -229,7 +229,7 @@ public class ContractDTO {
         StringBuilder sb = new StringBuilder();
         sb.append(getDisplayText());
         if (amount != null) sb.append(" | Amount: ").append(amount);
-        if (currency != null) sb.append(" ").append(currency.getCodeLt());
+        if (currency != null) sb.append(" ").append(currency.getCode());
         if (provider != null) sb.append(" | Provider: ").append(provider.getDisplayText());
         return sb.toString();
     }

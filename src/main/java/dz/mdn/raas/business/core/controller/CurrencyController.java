@@ -31,8 +31,8 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Currency REST Controller
  * Handles currency operations: create, get metadata, delete, get all
- * Based on exact Currency model: F_00=id, F_01=designationAr, F_02=designationEn,
- * F_03=designationFr, F_04=codeAr, F_05=codeLt
+ * Based on exact Currency model: F_00=id, F_01=code, F_02=designationAr, F_03=designationEn,
+ * F_04=designationFr, F_05=codeAr, F_06=codeEn, F_07=codeFr
  * All fields F_01 through F_05 have unique constraints and are required
  */
 @RestController
@@ -51,8 +51,8 @@ public class CurrencyController {
      */
     @PostMapping
     public ResponseEntity<CurrencyDTO> createCurrency(@Valid @RequestBody CurrencyDTO currencyDTO) {
-        log.info("Creating currency with Latin code: {} and designations: AR={}, EN={}, FR={}", 
-                currencyDTO.getCodeLt(), currencyDTO.getDesignationAr(), 
+        log.info("Creating currency with code: {} and designations: AR={}, EN={}, FR={}", 
+                currencyDTO.getCode(), currencyDTO.getDesignationAr(), 
                 currencyDTO.getDesignationEn(), currencyDTO.getDesignationFr());
         
         CurrencyDTO createdCurrency = currencyService.createCurrency(currencyDTO);
@@ -78,6 +78,18 @@ public class CurrencyController {
     /**
      * Get currency by Arabic designation (unique field F_01)
      */
+    @GetMapping("/designation-ar/{code}")
+    public ResponseEntity<CurrencyDTO> getCurrencyByCode(@PathVariable String code) {
+        log.debug("Getting currency by code: {}", code);
+        
+        return currencyService.findByCode(code)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get currency by Arabic designation (unique field F_02)
+     */
     @GetMapping("/designation-ar/{designationAr}")
     public ResponseEntity<CurrencyDTO> getCurrencyByDesignationAr(@PathVariable String designationAr) {
         log.debug("Getting currency by Arabic designation: {}", designationAr);
@@ -88,7 +100,7 @@ public class CurrencyController {
     }
 
     /**
-     * Get currency by English designation (unique field F_02)
+     * Get currency by English designation (unique field F_03)
      */
     @GetMapping("/designation-en/{designationEn}")
     public ResponseEntity<CurrencyDTO> getCurrencyByDesignationEn(@PathVariable String designationEn) {
@@ -100,7 +112,7 @@ public class CurrencyController {
     }
 
     /**
-     * Get currency by French designation (unique field F_03)
+     * Get currency by French designation (unique field F_04)
      */
     @GetMapping("/designation-fr/{designationFr}")
     public ResponseEntity<CurrencyDTO> getCurrencyByDesignationFr(@PathVariable String designationFr) {
@@ -112,25 +124,37 @@ public class CurrencyController {
     }
 
     /**
-     * Get currency by Arabic code (unique field F_04)
+     * Get currency by Arabic code (unique field F_05)
      */
-    @GetMapping("/code-ar/{codeAr}")
-    public ResponseEntity<CurrencyDTO> getCurrencyByCodeAr(@PathVariable String codeAr) {
-        log.debug("Getting currency by Arabic code: {}", codeAr);
+    @GetMapping("/code-ar/{acronymAr}")
+    public ResponseEntity<CurrencyDTO> getCurrencyByAcronymAr(@PathVariable String acronymAr) {
+        log.debug("Getting currency by Arabic acronym: {}", acronymAr);
         
-        return currencyService.findByCodeAr(codeAr)
+        return currencyService.findByAcronymAr(acronymAr)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     /**
-     * Get currency by Latin code (unique field F_05)
+     * Get currency by English acronym (unique field F_06)
      */
-    @GetMapping("/code-lt/{codeLt}")
-    public ResponseEntity<CurrencyDTO> getCurrencyByCodeLt(@PathVariable String codeLt) {
-        log.debug("Getting currency by Latin code: {}", codeLt);
+    @GetMapping("/acronym-en/{acronymEn}")
+    public ResponseEntity<CurrencyDTO> getCurrencyByAcronymEn(@PathVariable String acronymEn) {
+        log.debug("Getting currency by English acronym: {}", acronymEn);
         
-        return currencyService.findByCodeLt(codeLt)
+        return currencyService.findByAcronymEn(acronymEn)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get currency by French acronym (unique field F_07)
+     */
+    @GetMapping("/acronym-fr/{acronymFr}")
+    public ResponseEntity<CurrencyDTO> getCurrencyByAcronymFr(@PathVariable String acronymFr) {
+        log.debug("Getting currency by French acronym: {}", acronymFr);
+        
+        return currencyService.findByAcronymFr(acronymFr)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -160,7 +184,7 @@ public class CurrencyController {
     public ResponseEntity<Page<CurrencyDTO>> getAllCurrencies(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "codeLt") String sortBy,
+            @RequestParam(defaultValue = "code") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
         
         log.debug("Getting all currencies - page: {}, size: {}, sortBy: {}, sortDir: {}", 
@@ -186,7 +210,7 @@ public class CurrencyController {
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "codeLt") String sortBy,
+            @RequestParam(defaultValue = "code") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
         
         log.debug("Searching currencies with query: {}", query);
@@ -219,18 +243,18 @@ public class CurrencyController {
     }
 
     /**
-     * Search currencies by code (Arabic and Latin)
+     * Search currencies by acronym 
      */
-    @GetMapping("/search/code")
-    public ResponseEntity<Page<CurrencyDTO>> searchByCode(
-            @RequestParam String code,
+    @GetMapping("/search/acronym")
+    public ResponseEntity<Page<CurrencyDTO>> searchByAcronym(
+            @RequestParam String acronym,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        log.debug("Searching currencies by code: {}", code);
+        log.debug("Searching currencies by acronym: {}", acronym);
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "codeLt"));
-        Page<CurrencyDTO> currencies = currencyService.searchByCode(code, pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "code"));
+        Page<CurrencyDTO> currencies = currencyService.searchByAcronym(acronym, pageable);
         
         return ResponseEntity.ok(currencies);
     }
@@ -317,6 +341,18 @@ public class CurrencyController {
     }
 
     /**
+     * Check if currency exists by code
+     */
+    @GetMapping("/exists/code-ar/{code}")
+    public ResponseEntity<Boolean> checkCurrencyExistsByCode(@PathVariable String code) {
+        log.debug("Checking existence by Arabic code: {}", code);
+        
+        boolean exists = currencyService.existsByCode(code);
+        
+        return ResponseEntity.ok(exists);
+    }
+
+    /**
      * Check if currency exists by Arabic designation
      */
     @GetMapping("/exists/designation-ar/{designationAr}")
@@ -353,25 +389,37 @@ public class CurrencyController {
     }
 
     /**
-     * Check if currency exists by Arabic code
+     * Check if currency exists by Arabic acronym
      */
-    @GetMapping("/exists/code-ar/{codeAr}")
-    public ResponseEntity<Boolean> checkCurrencyExistsByCodeAr(@PathVariable String codeAr) {
-        log.debug("Checking existence by Arabic code: {}", codeAr);
+    @GetMapping("/exists/code-ar/{acronymAr}")
+    public ResponseEntity<Boolean> checkCurrencyExistsByAcronymAr(@PathVariable String acronymAr) {
+        log.debug("Checking existence by Arabic code: {}", acronymAr);
         
-        boolean exists = currencyService.existsByCodeAr(codeAr);
+        boolean exists = currencyService.existsByAcronymAr(acronymAr);
         
         return ResponseEntity.ok(exists);
     }
 
     /**
-     * Check if currency exists by Latin code
+     * Check if currency exists by French acronym
      */
-    @GetMapping("/exists/code-lt/{codeLt}")
-    public ResponseEntity<Boolean> checkCurrencyExistsByCodeLt(@PathVariable String codeLt) {
-        log.debug("Checking existence by Latin code: {}", codeLt);
+    @GetMapping("/exists/code-ar/{acronymEn}")
+    public ResponseEntity<Boolean> checkCurrencyExistsByAcronymEn(@PathVariable String acronymEn) {
+        log.debug("Checking existence by Arabic code: {}", acronymEn);
         
-        boolean exists = currencyService.existsByCodeLt(codeLt);
+        boolean exists = currencyService.existsByAcronymEn(acronymEn);
+        
+        return ResponseEntity.ok(exists);
+    }
+
+    /**
+     * Check if currency exists by English acronym
+     */
+    @GetMapping("/exists/code-ar/{acronymFr}")
+    public ResponseEntity<Boolean> checkCurrencyExistsByAcronymFr(@PathVariable String acronymFr) {
+        log.debug("Checking existence by Arabic code: {}", acronymFr);
+        
+        boolean exists = currencyService.existsByAcronymFr(acronymFr);
         
         return ResponseEntity.ok(exists);
     }
@@ -402,18 +450,20 @@ public class CurrencyController {
                     .map(currencyDTO -> {
                         CurrencyInfoResponse response = CurrencyInfoResponse.builder()
                                 .currencyMetadata(currencyDTO)
+                                .hasCode(currencyDTO.getCode() != null && !currencyDTO.getCode().trim().isEmpty())
                                 .hasArabicDesignation(currencyDTO.getDesignationAr() != null && !currencyDTO.getDesignationAr().trim().isEmpty())
                                 .hasEnglishDesignation(currencyDTO.getDesignationEn() != null && !currencyDTO.getDesignationEn().trim().isEmpty())
                                 .hasFrenchDesignation(currencyDTO.getDesignationFr() != null && !currencyDTO.getDesignationFr().trim().isEmpty())
-                                .hasArabicCode(currencyDTO.getCodeAr() != null && !currencyDTO.getCodeAr().trim().isEmpty())
-                                .hasLatinCode(currencyDTO.getCodeLt() != null && !currencyDTO.getCodeLt().trim().isEmpty())
+                                .hasArabicAcronym(currencyDTO.getAcronymAr() != null && !currencyDTO.getAcronymAr().trim().isEmpty())
+                                .hasEnglishAcronym(currencyDTO.getAcronymEn() != null && !currencyDTO.getAcronymEn().trim().isEmpty())
+                                .hasFrenchAcronym(currencyDTO.getAcronymFr() != null && !currencyDTO.getAcronymFr().trim().isEmpty())
                                 .isMultilingual(currencyDTO.isMultilingual())
-                                .hasDualCodeSystem(currencyDTO.hasDualCodeSystem())
+                                .isCodeMultilingual(currencyDTO.isCodeMultilingual())
                                 .isMajorCurrency(currencyDTO.isMajorCurrency())
                                 .isRegionalCurrency(currencyDTO.isRegionalCurrency())
                                 .isValid(currencyDTO.isValid())
                                 .defaultDesignation(currencyDTO.getDefaultDesignation())
-                                .defaultCode(currencyDTO.getDefaultCode())
+                                .defaultAcronym(currencyDTO.getDefaultAcronym())
                                 .displayText(currencyDTO.getDisplayText())
                                 .currencyType(currencyDTO.getCurrencyType())
                                 .currencySymbol(currencyDTO.getCurrencySymbol())
@@ -441,18 +491,20 @@ public class CurrencyController {
     @lombok.AllArgsConstructor
     public static class CurrencyInfoResponse {
         private CurrencyDTO currencyMetadata;
+        private Boolean hasCode;
         private Boolean hasArabicDesignation;
         private Boolean hasEnglishDesignation;
         private Boolean hasFrenchDesignation;
-        private Boolean hasArabicCode;
-        private Boolean hasLatinCode;
+        private Boolean hasArabicAcronym;
+        private Boolean hasEnglishAcronym;
+        private Boolean hasFrenchAcronym;
         private Boolean isMultilingual;
-        private Boolean hasDualCodeSystem;
+        private Boolean isCodeMultilingual;
         private Boolean isMajorCurrency;
         private Boolean isRegionalCurrency;
         private Boolean isValid;
         private String defaultDesignation;
-        private String defaultCode;
+        private String defaultAcronym;
         private String displayText;
         private String currencyType;
         private String currencySymbol;

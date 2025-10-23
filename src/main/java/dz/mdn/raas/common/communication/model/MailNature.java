@@ -52,3 +52,10 @@ public class MailNature {
 	private String designationFr;
 	
 }
+
+/*
+INSERT INTO T_01_02_01 (F_00, F_01, F_02, F_03) VALUES
+(1, 'الصادر', 'Outgoing', 'Départ'),
+(2, 'الوارد', 'Arriving', 'Arrivé'); 
+
+*/

@@ -48,7 +48,7 @@ public class CurrencyService {
      */
     public CurrencyDTO createCurrency(CurrencyDTO currencyDTO) {
         log.info("Creating currency with Latin code: {} and designations: AR={}, EN={}, FR={}", 
-                currencyDTO.getCodeLt(), currencyDTO.getDesignationAr(), 
+                currencyDTO.getAcronymFr(), currencyDTO.getDesignationAr(), 
                 currencyDTO.getDesignationEn(), currencyDTO.getDesignationFr());
 
         // Validate required fields
@@ -59,11 +59,13 @@ public class CurrencyService {
 
         // Create entity with exact field mapping
         Currency currency = new Currency();
+        currency.setCode(currencyDTO.getCode()); // F_01
         currency.setDesignationAr(currencyDTO.getDesignationAr()); // F_01
         currency.setDesignationEn(currencyDTO.getDesignationEn()); // F_02
         currency.setDesignationFr(currencyDTO.getDesignationFr()); // F_03
-        currency.setCodeAr(currencyDTO.getCodeAr()); // F_04
-        currency.setCodeLt(currencyDTO.getCodeLt()); // F_05
+        currency.setAcronymAr(currencyDTO.getAcronymAr()); // F_04
+        currency.setAcronymEn(currencyDTO.getAcronymEn()); // F_04
+        currency.setAcronymFr(currencyDTO.getAcronymFr()); // F_05
 
         Currency savedCurrency = currencyRepository.save(currency);
         log.info("Successfully created currency with ID: {}", savedCurrency.getId());
@@ -96,7 +98,18 @@ public class CurrencyService {
     }
 
     /**
-     * Find currency by Arabic designation (unique field F_01)
+     * Find currency by code (unique field F_01)
+     */
+    @Transactional(readOnly = true)
+    public Optional<CurrencyDTO> findByCode(String code) {
+        log.debug("Finding currency with code: {}", code);
+
+        return currencyRepository.findByCode(code)
+                .map(CurrencyDTO::fromEntity);
+    }
+
+    /**
+     * Find currency by Arabic designation (unique field F_02)
      */
     @Transactional(readOnly = true)
     public Optional<CurrencyDTO> findByDesignationAr(String designationAr) {
@@ -107,7 +120,7 @@ public class CurrencyService {
     }
 
     /**
-     * Find currency by English designation (unique field F_02)
+     * Find currency by English designation (unique field F_03)
      */
     @Transactional(readOnly = true)
     public Optional<CurrencyDTO> findByDesignationEn(String designationEn) {
@@ -118,7 +131,7 @@ public class CurrencyService {
     }
 
     /**
-     * Find currency by French designation (unique field F_03)
+     * Find currency by French designation (unique field F_04)
      */
     @Transactional(readOnly = true)
     public Optional<CurrencyDTO> findByDesignationFr(String designationFr) {
@@ -129,24 +142,35 @@ public class CurrencyService {
     }
 
     /**
-     * Find currency by Arabic code (unique field F_04)
+     * Find currency by Arabic acronym (unique field F_05)
      */
     @Transactional(readOnly = true)
-    public Optional<CurrencyDTO> findByCodeAr(String codeAr) {
-        log.debug("Finding currency with Arabic code: {}", codeAr);
+    public Optional<CurrencyDTO> findByAcronymAr(String acronymAr) {
+        log.debug("Finding currency with Arabic code: {}", acronymAr);
 
-        return currencyRepository.findByCodeAr(codeAr)
+        return currencyRepository.findByAcronymAr(acronymAr)
                 .map(CurrencyDTO::fromEntity);
     }
 
     /**
-     * Find currency by Latin code (unique field F_05)
+     * Find currency by Latin acronym (unique field F_06)
      */
     @Transactional(readOnly = true)
-    public Optional<CurrencyDTO> findByCodeLt(String codeLt) {
-        log.debug("Finding currency with Latin code: {}", codeLt);
+    public Optional<CurrencyDTO> findByAcronymEn(String acronymEn) {
+        log.debug("Finding currency with Latin code: {}", acronymEn);
 
-        return currencyRepository.findByCodeLt(codeLt)
+        return currencyRepository.findByAcronymEn(acronymEn)
+                .map(CurrencyDTO::fromEntity);
+    }
+
+    /**
+     * Find currency by Latin acronym (unique field F_07)
+     */
+    @Transactional(readOnly = true)
+    public Optional<CurrencyDTO> findByAcronymFr(String acronymFr) {
+        log.debug("Finding currency with Latin code: {}", acronymFr);
+
+        return currencyRepository.findByAcronymFr(acronymFr)
                 .map(CurrencyDTO::fromEntity);
     }
 
@@ -157,7 +181,7 @@ public class CurrencyService {
     public Page<CurrencyDTO> getAllCurrencies(Pageable pageable) {
         log.debug("Getting all currencies with pagination");
 
-        Page<Currency> currencies = currencyRepository.findAllOrderByCodeLt(pageable);
+        Page<Currency> currencies = currencyRepository.findAllOrderByCode(pageable);
         return currencies.map(CurrencyDTO::fromEntity);
     }
 
@@ -188,6 +212,17 @@ public class CurrencyService {
     }
 
     /**
+     * Search currencies by code
+     */
+    @Transactional(readOnly = true)
+    public Page<CurrencyDTO> searchByCode(String code, Pageable pageable) {
+        log.debug("Searching currencies by code: {}", code);
+
+        Page<Currency> currencies = currencyRepository.searchByCode(code, pageable);
+        return currencies.map(CurrencyDTO::fromEntity);
+    }
+
+    /**
      * Search currencies by designation
      */
     @Transactional(readOnly = true)
@@ -202,10 +237,10 @@ public class CurrencyService {
      * Search currencies by code
      */
     @Transactional(readOnly = true)
-    public Page<CurrencyDTO> searchByCode(String code, Pageable pageable) {
-        log.debug("Searching currencies by code: {}", code);
+    public Page<CurrencyDTO> searchByAcronym(String acronym, Pageable pageable) {
+        log.debug("Searching currencies by acronym: {}", acronym);
 
-        Page<Currency> currencies = currencyRepository.searchByCode(code, pageable);
+        Page<Currency> currencies = currencyRepository.searchByAcronym(acronym, pageable);
         return currencies.map(CurrencyDTO::fromEntity);
     }
 
@@ -259,11 +294,13 @@ public class CurrencyService {
         validateAllUniqueConstraints(currencyDTO, id);
 
         // Update fields with exact field mapping
-        existingCurrency.setDesignationAr(currencyDTO.getDesignationAr()); // F_01
+        existingCurrency.setCode(currencyDTO.getCode()); // F_01
+        existingCurrency.setDesignationAr(currencyDTO.getDesignationAr()); // F_02
         existingCurrency.setDesignationEn(currencyDTO.getDesignationEn()); // F_02
         existingCurrency.setDesignationFr(currencyDTO.getDesignationFr()); // F_03
-        existingCurrency.setCodeAr(currencyDTO.getCodeAr()); // F_04
-        existingCurrency.setCodeLt(currencyDTO.getCodeLt()); // F_05
+        existingCurrency.setAcronymAr(currencyDTO.getAcronymAr()); // F_04
+        existingCurrency.setAcronymEn(currencyDTO.getAcronymEn()); // F_04
+        existingCurrency.setAcronymFr(currencyDTO.getAcronymFr()); // F_04
 
         Currency updatedCurrency = currencyRepository.save(existingCurrency);
         log.info("Successfully updated currency with ID: {}", id);
@@ -313,6 +350,11 @@ public class CurrencyService {
      * Check if currency exists by any unique field
      */
     @Transactional(readOnly = true)
+    public boolean existsByCode(String code) {
+        return currencyRepository.existsByCode(code);
+    }
+    
+    @Transactional(readOnly = true)
     public boolean existsByDesignationAr(String designationAr) {
         return currencyRepository.existsByDesignationAr(designationAr);
     }
@@ -328,13 +370,18 @@ public class CurrencyService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByCodeAr(String codeAr) {
-        return currencyRepository.existsByCodeAr(codeAr);
+    public boolean existsByAcronymAr(String acronymAr) {
+        return currencyRepository.existsByAcronymAr(acronymAr);
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByCodeLt(String codeLt) {
-        return currencyRepository.existsByCodeLt(codeLt);
+    public boolean existsByAcronymEn(String acronymEn) {
+        return currencyRepository.existsByAcronymEn(acronymEn);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByAcronymFr(String acronymFr) {
+        return currencyRepository.existsByAcronymFr(acronymFr);
     }
 
     /**
@@ -351,6 +398,10 @@ public class CurrencyService {
      * Validate required fields
      */
     private void validateRequiredFields(CurrencyDTO currencyDTO, String operation) {
+        if (currencyDTO.getCode() == null || currencyDTO.getCode().trim().isEmpty()) {
+            throw new RuntimeException("Code is required for " + operation);
+        }
+        
         if (currencyDTO.getDesignationAr() == null || currencyDTO.getDesignationAr().trim().isEmpty()) {
             throw new RuntimeException("Arabic designation is required for " + operation);
         }
@@ -363,12 +414,16 @@ public class CurrencyService {
             throw new RuntimeException("French designation is required for " + operation);
         }
 
-        if (currencyDTO.getCodeAr() == null || currencyDTO.getCodeAr().trim().isEmpty()) {
-            throw new RuntimeException("Arabic code is required for " + operation);
+        if (currencyDTO.getAcronymAr() == null || currencyDTO.getAcronymAr().trim().isEmpty()) {
+            throw new RuntimeException("Arabic acronym is required for " + operation);
         }
 
-        if (currencyDTO.getCodeLt() == null || currencyDTO.getCodeLt().trim().isEmpty()) {
-            throw new RuntimeException("Latin code is required for " + operation);
+        if (currencyDTO.getAcronymEn() == null || currencyDTO.getAcronymEn().trim().isEmpty()) {
+            throw new RuntimeException("English acronym is required for " + operation);
+        }
+
+        if (currencyDTO.getAcronymFr() == null || currencyDTO.getAcronymFr().trim().isEmpty()) {
+            throw new RuntimeException("French acronym is required for " + operation);
         }
     }
 
@@ -377,6 +432,17 @@ public class CurrencyService {
      */
     private void validateAllUniqueConstraints(CurrencyDTO currencyDTO, Long excludeId) {
         // Check Arabic designation uniqueness (F_01)
+        if (excludeId == null) {
+            if (currencyRepository.existsByCode(currencyDTO.getCode())) {
+                throw new RuntimeException("Currency with code '" + currencyDTO.getCode() + "' already exists");
+            }
+        } else {
+            if (currencyRepository.existsByCodeAndIdNot(currencyDTO.getCode(), excludeId)) {
+                throw new RuntimeException("Another currency with code '" + currencyDTO.getCode() + "' already exists");
+            }
+        }
+        
+        // Check Arabic designation uniqueness (F_02)
         if (excludeId == null) {
             if (currencyRepository.existsByDesignationAr(currencyDTO.getDesignationAr())) {
                 throw new RuntimeException("Currency with Arabic designation '" + currencyDTO.getDesignationAr() + "' already exists");
@@ -387,7 +453,7 @@ public class CurrencyService {
             }
         }
 
-        // Check English designation uniqueness (F_02)
+        // Check English designation uniqueness (F_03)
         if (excludeId == null) {
             if (currencyRepository.existsByDesignationEn(currencyDTO.getDesignationEn())) {
                 throw new RuntimeException("Currency with English designation '" + currencyDTO.getDesignationEn() + "' already exists");
@@ -398,7 +464,7 @@ public class CurrencyService {
             }
         }
 
-        // Check French designation uniqueness (F_03)
+        // Check French designation uniqueness (F_04)
         if (excludeId == null) {
             if (currencyRepository.existsByDesignationFr(currencyDTO.getDesignationFr())) {
                 throw new RuntimeException("Currency with French designation '" + currencyDTO.getDesignationFr() + "' already exists");
@@ -409,25 +475,36 @@ public class CurrencyService {
             }
         }
 
-        // Check Arabic code uniqueness (F_04)
+        // Check Arabic code uniqueness (F_05)
         if (excludeId == null) {
-            if (currencyRepository.existsByCodeAr(currencyDTO.getCodeAr())) {
-                throw new RuntimeException("Currency with Arabic code '" + currencyDTO.getCodeAr() + "' already exists");
+            if (currencyRepository.existsByAcronymAr(currencyDTO.getAcronymAr())) {
+                throw new RuntimeException("Currency with Arabic acronym '" + currencyDTO.getAcronymAr() + "' already exists");
             }
         } else {
-            if (currencyRepository.existsByCodeArAndIdNot(currencyDTO.getCodeAr(), excludeId)) {
-                throw new RuntimeException("Another currency with Arabic code '" + currencyDTO.getCodeAr() + "' already exists");
+            if (currencyRepository.existsByAcronymArAndIdNot(currencyDTO.getAcronymAr(), excludeId)) {
+                throw new RuntimeException("Another currency with Arabic code '" + currencyDTO.getAcronymAr() + "' already exists");
             }
         }
 
-        // Check Latin code uniqueness (F_05)
+        // Check Arabic code uniqueness (F_05)
         if (excludeId == null) {
-            if (currencyRepository.existsByCodeLt(currencyDTO.getCodeLt())) {
-                throw new RuntimeException("Currency with Latin code '" + currencyDTO.getCodeLt() + "' already exists");
+            if (currencyRepository.existsByAcronymEn(currencyDTO.getAcronymEn())) {
+                throw new RuntimeException("Currency with English acronym '" + currencyDTO.getAcronymEn() + "' already exists");
             }
         } else {
-            if (currencyRepository.existsByCodeLtAndIdNot(currencyDTO.getCodeLt(), excludeId)) {
-                throw new RuntimeException("Another currency with Latin code '" + currencyDTO.getCodeLt() + "' already exists");
+            if (currencyRepository.existsByAcronymEnAndIdNot(currencyDTO.getAcronymEn(), excludeId)) {
+                throw new RuntimeException("Another currency with English code '" + currencyDTO.getAcronymEn() + "' already exists");
+            }
+        }
+
+        // Check Arabic code uniqueness (F_05)
+        if (excludeId == null) {
+            if (currencyRepository.existsByAcronymFr(currencyDTO.getAcronymFr())) {
+                throw new RuntimeException("Currency with French acronym '" + currencyDTO.getAcronymFr() + "' already exists");
+            }
+        } else {
+            if (currencyRepository.existsByAcronymFrAndIdNot(currencyDTO.getAcronymFr(), excludeId)) {
+                throw new RuntimeException("Another currency with French code '" + currencyDTO.getAcronymFr() + "' already exists");
             }
         }
     }

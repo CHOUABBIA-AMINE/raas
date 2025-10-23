@@ -46,16 +46,6 @@ public class MilitaryCategoryDTO {
     @Size(max = 50, message = "French designation must not exceed 50 characters")
     private String designationFr; // F_03 - required and unique
 
-    @Size(max = 10, message = "Arabic abbreviation must not exceed 10 characters")
-    private String abbreviationAr; // F_04 - optional
-
-    @Size(max = 10, message = "English abbreviation must not exceed 10 characters")
-    private String abbreviationEn; // F_05 - optional
-
-    @NotBlank(message = "French abbreviation is required")
-    @Size(max = 10, message = "French abbreviation must not exceed 10 characters")
-    private String abbreviationFr; // F_06 - required
-
     /**
      * Create DTO from entity
      */
@@ -67,9 +57,6 @@ public class MilitaryCategoryDTO {
                 .designationAr(militaryCategory.getDesignationAr())
                 .designationEn(militaryCategory.getDesignationEn())
                 .designationFr(militaryCategory.getDesignationFr())
-                .abbreviationAr(militaryCategory.getAbbreviationAr())
-                .abbreviationEn(militaryCategory.getAbbreviationEn())
-                .abbreviationFr(militaryCategory.getAbbreviationFr())
                 .build();
     }
 
@@ -83,9 +70,6 @@ public class MilitaryCategoryDTO {
         militaryCategory.setDesignationAr(this.designationAr);
         militaryCategory.setDesignationEn(this.designationEn);
         militaryCategory.setDesignationFr(this.designationFr);
-        militaryCategory.setAbbreviationAr(this.abbreviationAr);
-        militaryCategory.setAbbreviationEn(this.abbreviationEn);
-        militaryCategory.setAbbreviationFr(this.abbreviationFr);
         return militaryCategory;
     }
 
@@ -102,15 +86,6 @@ public class MilitaryCategoryDTO {
         if (this.designationFr != null) {
             militaryCategory.setDesignationFr(this.designationFr);
         }
-        if (this.abbreviationAr != null) {
-            militaryCategory.setAbbreviationAr(this.abbreviationAr);
-        }
-        if (this.abbreviationEn != null) {
-            militaryCategory.setAbbreviationEn(this.abbreviationEn);
-        }
-        if (this.abbreviationFr != null) {
-            militaryCategory.setAbbreviationFr(this.abbreviationFr);
-        }
     }
 
     /**
@@ -118,13 +93,6 @@ public class MilitaryCategoryDTO {
      */
     public String getDefaultDesignation() {
         return designationFr;
-    }
-
-    /**
-     * Get default abbreviation (French as it's required)
-     */
-    public String getDefaultAbbreviation() {
-        return abbreviationFr;
     }
 
     /**
@@ -142,20 +110,6 @@ public class MilitaryCategoryDTO {
     }
 
     /**
-     * Get abbreviation by language preference
-     */
-    public String getAbbreviationByLanguage(String language) {
-        if (language == null) return abbreviationFr;
-        
-        return switch (language.toLowerCase()) {
-            case "ar", "arabic" -> abbreviationAr != null ? abbreviationAr : abbreviationFr;
-            case "en", "english" -> abbreviationEn != null ? abbreviationEn : abbreviationFr;
-            case "fr", "french" -> abbreviationFr;
-            default -> abbreviationFr;
-        };
-    }
-
-    /**
      * Get display text with priority: French designation > English designation > Arabic designation
      */
     public String getDisplayText() {
@@ -167,22 +121,6 @@ public class MilitaryCategoryDTO {
         }
         if (designationAr != null && !designationAr.trim().isEmpty()) {
             return designationAr;
-        }
-        return "N/A";
-    }
-
-    /**
-     * Get display abbreviation
-     */
-    public String getDisplayAbbreviation() {
-        if (abbreviationFr != null && !abbreviationFr.trim().isEmpty()) {
-            return abbreviationFr;
-        }
-        if (abbreviationEn != null && !abbreviationEn.trim().isEmpty()) {
-            return abbreviationEn;
-        }
-        if (abbreviationAr != null && !abbreviationAr.trim().isEmpty()) {
-            return abbreviationAr;
         }
         return "N/A";
     }
@@ -215,13 +153,6 @@ public class MilitaryCategoryDTO {
         }
         
         return languages.stream().toArray(String[]::new);
-    }
-
-    /**
-     * Get military category code/identifier (using French abbreviation)
-     */
-    public String getCode() {
-        return abbreviationFr;
     }
 
     /**
@@ -334,7 +265,6 @@ public class MilitaryCategoryDTO {
         return MilitaryCategoryDTO.builder()
                 .id(id)
                 .designationFr(designationFr)
-                .abbreviationFr(abbreviationFr)
                 .build();
     }
 
@@ -342,15 +272,7 @@ public class MilitaryCategoryDTO {
      * Validate required fields are present
      */
     public boolean isValid() {
-        return designationFr != null && !designationFr.trim().isEmpty() && 
-               abbreviationFr != null && !abbreviationFr.trim().isEmpty();
-    }
-
-    /**
-     * Get short display for lists (abbreviation - designation)
-     */
-    public String getShortDisplay() {
-        return getDisplayAbbreviation() + " - " + getDisplayText();
+        return designationFr != null && !designationFr.trim().isEmpty();
     }
 
     /**
@@ -367,8 +289,6 @@ public class MilitaryCategoryDTO {
         if (designationAr != null) {
             sb.append(" / ").append(designationAr);
         }
-        
-        sb.append(" (").append(abbreviationFr).append(")");
         
         String categoryType = getCategoryType();
         if (!"OTHER".equals(categoryType)) {
@@ -396,19 +316,10 @@ public class MilitaryCategoryDTO {
     }
 
     /**
-     * Get display with abbreviation and type
-     */
-    public String getDisplayWithAbbreviationAndType() {
-        String categoryType = getCategoryType();
-        String typeDisplay = categoryType.replace("_", " ").toLowerCase();
-        return getDisplayAbbreviation() + " - " + getDisplayText() + " (" + typeDisplay + ")";
-    }
-
-    /**
      * Get formal military display
      */
     public String getFormalMilitaryDisplay() {
-        return getDisplayAbbreviation() + " (" + getDisplayText() + ")";
+        return getDisplayText();
     }
 
     /**

@@ -61,8 +61,7 @@ public class MilitaryCategoryService {
     public MilitaryCategoryDTO createMilitaryCategory(MilitaryCategoryDTO militaryCategoryDTO) {
         log.info("Creating military category with French designation: {} and designations: AR={}, EN={}, Abbreviations: FR={}, AR={}, EN={}", 
                 militaryCategoryDTO.getDesignationFr(), militaryCategoryDTO.getDesignationAr(), 
-                militaryCategoryDTO.getDesignationEn(), militaryCategoryDTO.getAbbreviationFr(),
-                militaryCategoryDTO.getAbbreviationAr(), militaryCategoryDTO.getAbbreviationEn());
+                militaryCategoryDTO.getDesignationEn());
 
         // Validate required fields
         validateRequiredFields(militaryCategoryDTO, "create");
@@ -75,9 +74,6 @@ public class MilitaryCategoryService {
         militaryCategory.setDesignationAr(militaryCategoryDTO.getDesignationAr()); // F_01
         militaryCategory.setDesignationEn(militaryCategoryDTO.getDesignationEn()); // F_02
         militaryCategory.setDesignationFr(militaryCategoryDTO.getDesignationFr()); // F_03
-        militaryCategory.setAbbreviationAr(militaryCategoryDTO.getAbbreviationAr()); // F_04
-        militaryCategory.setAbbreviationEn(militaryCategoryDTO.getAbbreviationEn()); // F_05
-        militaryCategory.setAbbreviationFr(militaryCategoryDTO.getAbbreviationFr()); // F_06
 
         MilitaryCategory savedMilitaryCategory = militaryCategoryRepository.save(militaryCategory);
         log.info("Successfully created military category with ID: {}", savedMilitaryCategory.getId());
@@ -364,9 +360,6 @@ public class MilitaryCategoryService {
         existingMilitaryCategory.setDesignationAr(militaryCategoryDTO.getDesignationAr()); // F_01
         existingMilitaryCategory.setDesignationEn(militaryCategoryDTO.getDesignationEn()); // F_02
         existingMilitaryCategory.setDesignationFr(militaryCategoryDTO.getDesignationFr()); // F_03
-        existingMilitaryCategory.setAbbreviationAr(militaryCategoryDTO.getAbbreviationAr()); // F_04
-        existingMilitaryCategory.setAbbreviationEn(militaryCategoryDTO.getAbbreviationEn()); // F_05
-        existingMilitaryCategory.setAbbreviationFr(militaryCategoryDTO.getAbbreviationFr()); // F_06
 
         MilitaryCategory updatedMilitaryCategory = militaryCategoryRepository.save(existingMilitaryCategory);
         log.info("Successfully updated military category with ID: {}", id);
@@ -477,9 +470,6 @@ public class MilitaryCategoryService {
         if (militaryCategoryDTO.getDesignationFr() == null || militaryCategoryDTO.getDesignationFr().trim().isEmpty()) {
             throw new RuntimeException("French designation is required for " + operation);
         }
-        if (militaryCategoryDTO.getAbbreviationFr() == null || militaryCategoryDTO.getAbbreviationFr().trim().isEmpty()) {
-            throw new RuntimeException("French abbreviation is required for " + operation);
-        }
     }
 
     /**
@@ -494,19 +484,6 @@ public class MilitaryCategoryService {
         } else {
             if (militaryCategoryRepository.existsByDesignationFrAndIdNot(militaryCategoryDTO.getDesignationFr(), excludeId)) {
                 throw new RuntimeException("Another military category with French designation '" + militaryCategoryDTO.getDesignationFr() + "' already exists");
-            }
-        }
-
-        // Additional check for abbreviation uniqueness (business rule)
-        if (militaryCategoryDTO.getAbbreviationFr() != null && !militaryCategoryDTO.getAbbreviationFr().trim().isEmpty()) {
-            if (excludeId == null) {
-                if (militaryCategoryRepository.existsByAbbreviationFr(militaryCategoryDTO.getAbbreviationFr())) {
-                    throw new RuntimeException("Military category with French abbreviation '" + militaryCategoryDTO.getAbbreviationFr() + "' already exists");
-                }
-            } else {
-                if (militaryCategoryRepository.existsByAbbreviationFrAndIdNot(militaryCategoryDTO.getAbbreviationFr(), excludeId)) {
-                    throw new RuntimeException("Another military category with French abbreviation '" + militaryCategoryDTO.getAbbreviationFr() + "' already exists");
-                }
             }
         }
     }

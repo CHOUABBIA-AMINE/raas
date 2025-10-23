@@ -54,8 +54,7 @@ public class MilitaryCategoryController {
     public ResponseEntity<MilitaryCategoryDTO> createMilitaryCategory(@Valid @RequestBody MilitaryCategoryDTO militaryCategoryDTO) {
         log.info("Creating military category with French designation: {} and designations: AR={}, EN={}, Abbreviations: FR={}, AR={}, EN={}", 
                 militaryCategoryDTO.getDesignationFr(), militaryCategoryDTO.getDesignationAr(), 
-                militaryCategoryDTO.getDesignationEn(), militaryCategoryDTO.getAbbreviationFr(),
-                militaryCategoryDTO.getAbbreviationAr(), militaryCategoryDTO.getAbbreviationEn());
+                militaryCategoryDTO.getDesignationEn());
         
         MilitaryCategoryDTO createdMilitaryCategory = militaryCategoryService.createMilitaryCategory(militaryCategoryDTO);
         
@@ -551,23 +550,18 @@ public class MilitaryCategoryController {
                         MilitaryCategoryInfoResponse response = MilitaryCategoryInfoResponse.builder()
                                 .militaryCategoryMetadata(militaryCategoryDTO)
                                 .defaultDesignation(militaryCategoryDTO.getDefaultDesignation())
-                                .defaultAbbreviation(militaryCategoryDTO.getDefaultAbbreviation())
                                 .displayText(militaryCategoryDTO.getDisplayText())
-                                .displayAbbreviation(militaryCategoryDTO.getDisplayAbbreviation())
                                 .isMultilingual(militaryCategoryDTO.isMultilingual())
                                 .availableLanguages(militaryCategoryDTO.getAvailableLanguages())
-                                .code(militaryCategoryDTO.getCode())
                                 .categoryType(militaryCategoryDTO.getCategoryType())
                                 .categoryPriority(militaryCategoryDTO.getCategoryPriority())
                                 .isMainServiceBranch(militaryCategoryDTO.isMainServiceBranch())
                                 .isSupportService(militaryCategoryDTO.isSupportService())
                                 .isSecurityService(militaryCategoryDTO.isSecurityService())
                                 .organizationalLevel(militaryCategoryDTO.getOrganizationalLevel())
-                                .shortDisplay(militaryCategoryDTO.getShortDisplay())
                                 .fullDisplay(militaryCategoryDTO.getFullDisplay())
                                 .comparisonKey(militaryCategoryDTO.getComparisonKey())
                                 .displayWithType(militaryCategoryDTO.getDisplayWithType())
-                                .displayWithAbbreviationAndType(militaryCategoryDTO.getDisplayWithAbbreviationAndType())
                                 .formalMilitaryDisplay(militaryCategoryDTO.getFormalMilitaryDisplay())
                                 .commandStructureLevel(militaryCategoryDTO.getCommandStructureLevel())
                                 .personnelSizeCategory(militaryCategoryDTO.getPersonnelSizeCategory())
@@ -598,9 +592,7 @@ public class MilitaryCategoryController {
     public static class MilitaryCategoryInfoResponse {
         private MilitaryCategoryDTO militaryCategoryMetadata;
         private String defaultDesignation;
-        private String defaultAbbreviation;
         private String displayText;
-        private String displayAbbreviation;
         private Boolean isMultilingual;
         private String[] availableLanguages;
         private String code;
@@ -610,11 +602,9 @@ public class MilitaryCategoryController {
         private Boolean isSupportService;
         private Boolean isSecurityService;
         private String organizationalLevel;
-        private String shortDisplay;
         private String fullDisplay;
         private String comparisonKey;
         private String displayWithType;
-        private String displayWithAbbreviationAndType;
         private String formalMilitaryDisplay;
         private String commandStructureLevel;
         private String personnelSizeCategory;
