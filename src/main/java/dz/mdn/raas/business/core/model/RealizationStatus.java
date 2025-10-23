@@ -52,3 +52,13 @@ public class RealizationStatus {
 	private String designationFr;
 
 }
+/*
+INSERT INTO T_02_01_05 (F_00, F_01, F_02, F_03) VALUES
+(1,'قيد الانتظار','On Hold','En Instance'),
+(2,'قيد التنفيذ','Ongoing','En cours'),
+(3,'غيرمجدي','Defective','Infrectieux'),
+(4,'مُنجز','Finalized','Finalisé'),
+(5,'ملغي','Canceled','Annulé'),
+(6,'مؤجل','Deferred','Différé'),
+(7,'منقول','Transferred','Transféré');
+*/

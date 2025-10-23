@@ -52,3 +52,10 @@ public class ItemStatus {
 	private String designationFr;
 
 }
+
+/*
+INSERT INTO T_02_02_02 (F_00, F_01, F_02, F_03) VALUES
+(1, 'مخطط', 'Planed', 'Plannifié'),
+(2, 'في طور الانجاز', 'Procurement Ongoing', 'En cours de Réalisation'),
+(3, 'منجز', 'Procured', 'Réalisé');
+*/

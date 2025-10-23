@@ -53,3 +53,13 @@ public class RealizationNature {
 	private String designationFr;
 
 }
+/*
+INSERT INTO T_02_01_04 (F_00, F_01, F_02, F_03) VALUES
+(1,'الوسائل الكبرى','Major Means','Moyens Majeurs'),
+(2,'تسيير','Operation','Fonctionnement'),
+(3,'تجهيز','Equipment','Équipement'),
+(4,'قطع غيار','Spare Parts','Pièces de Rechange'),
+(5,'أشغال','Constructions','Travaux'),
+(6,'خدمات','Services','Prestations'),
+(7,'دراسات','Studies','Études');
+*/

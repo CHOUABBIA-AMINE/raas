@@ -52,3 +52,15 @@ public class ContractType {
 	private String designationFr;
 
 }
+/*
+INSERT INTO T_02_05_01 (F_00, F_01, F_02, F_03) VALUES
+(1,'اتفاقية﻿','Convention','Convention'),
+(2,'اتفاقية إطار﻿','Framework Convention','Convention Cadre'),
+(3,'صفقة','Contract','Marché'),
+(4,'صفقة تسوية﻿','Regularization Contract','Marché de Régularisation'),
+(5,'صفقة طلبات﻿','Contract on Demand','Marché à Commandes'),
+(6,'عقد﻿','Contract','Contrat'),
+(7,'عقد برنامج﻿','Framework Contract','Contrat Programme'),
+(8,'عقد تطبيق﻿','Implementation Contract','Contrat d'Application'),
+(9,'أمر شراء﻿','Purchase Order','Bon de Commande');
+*/

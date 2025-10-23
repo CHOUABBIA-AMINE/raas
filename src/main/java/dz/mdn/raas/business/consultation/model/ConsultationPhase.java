@@ -58,3 +58,12 @@ public class ConsultationPhase {
     private List<ConsultationStep> consultationSteps;
 
 }
+
+/*
+INSERT INTO T_02_04_02 (F_00, F_01, F_02, F_03) VALUES
+(1,'مبرمجة﻿','Planed','Programmée'),
+(2,'قيد الإعداد','In Progress','En cours d\'élaboration'),
+(3,'قيد المراجعة﻿','Under Review','En cours de contrôle'),
+(4,'قيد النشر﻿','In Publication','En cours de publication'),
+(5,'قيد التقييم﻿','Under Evaluation','En cours d\'évaluation');
+*/

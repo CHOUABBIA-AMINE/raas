@@ -56,5 +56,5 @@ public class RealizationDirector {
 /*
 INSERT INTO T_02_01_03 (F_00, F_01, F_02, F_03) VALUES
 (1, 'المديرية الفرعية للإنجازات', 'Sub Directorat of Realizations', 'Sous Direction Réalisations'),
-(2, 'دائرة المؤن', 'Approvisionment Department, 'Département des Approvisionnements');
+(2, 'دائرة المؤن', 'Approvisionment Department', 'Département des Approvisionnements');
  */

@@ -52,3 +52,9 @@ public class ExclusionType {
 	private String designationFr;
 
 }
+
+/*
+INSERT INTO T_02_03_03 (F_00, F_01, F_02, F_03) VALUES
+(1,'إقصاء مؤقت﻿','Temporary exclusion','Exclusion à titre temporale'),
+(2,'إقصاء نهائي','Permanent exclusion','Exclusion à titre definitif');
+*/

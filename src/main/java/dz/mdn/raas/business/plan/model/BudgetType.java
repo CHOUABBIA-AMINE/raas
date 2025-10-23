@@ -62,3 +62,9 @@ public class BudgetType {
 	private String acronymFr;
 
 }
+
+/*
+INSERT INTO T_02_02_01 (F_00, F_04, F_05, F_06, F_01, F_02, F_03) VALUES
+(1, 'تسيير', 'F', 'F', 'ميزانية التسيير', 'Functional Budget', 'Budget de Fonctionnement'),
+(2, 'تجهيز', 'E', 'E', 'ميزانية التجهيز', 'Equipment Budget', 'Budget d\'Equipement');
+*/

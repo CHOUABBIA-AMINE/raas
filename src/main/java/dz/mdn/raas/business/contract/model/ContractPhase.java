@@ -58,3 +58,10 @@ public class ContractPhase {
     private List<ContractStep> contractSteps;
 
 }
+/*
+INSERT INTO T_02_05_02 (F_00, F_01, F_02, F_03) VALUES
+(1,'مبرمجة﻿','Planed','Programmée'),
+(2,'قيد الإعداد','In Progress','En cours d\'élaboration'),
+(3,'قيد المراجعة﻿','Under Review','En cours de contrôle'),
+(4,'قيد الإلتزام','Under Engagement','En cours d\engagement');
+*/
