@@ -14,7 +14,10 @@
 package dz.mdn.raas.business.provider.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.*;
+
+import dz.mdn.raas.business.provider.model.EconomicDomain;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,6 +38,9 @@ public class EconomicDomainDTO {
 
     private Long id; // F_00
 
+    @NotBlank(message = "Code is required")
+    private int code; // F_03 - required and unique
+
     @Size(max = 200, message = "Arabic designation must not exceed 200 characters")
     private String designationAr; // F_01 - optional
 
@@ -48,11 +54,12 @@ public class EconomicDomainDTO {
     /**
      * Create DTO from entity
      */
-    public static EconomicDomainDTO fromEntity(dz.mdn.raas.business.provider.model.EconomicDomain economicDomain) {
+    public static EconomicDomainDTO fromEntity(EconomicDomain economicDomain) {
         if (economicDomain == null) return null;
         
         return EconomicDomainDTO.builder()
                 .id(economicDomain.getId())
+                .code(economicDomain.getCode())
                 .designationAr(economicDomain.getDesignationAr())
                 .designationEn(economicDomain.getDesignationEn())
                 .designationFr(economicDomain.getDesignationFr())
@@ -62,10 +69,10 @@ public class EconomicDomainDTO {
     /**
      * Convert to entity
      */
-    public dz.mdn.raas.business.provider.model.EconomicDomain toEntity() {
-        dz.mdn.raas.business.provider.model.EconomicDomain economicDomain = 
-            new dz.mdn.raas.business.provider.model.EconomicDomain();
+    public EconomicDomain toEntity() {
+        EconomicDomain economicDomain = new EconomicDomain();
         economicDomain.setId(this.id);
+        economicDomain.setCode(this.code);
         economicDomain.setDesignationAr(this.designationAr);
         economicDomain.setDesignationEn(this.designationEn);
         economicDomain.setDesignationFr(this.designationFr);
@@ -75,7 +82,10 @@ public class EconomicDomainDTO {
     /**
      * Update entity from DTO
      */
-    public void updateEntity(dz.mdn.raas.business.provider.model.EconomicDomain economicDomain) {
+    public void updateEntity(EconomicDomain economicDomain) {
+        if (this.code != 0) {
+            economicDomain.setCode(this.code);
+        }
         if (this.designationAr != null) {
             economicDomain.setDesignationAr(this.designationAr);
         }
@@ -113,13 +123,13 @@ public class EconomicDomainDTO {
      */
     public String getDisplayText() {
         if (designationFr != null && !designationFr.trim().isEmpty()) {
-            return designationFr;
+            return code + "" + designationFr;
         }
         if (designationEn != null && !designationEn.trim().isEmpty()) {
-            return designationEn;
+            return code + "" + designationEn;
         }
         if (designationAr != null && !designationAr.trim().isEmpty()) {
-            return designationAr;
+            return code + "" + designationAr;
         }
         return "N/A";
     }

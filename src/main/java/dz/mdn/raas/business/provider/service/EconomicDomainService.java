@@ -47,8 +47,8 @@ public class EconomicDomainService {
      * Create new economic domain
      */
     public EconomicDomainDTO createEconomicDomain(EconomicDomainDTO economicDomainDTO) {
-        log.info("Creating economic domain with French designation: {} and designations: AR={}, EN={}", 
-                economicDomainDTO.getDesignationFr(), economicDomainDTO.getDesignationAr(), 
+        log.info("Creating economic domain with code, French designation: {} and designations: AR={}, EN={}", 
+        		economicDomainDTO.getCode(), economicDomainDTO.getDesignationFr(), economicDomainDTO.getDesignationAr(), 
                 economicDomainDTO.getDesignationEn());
 
         // Validate required fields
@@ -59,9 +59,10 @@ public class EconomicDomainService {
 
         // Create entity with exact field mapping
         EconomicDomain economicDomain = new EconomicDomain();
-        economicDomain.setDesignationAr(economicDomainDTO.getDesignationAr()); // F_01
-        economicDomain.setDesignationEn(economicDomainDTO.getDesignationEn()); // F_02
-        economicDomain.setDesignationFr(economicDomainDTO.getDesignationFr()); // F_03
+        economicDomain.setCode(economicDomainDTO.getCode()); // F_01
+        economicDomain.setDesignationAr(economicDomainDTO.getDesignationAr()); // F_02
+        economicDomain.setDesignationEn(economicDomainDTO.getDesignationEn()); // F_03
+        economicDomain.setDesignationFr(economicDomainDTO.getDesignationFr()); // F_04
 
         EconomicDomain savedEconomicDomain = economicDomainRepository.save(economicDomain);
         log.info("Successfully created economic domain with ID: {}", savedEconomicDomain.getId());
@@ -94,7 +95,18 @@ public class EconomicDomainService {
     }
 
     /**
-     * Find economic domain by French designation (unique field F_03)
+     * Find economic domain by French designation (unique field F_01)
+     */
+    @Transactional(readOnly = true)
+    public Optional<EconomicDomainDTO> findByCode(String code) {
+        log.debug("Finding economic domain with French designation: {}", code);
+
+        return economicDomainRepository.findByCode(code)
+                .map(EconomicDomainDTO::fromEntity);
+    }
+
+    /**
+     * Find economic domain by French designation (unique field F_04)
      */
     @Transactional(readOnly = true)
     public Optional<EconomicDomainDTO> findByDesignationFr(String designationFr) {
@@ -105,7 +117,7 @@ public class EconomicDomainService {
     }
 
     /**
-     * Find economic domain by Arabic designation (F_01)
+     * Find economic domain by Arabic designation (F_02)
      */
     @Transactional(readOnly = true)
     public Optional<EconomicDomainDTO> findByDesignationAr(String designationAr) {
@@ -116,7 +128,7 @@ public class EconomicDomainService {
     }
 
     /**
-     * Find economic domain by English designation (F_02)
+     * Find economic domain by English designation (F_03)
      */
     @Transactional(readOnly = true)
     public Optional<EconomicDomainDTO> findByDesignationEn(String designationEn) {

@@ -59,3 +59,19 @@ public class ConsultationStep {
     private ConsultationPhase consultationPhase;
 
 }
+/*
+INSERT INTO T_02_04_03 (F_00, F_01, F_02, F_03, F_04) VALUES
+(1,'مرحلة إعداد المخطط الميزانياتي','Budget Plan Maturation Stage','Instance de maturation de plan budgétaire'),
+(2,'مرحلة تحديد الإحتياجات','Needs Identification Stage','Instance du besoin'),
+(3,'مرحلة إعداد البطاقة التقنية','Technical Data Sheet Preparation Stage','Instance de la fiche technique'),
+(4,'مرحلة موافقة القيادة العليا','High Command Approval Stage','Instance Accord du Haut Commandement'),
+(5,'مرحلة إبداء الرأي','Opinion Stage','Instance d'avis'),
+(6,'إعداد ملف اللجنة القطاعية للصفقات (CSM)','Preparation of CSM File','Préparation du dossier CSM'),
+(7,'مرحلة دراسة اللجنة القطاعية للصفقات (CSM)','CSM Review Stage','Instance Examen de la CSM'),
+(8,'رفع التحفظات جارية','Lifting of Ongoing Reservations','Leveé des réserves en cours'),
+(9,'رفع التحفظات، في إنتظار مداولة اللجنة القطاعية للصفقات (CSM)','Reservations Removed, CSM Deliberation Stage','Réserves leveés, instance délibiration de la CSM'),
+(10,'إعداد ملف النشر','Preparation of Publish File','Préparation du dossier de publication'),
+(11,'مرحلة النشر','Publish Stage','Instance publication'),
+(12,'مرحلة إيداع العروض','Submission of Offers Stage','Instance dépôt des offres'),
+(13,'تحويل الملف إلى لجنة فتح الأظرفة وتقييم العروض (COPEO)','File Transmitted to COPEO','Dossier transmis à la COPEO');
+*/

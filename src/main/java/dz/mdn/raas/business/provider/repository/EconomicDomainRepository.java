@@ -33,10 +33,22 @@ import java.util.Optional;
 public interface EconomicDomainRepository extends JpaRepository<EconomicDomain, Long> {
 
     /**
-     * Find economic domain by French designation (F_03) - unique field
+     * Find economic domain by Code (F_01) - unique field
+     */
+    @Query("SELECT ed FROM EconomicDomain ed WHERE ed.code = :code")
+    Optional<EconomicDomain> findByCode(@Param("code") String code);
+
+    /**
+     * Find economic domain by French designation (F_04) - unique field
      */
     @Query("SELECT ed FROM EconomicDomain ed WHERE ed.designationFr = :designationFr")
     Optional<EconomicDomain> findByDesignationFr(@Param("designationFr") String designationFr);
+
+    /**
+     * Check if economic domain exists by code
+     */
+    @Query("SELECT CASE WHEN COUNT(ed) > 0 THEN true ELSE false END FROM EconomicDomain ed WHERE ed.code = :code")
+    boolean existsByCode(@Param("code") String code);
 
     /**
      * Check if economic domain exists by French designation
@@ -47,8 +59,20 @@ public interface EconomicDomainRepository extends JpaRepository<EconomicDomain, 
     /**
      * Check unique constraint for updates (excluding current ID)
      */
+    @Query("SELECT CASE WHEN COUNT(ed) > 0 THEN true ELSE false END FROM EconomicDomain ed WHERE ed.code = :code AND ed.id != :id")
+    boolean existsByCodeAndIdNot(@Param("code") String code, @Param("id") Long id);
+
+    /**
+     * Check unique constraint for updates (excluding current ID)
+     */
     @Query("SELECT CASE WHEN COUNT(ed) > 0 THEN true ELSE false END FROM EconomicDomain ed WHERE ed.designationFr = :designationFr AND ed.id != :id")
     boolean existsByDesignationFrAndIdNot(@Param("designationFr") String designationFr, @Param("id") Long id);
+
+    /**
+     * Find all economic domains with pagination ordered by French designation
+     */
+    @Query("SELECT ed FROM EconomicDomain ed ORDER BY ed.code ASC")
+    Page<EconomicDomain> findAllOrderByCode(Pageable pageable);
 
     /**
      * Find all economic domains with pagination ordered by French designation

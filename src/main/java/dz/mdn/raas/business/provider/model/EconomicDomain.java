@@ -42,13 +42,16 @@ public class EconomicDomain {
   	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(name="F_01", length=200)
+	@Column(name="F_01")
+	private int code;
+	
+	@Column(name="F_02", length=200)
 	private String designationAr;
 
-	@Column(name="F_02", length=200)
+	@Column(name="F_03", length=200)
 	private String designationEn;
 	
-	@Column(name="F_03", length=200, nullable=false)
+	@Column(name="F_04", length=200, nullable=false)
 	private String designationFr;
 
 }

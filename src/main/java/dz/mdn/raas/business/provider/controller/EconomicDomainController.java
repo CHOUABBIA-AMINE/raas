@@ -52,7 +52,7 @@ public class EconomicDomainController {
     @PostMapping
     public ResponseEntity<EconomicDomainDTO> createEconomicDomain(@Valid @RequestBody EconomicDomainDTO economicDomainDTO) {
         log.info("Creating economic domain with French designation: {} and designations: AR={}, EN={}", 
-                economicDomainDTO.getDesignationFr(), economicDomainDTO.getDesignationAr(), 
+        		economicDomainDTO.getCode(), economicDomainDTO.getDesignationFr(), economicDomainDTO.getDesignationAr(), 
                 economicDomainDTO.getDesignationEn());
         
         EconomicDomainDTO createdEconomicDomain = economicDomainService.createEconomicDomain(economicDomainDTO);
@@ -76,7 +76,19 @@ public class EconomicDomainController {
     }
 
     /**
-     * Get economic domain by French designation (F_03) - unique field
+     * Get economic domain by French designation (F_04) - unique field
+     */
+    @GetMapping("/code/{code}")
+    public ResponseEntity<EconomicDomainDTO> getEconomicDomainByCode(@PathVariable String code) {
+        log.debug("Getting economic domain by Code: {}", code);
+        
+        return economicDomainService.findByCode(code)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get economic domain by French designation (F_04) - unique field
      */
     @GetMapping("/designation-fr/{designationFr}")
     public ResponseEntity<EconomicDomainDTO> getEconomicDomainByDesignationFr(@PathVariable String designationFr) {
@@ -88,7 +100,7 @@ public class EconomicDomainController {
     }
 
     /**
-     * Get economic domain by Arabic designation (F_01)
+     * Get economic domain by Arabic designation (F_02)
      */
     @GetMapping("/designation-ar/{designationAr}")
     public ResponseEntity<EconomicDomainDTO> getEconomicDomainByDesignationAr(@PathVariable String designationAr) {
@@ -100,7 +112,7 @@ public class EconomicDomainController {
     }
 
     /**
-     * Get economic domain by English designation (F_02)
+     * Get economic domain by English designation (F_03)
      */
     @GetMapping("/designation-en/{designationEn}")
     public ResponseEntity<EconomicDomainDTO> getEconomicDomainByDesignationEn(@PathVariable String designationEn) {

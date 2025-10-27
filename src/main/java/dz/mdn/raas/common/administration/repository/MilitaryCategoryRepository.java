@@ -25,10 +25,9 @@ import java.util.Optional;
 
 /**
  * Military Category Repository with essential CRUD operations
- * Based on exact field names: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr
+ * Based on exact field names: F_00=id, F_01=designationAr, F_02=designationEn, F_03=designationFr
  * F_03 (designationFr) has unique constraint and is required
- * F_06 (abbreviationFr) is required
- * F_01, F_02, F_04, F_05 are optional
+ * F_01, F_02 are optional
  */
 @Repository
 public interface MilitaryCategoryRepository extends JpaRepository<MilitaryCategory, Long> {
@@ -38,12 +37,6 @@ public interface MilitaryCategoryRepository extends JpaRepository<MilitaryCatego
      */
     @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationFr = :designationFr")
     Optional<MilitaryCategory> findByDesignationFr(@Param("designationFr") String designationFr);
-
-    /**
-     * Find military category by French abbreviation (F_06)
-     */
-    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.abbreviationFr = :abbreviationFr")
-    Optional<MilitaryCategory> findByAbbreviationFr(@Param("abbreviationFr") String abbreviationFr);
 
     /**
      * Check if military category exists by French designation
@@ -64,28 +57,19 @@ public interface MilitaryCategoryRepository extends JpaRepository<MilitaryCatego
     Page<MilitaryCategory> findAllOrderByDesignationFr(Pageable pageable);
 
     /**
-     * Search military categories by any designation or abbreviation field
+     * Search military categories by any designation field
      */
     @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
            "mc.designationAr LIKE %:search% OR " +
            "mc.designationEn LIKE %:search% OR " +
-           "mc.designationFr LIKE %:search% OR " +
-           "mc.abbreviationAr LIKE %:search% OR " +
-           "mc.abbreviationEn LIKE %:search% OR " +
-           "mc.abbreviationFr LIKE %:search%")
-    Page<MilitaryCategory> searchByDesignationOrAbbreviation(@Param("search") String search, Pageable pageable);
+           "mc.designationFr LIKE %:search% ")
+    Page<MilitaryCategory> searchByDesignation(@Param("search") String search, Pageable pageable);
 
     /**
      * Find military categories by French designation pattern (F_03)
      */
     @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.designationFr LIKE %:pattern%")
     Page<MilitaryCategory> findByDesignationFrContaining(@Param("pattern") String pattern, Pageable pageable);
-
-    /**
-     * Find military categories by French abbreviation pattern (F_06)
-     */
-    @Query("SELECT mc FROM MilitaryCategory mc WHERE mc.abbreviationFr LIKE %:pattern%")
-    Page<MilitaryCategory> findByAbbreviationFrContaining(@Param("pattern") String pattern, Pageable pageable);
 
     /**
      * Count total military categories
@@ -204,32 +188,12 @@ public interface MilitaryCategoryRepository extends JpaRepository<MilitaryCatego
     Long countMultilingualMilitaryCategories();
 
     /**
-     * Find military categories by abbreviation length
-     */
-    @Query("SELECT mc FROM MilitaryCategory mc WHERE LENGTH(mc.abbreviationFr) <= :maxLength")
-    Page<MilitaryCategory> findByAbbreviationLength(@Param("maxLength") Integer maxLength, Pageable pageable);
-
-    /**
      * Find military categories missing translations
      */
     @Query("SELECT mc FROM MilitaryCategory mc WHERE " +
            "(mc.designationAr IS NULL OR mc.designationAr = '') OR " +
-           "(mc.designationEn IS NULL OR mc.designationEn = '') OR " +
-           "(mc.abbreviationAr IS NULL OR mc.abbreviationAr = '') OR " +
-           "(mc.abbreviationEn IS NULL OR mc.abbreviationEn = '')")
+           "(mc.designationEn IS NULL OR mc.designationEn = '') ")
     Page<MilitaryCategory> findMissingTranslations(Pageable pageable);
-
-    /**
-     * Check if abbreviation exists
-     */
-    @Query("SELECT CASE WHEN COUNT(mc) > 0 THEN true ELSE false END FROM MilitaryCategory mc WHERE mc.abbreviationFr = :abbreviationFr")
-    boolean existsByAbbreviationFr(@Param("abbreviationFr") String abbreviationFr);
-
-    /**
-     * Check if abbreviation exists excluding current ID
-     */
-    @Query("SELECT CASE WHEN COUNT(mc) > 0 THEN true ELSE false END FROM MilitaryCategory mc WHERE mc.abbreviationFr = :abbreviationFr AND mc.id != :id")
-    boolean existsByAbbreviationFrAndIdNot(@Param("abbreviationFr") String abbreviationFr, @Param("id") Long id);
 
     /**
      * Find military categories by Arabic designation

@@ -58,7 +58,6 @@ public class ConsultationPhase {
     private List<ConsultationStep> consultationSteps;
 
 }
-
 /*
 INSERT INTO T_02_04_02 (F_00, F_01, F_02, F_03) VALUES
 (1,'مبرمجة﻿','Planed','Programmée'),

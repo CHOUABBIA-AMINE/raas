@@ -89,18 +89,6 @@ public class MilitaryCategoryController {
     }
 
     /**
-     * Get military category by French abbreviation (F_06)
-     */
-    @GetMapping("/abbreviation-fr/{abbreviationFr}")
-    public ResponseEntity<MilitaryCategoryDTO> getMilitaryCategoryByAbbreviationFr(@PathVariable String abbreviationFr) {
-        log.debug("Getting military category by French abbreviation: {}", abbreviationFr);
-        
-        return militaryCategoryService.findByAbbreviationFr(abbreviationFr)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    /**
      * Get military category by Arabic designation (F_01)
      */
     @GetMapping("/designation-ar/{designationAr}")
@@ -459,18 +447,6 @@ public class MilitaryCategoryController {
         log.debug("Checking existence by French designation: {}", designationFr);
         
         boolean exists = militaryCategoryService.existsByDesignationFr(designationFr);
-        
-        return ResponseEntity.ok(exists);
-    }
-
-    /**
-     * Check if military category exists by French abbreviation
-     */
-    @GetMapping("/exists/abbreviation-fr/{abbreviationFr}")
-    public ResponseEntity<Boolean> checkMilitaryCategoryExistsByAbbreviationFr(@PathVariable String abbreviationFr) {
-        log.debug("Checking existence by French abbreviation: {}", abbreviationFr);
-        
-        boolean exists = militaryCategoryService.existsByAbbreviationFr(abbreviationFr);
         
         return ResponseEntity.ok(exists);
     }

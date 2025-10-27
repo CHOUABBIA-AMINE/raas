@@ -117,17 +117,6 @@ public class MilitaryCategoryService {
     }
 
     /**
-     * Find military category by French abbreviation (F_06)
-     */
-    @Transactional(readOnly = true)
-    public Optional<MilitaryCategoryDTO> findByAbbreviationFr(String abbreviationFr) {
-        log.debug("Finding military category with French abbreviation: {}", abbreviationFr);
-
-        return militaryCategoryRepository.findByAbbreviationFr(abbreviationFr)
-                .map(MilitaryCategoryDTO::fromEntity);
-    }
-
-    /**
      * Find military category by Arabic designation (F_01)
      */
     @Transactional(readOnly = true)
@@ -182,7 +171,7 @@ public class MilitaryCategoryService {
             return getAllMilitaryCategories(pageable);
         }
 
-        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.searchByDesignationOrAbbreviation(searchTerm.trim(), pageable);
+        Page<MilitaryCategory> militaryCategories = militaryCategoryRepository.searchByDesignation(searchTerm.trim(), pageable);
         return militaryCategories.map(MilitaryCategoryDTO::fromEntity);
     }
 
@@ -411,14 +400,6 @@ public class MilitaryCategoryService {
     @Transactional(readOnly = true)
     public boolean existsByDesignationFr(String designationFr) {
         return militaryCategoryRepository.existsByDesignationFr(designationFr);
-    }
-
-    /**
-     * Check if military category exists by French abbreviation
-     */
-    @Transactional(readOnly = true)
-    public boolean existsByAbbreviationFr(String abbreviationFr) {
-        return militaryCategoryRepository.existsByAbbreviationFr(abbreviationFr);
     }
 
     /**

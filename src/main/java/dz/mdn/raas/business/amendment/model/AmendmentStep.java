@@ -59,3 +59,16 @@ public class AmendmentStep {
     private AmendmentPhase amendmentPhase;
 
 }
+/*
+INSERT INTO T_02_06_03 (F_00, F_01, F_02, F_03, F_04) VALUES
+(1,'مرحلة مداولات لجنة فتح الأظرفة وتقييم العروض','COPEO Amendment fileStage','Instance Dossier de l'avenant',1),
+(2,'مرحلة مداولات لجنة فتح الأظرفة وتقييم العروض','COPEO Committee Deliberation Stage','Instance PVs COPEO',1),
+(3,'مرحلة موافقة القيادة العليا','High Command Approval Stage','Instance Accord du Haut Commandement',1),
+(4,'إمضاء مشروع العقد/الفقة','Signature of the Amendment project','Signature du projet de l'avenant',2),
+(5,'إعداد ملف اللجنة القطاعية للصفقات','Preparation of CSM File','Préparation du dossier CSM',2),
+(6,'مرحلة دراسة اللجنة القطاعية للصفقات','CSM Review Stage','Instance Examen de la CSM',3),
+(7,'رفع التحفظات جارية','Lifting of Ongoing Reservations','Leveé des réserves en cours',3),
+(8,'رفع التحفظات، في إنتظار مداولة اللجنة القطاعية للصفقات','Reservations Removed, CSM Deliberation Stage','Réserves leveés, instance délibiration de la CSM',3),
+(9,'إعداد ملف الالتزام','Preparation of Commitment File','Préparation du dossier du dossier d'engagement',3),
+(10,'إرسال الملف للالتزام','File Sent for Commitment','Dossier transmis pour engagement',4);
+*/

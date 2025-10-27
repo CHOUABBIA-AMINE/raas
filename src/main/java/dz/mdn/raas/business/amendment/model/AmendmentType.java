@@ -52,3 +52,10 @@ public class AmendmentType {
 	private String designationFr;
 
 }
+/*
+INSERT INTO T_02_06_01 (F_00, F_01, F_02, F_03) VALUES
+(1,'ملحق عقد','Amendment','Avenant'),
+(2,'ملحق تعديل','Adjustment Amendment','Avenant d\'Ajustement'),
+(3,'ملحق نقل الحقوق والالتزامات','Amendment for Transfer of Rights and Obligations','Avenant de transfert des droits et des obligations'),
+(4,'ملحق تعديل الكميات النهائية','Amendment for Adjustment of Final Quantities','Avenant d\'Ajustement des Quantités Définitives');
+*/
