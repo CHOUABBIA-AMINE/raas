@@ -16,6 +16,7 @@ package dz.mdn.raas.business.consultation.model;
 import java.util.Date;
 
 import dz.mdn.raas.business.provider.model.Provider;
+import dz.mdn.raas.configuration.BaseEntity;
 import dz.mdn.raas.system.utility.model.File;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,7 +29,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -37,12 +37,11 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Submission")
 @Table(name="T_02_04_05", uniqueConstraints = { @UniqueConstraint(name = "T_02_04_05_UK_01", columnNames = { "F_03", "F_04" })})
-public class Submission {
+public class Submission extends BaseEntity {
 	
 	@Id
 	@Column(name="F_00")

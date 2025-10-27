@@ -40,8 +40,8 @@ public class RoomController {
 
     @PostMapping
     public ResponseEntity<RoomDTO> createRoom(@Valid @RequestBody RoomDTO roomDTO) {
-        log.info("Creating room with code: {} and French designation: {} for bloc ID: {}, floor ID: {}", 
-                roomDTO.getCode(), roomDTO.getDesignationFr(), roomDTO.getBlocId(), roomDTO.getFloorId());
+        log.info("Creating room with code: {} for bloc ID: {}, floor ID: {}", 
+                roomDTO.getCode(), roomDTO.getBlocId(), roomDTO.getFloorId());
         
         RoomDTO createdRoom = roomService.createRoom(roomDTO);
         
@@ -64,15 +64,6 @@ public class RoomController {
         log.debug("Getting room by code: {}", code);
         
         return roomService.findByCode(code)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/designation-fr/{designationFr}")
-    public ResponseEntity<RoomDTO> getRoomByDesignationFr(@PathVariable String designationFr) {
-        log.debug("Getting room by French designation: {}", designationFr);
-        
-        return roomService.findByDesignationFr(designationFr)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -287,15 +278,6 @@ public class RoomController {
         return ResponseEntity.ok(exists);
     }
 
-    @GetMapping("/exists/designation-fr/{designationFr}")
-    public ResponseEntity<Boolean> checkRoomExistsByDesignationFr(@PathVariable String designationFr) {
-        log.debug("Checking existence by French designation: {}", designationFr);
-        
-        boolean exists = roomService.existsByDesignationFr(designationFr);
-        
-        return ResponseEntity.ok(exists);
-    }
-
     // ========== STATISTICS ENDPOINTS ==========
 
     @GetMapping("/count")
@@ -353,16 +335,10 @@ public class RoomController {
                         RoomInfoResponse response = RoomInfoResponse.builder()
                                 .roomMetadata(roomDTO)
                                 .hasCode(roomDTO.getCode() != null && !roomDTO.getCode().trim().isEmpty())
-                                .hasArabicDesignation(roomDTO.getDesignationAr() != null && !roomDTO.getDesignationAr().trim().isEmpty())
-                                .hasEnglishDesignation(roomDTO.getDesignationEn() != null && !roomDTO.getDesignationEn().trim().isEmpty())
-                                .hasFrenchDesignation(roomDTO.getDesignationFr() != null && !roomDTO.getDesignationFr().trim().isEmpty())
                                 .hasStructure(roomDTO.hasStructure())
                                 .hasShelfs(roomDTO.hasShelfs())
-                                .isMultilingual(roomDTO.isMultilingual())
                                 .isComplete(roomDTO.isComplete())
-                                .defaultDesignation(roomDTO.getDefaultDesignation())
-                                .displayTextWithCode(roomDTO.getDisplayTextWithCode())
-                                .fullDisplayText(roomDTO.getFullDisplayText())
+                                .displayText(roomDTO.getDisplayText())
                                 .locationPath(roomDTO.getLocationPath())
                                 .capacityStatus(roomDTO.getCapacityStatus())
                                 .shelfCount(roomDTO.getShelfCount())
@@ -387,16 +363,10 @@ public class RoomController {
     public static class RoomInfoResponse {
         private RoomDTO roomMetadata;
         private Boolean hasCode;
-        private Boolean hasArabicDesignation;
-        private Boolean hasEnglishDesignation;
-        private Boolean hasFrenchDesignation;
         private Boolean hasStructure;
         private Boolean hasShelfs;
-        private Boolean isMultilingual;
         private Boolean isComplete;
-        private String defaultDesignation;
-        private String displayTextWithCode;
-        private String fullDisplayText;
+        private String displayText;
         private String locationPath;
         private String capacityStatus;
         private Long shelfCount;

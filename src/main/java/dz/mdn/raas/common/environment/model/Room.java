@@ -41,8 +41,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Room")
-@Table(name="T_01_01_02", uniqueConstraints = { @UniqueConstraint(name = "T_01_01_02_UK_01", columnNames = { "F_01" }), 
-											 	@UniqueConstraint(name = "T_01_01_02_UK_02", columnNames = { "F_04" })})
+@Table(name="T_01_01_02", uniqueConstraints = { @UniqueConstraint(name = "T_01_01_02_UK_01", columnNames = { "F_01" })})
 public class Room {
 	
 	@Id
@@ -53,25 +52,16 @@ public class Room {
 	@Column(name="F_01", length=20, nullable=false)
 	private String code;
 	
-	@Column(name="F_02", length=200)
-	private String designationAr;
-	
-	@Column(name="F_03", length=200)
-	private String designationEn;
-	
-	@Column(name="F_04", length=200, nullable=false)
-	private String designationFr;
-	
 	@ManyToOne
-    @JoinColumn(name="F_05", foreignKey=@ForeignKey(name="T_01_01_02_FK_01"), nullable=false)
+    @JoinColumn(name="F_02", foreignKey=@ForeignKey(name="T_01_01_02_FK_01"), nullable=false)
     private Bloc bloc;
 	
 	@ManyToOne
-    @JoinColumn(name="F_06", foreignKey=@ForeignKey(name="T_01_01_02_FK_02"), nullable=false)
+    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_01_01_02_FK_02"), nullable=false)
     private Floor floor;
 	
 	@ManyToOne
-    @JoinColumn(name="F_07", foreignKey=@ForeignKey(name="T_01_01_02_FK_03"), nullable=true)
+    @JoinColumn(name="F_04", foreignKey=@ForeignKey(name="T_01_01_02_FK_03"), nullable=true)
     private Structure structure;
 	
 	@OneToMany(mappedBy="room")

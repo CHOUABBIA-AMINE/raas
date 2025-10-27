@@ -97,8 +97,7 @@ public class FolderDTO {
                 // Get Room info from Shelf
                 if (folder.getArchiveBox().getShelf().getRoom() != null) {
                     builder.roomId(folder.getArchiveBox().getShelf().getRoom().getId())
-                           .roomCode(folder.getArchiveBox().getShelf().getRoom().getCode())
-                           .roomDesignationFr(folder.getArchiveBox().getShelf().getRoom().getDesignationFr());
+                           .roomCode(folder.getArchiveBox().getShelf().getRoom().getCode());
 
                     // Get Floor info from Room
                     if (folder.getArchiveBox().getShelf().getRoom().getFloor() != null) {
@@ -108,8 +107,7 @@ public class FolderDTO {
 
                     // Get Bloc info from Room
                     if (folder.getArchiveBox().getShelf().getRoom().getBloc() != null) {
-                        builder.blocCodeLt(folder.getArchiveBox().getShelf().getRoom().getBloc().getCodeLt())
-                               .blocDesignationFr(folder.getArchiveBox().getShelf().getRoom().getBloc().getDesignationFr());
+                        builder.blocCodeLt(folder.getArchiveBox().getShelf().getRoom().getBloc().getCodeLt());
                     }
                 }
             }

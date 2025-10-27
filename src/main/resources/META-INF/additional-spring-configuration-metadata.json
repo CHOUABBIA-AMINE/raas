@@ -1,5 +1,22 @@
-{"properties": [{
-  "name": "app.file.upload-dir",
-  "type": "java.lang.String",
-  "description": "A description for 'app.file.upload-dir'"
-}]}
+{"properties": [
+  {
+    "name": "app.file.upload-dir",
+    "type": "java.lang.String",
+    "description": "A description for 'app.file.upload-dir'"
+  },
+  {
+    "name": "raas.audit.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.audit.enabled'"
+  },
+  {
+    "name": "raas.audit.async",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.audit.async'"
+  },
+  {
+    "name": "raas.audit.retention-days",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.audit.retention-days'"
+  }
+]}

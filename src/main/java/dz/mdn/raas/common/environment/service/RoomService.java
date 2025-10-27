@@ -46,8 +46,7 @@ public class RoomService {
     // ========== CREATE OPERATIONS ==========
 
     public RoomDTO createRoom(RoomDTO roomDTO) {
-        log.info("Creating room with code: {} and French designation: {} for bloc ID: {}, floor ID: {}", 
-                roomDTO.getCode(), roomDTO.getDesignationFr(), roomDTO.getBlocId(), roomDTO.getFloorId());
+        log.info("Creating room with code: {} for bloc ID: {}, floor ID: {}", roomDTO.getCode(), roomDTO.getBlocId(), roomDTO.getFloorId());
 
         // Validate required fields
         validateRequiredFields(roomDTO, "create");
@@ -66,11 +65,8 @@ public class RoomService {
         // Create entity with exact field mapping
         Room room = new Room();
         room.setCode(roomDTO.getCode()); // F_01
-        room.setDesignationAr(roomDTO.getDesignationAr()); // F_02
-        room.setDesignationEn(roomDTO.getDesignationEn()); // F_03
-        room.setDesignationFr(roomDTO.getDesignationFr()); // F_04
-        room.setBloc(bloc); // F_05
-        room.setFloor(floor); // F_06
+        room.setBloc(bloc); // F_02
+        room.setFloor(floor); // F_03
         room.setStructure(structure); // F_07
 
         Room savedRoom = roomRepository.save(room);
@@ -102,14 +98,6 @@ public class RoomService {
         log.debug("Finding room with code: {}", code);
 
         return roomRepository.findByCode(code)
-                .map(RoomDTO::fromEntity);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<RoomDTO> findByDesignationFr(String designationFr) {
-        log.debug("Finding room with French designation: {}", designationFr);
-
-        return roomRepository.findByDesignationFr(designationFr)
                 .map(RoomDTO::fromEntity);
     }
 
@@ -180,7 +168,7 @@ public class RoomService {
             return getAllRooms(pageable);
         }
 
-        Page<Room> rooms = roomRepository.searchByCodeOrDesignation(searchTerm.trim(), pageable);
+        Page<Room> rooms = roomRepository.searchByCode(searchTerm.trim(), pageable);
         return rooms.map(RoomDTO::fromEntity);
     }
 
@@ -207,12 +195,9 @@ public class RoomService {
 
         // Update fields with exact field mapping
         existingRoom.setCode(roomDTO.getCode()); // F_01
-        existingRoom.setDesignationAr(roomDTO.getDesignationAr()); // F_02
-        existingRoom.setDesignationEn(roomDTO.getDesignationEn()); // F_03
-        existingRoom.setDesignationFr(roomDTO.getDesignationFr()); // F_04
-        existingRoom.setBloc(bloc); // F_05
-        existingRoom.setFloor(floor); // F_06
-        existingRoom.setStructure(structure); // F_07
+        existingRoom.setBloc(bloc); // F_02
+        existingRoom.setFloor(floor); // F_03
+        existingRoom.setStructure(structure); // F_04
 
         Room updatedRoom = roomRepository.save(existingRoom);
         log.info("Successfully updated room with ID: {}", id);
@@ -279,11 +264,6 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByDesignationFr(String designationFr) {
-        return roomRepository.existsByDesignationFr(designationFr);
-    }
-
-    @Transactional(readOnly = true)
     public Long getTotalCount() {
         return roomRepository.countAllRooms();
     }
@@ -315,10 +295,6 @@ public class RoomService {
             throw new RuntimeException("Code is required for " + operation);
         }
 
-        if (roomDTO.getDesignationFr() == null || roomDTO.getDesignationFr().trim().isEmpty()) {
-            throw new RuntimeException("French designation is required for " + operation);
-        }
-
         if (roomDTO.getBlocId() == null) {
             throw new RuntimeException("Bloc ID is required for " + operation);
         }
@@ -337,17 +313,6 @@ public class RoomService {
         } else {
             if (roomRepository.existsByCodeAndIdNot(roomDTO.getCode(), excludeId)) {
                 throw new RuntimeException("Another room with code '" + roomDTO.getCode() + "' already exists");
-            }
-        }
-
-        // Check French designation uniqueness (F_04)
-        if (excludeId == null) {
-            if (roomRepository.existsByDesignationFr(roomDTO.getDesignationFr())) {
-                throw new RuntimeException("Room with French designation '" + roomDTO.getDesignationFr() + "' already exists");
-            }
-        } else {
-            if (roomRepository.existsByDesignationFrAndIdNot(roomDTO.getDesignationFr(), excludeId)) {
-                throw new RuntimeException("Another room with French designation '" + roomDTO.getDesignationFr() + "' already exists");
             }
         }
     }

@@ -32,20 +32,11 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("SELECT r FROM Room r WHERE r.code = :code")
     Optional<Room> findByCode(@Param("code") String code);
 
-    @Query("SELECT r FROM Room r WHERE r.designationFr = :designationFr")
-    Optional<Room> findByDesignationFr(@Param("designationFr") String designationFr);
-
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Room r WHERE r.code = :code")
     boolean existsByCode(@Param("code") String code);
 
-    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Room r WHERE r.designationFr = :designationFr")
-    boolean existsByDesignationFr(@Param("designationFr") String designationFr);
-
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Room r WHERE r.code = :code AND r.id != :id")
     boolean existsByCodeAndIdNot(@Param("code") String code, @Param("id") Long id);
-
-    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Room r WHERE r.designationFr = :designationFr AND r.id != :id")
-    boolean existsByDesignationFrAndIdNot(@Param("designationFr") String designationFr, @Param("id") Long id);
 
     @Query("SELECT r FROM Room r LEFT JOIN FETCH r.bloc LEFT JOIN FETCH r.floor LEFT JOIN FETCH r.structure")
     Page<Room> findAllWithRelationships(Pageable pageable);
@@ -75,11 +66,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     Page<Room> findRoomsWithStructure(Pageable pageable);
 
     @Query("SELECT r FROM Room r WHERE " +
-           "r.code LIKE %:search% OR " +
-           "r.designationAr LIKE %:search% OR " +
-           "r.designationEn LIKE %:search% OR " +
-           "r.designationFr LIKE %:search%")
-    Page<Room> searchByCodeOrDesignation(@Param("search") String search, Pageable pageable);
+           "r.code LIKE %:search%")
+    Page<Room> searchByCode(@Param("search") String search, Pageable pageable);
 
     @Query("SELECT r FROM Room r ORDER BY r.code ASC")
     Page<Room> findAllOrderByCode(Pageable pageable);

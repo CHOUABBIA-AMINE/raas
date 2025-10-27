@@ -27,8 +27,10 @@ import dz.mdn.raas.business.consultation.repository.ConsultationRepository;
 import dz.mdn.raas.business.consultation.repository.SubmissionRepository;
 import dz.mdn.raas.business.provider.model.Provider;
 import dz.mdn.raas.business.provider.repository.ProviderRepository;
+import dz.mdn.raas.configuration.annotation.Auditable;
 import dz.mdn.raas.exception.BusinessValidationException;
 import dz.mdn.raas.exception.ResourceNotFoundException;
+import dz.mdn.raas.system.audit.model.AuditLog.AuditAction;
 import dz.mdn.raas.system.utility.model.File;
 import dz.mdn.raas.system.utility.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,7 @@ public class SubmissionService {
      * Create new submission
      * Validates unique constraint (consultation + tender)
      */
+    @Auditable(entityName = "Submission", action = AuditAction.CREATE, module = "CONSULTATION", businessProcess = "SUBMISSION_CREATION")
     public SubmissionDTO create(SubmissionDTO submissionDTO) {
         log.info("Creating submission for consultation ID: {} and tender ID: {}", 
                  submissionDTO.getConsultationId(), submissionDTO.getTenderId());
@@ -87,6 +90,7 @@ public class SubmissionService {
      * Update existing submission
      * Validates unique constraint and business rules
      */
+    @Auditable(entityName = "Submission", action = AuditAction.UPDATE, module = "CONSULTATION", businessProcess = "SUBMISSION_UPDATE")
     public SubmissionDTO update(Long id, SubmissionDTO submissionDTO) {
         log.info("Updating submission with ID: {}", id);
 
@@ -141,6 +145,7 @@ public class SubmissionService {
     /**
      * Delete submission by ID
      */
+    @Auditable(entityName = "Submission", action = AuditAction.DELETE, module = "CONSULTATION", businessProcess = "SUBMISSION_DELETE")
     public void delete(Long id) {
         log.info("Deleting submission with ID: {}", id);
 

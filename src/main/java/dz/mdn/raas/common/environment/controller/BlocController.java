@@ -40,8 +40,8 @@ public class BlocController {
 
     @PostMapping
     public ResponseEntity<BlocDTO> createBloc(@Valid @RequestBody BlocDTO blocDTO) {
-        log.info("Creating bloc with codes: {} (AR) | {} (LT) and French designation: {}", 
-                blocDTO.getCodeAr(), blocDTO.getCodeLt(), blocDTO.getDesignationFr());
+        log.info("Creating bloc with codes: {} (AR) | {} (LT)", 
+                blocDTO.getCodeAr(), blocDTO.getCodeLt());
         
         BlocDTO createdBloc = blocService.createBloc(blocDTO);
         
@@ -73,15 +73,6 @@ public class BlocController {
         log.debug("Getting bloc by Latin code: {}", codeLt);
         
         return blocService.findByCodeLt(codeLt)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/designation-fr/{designationFr}")
-    public ResponseEntity<BlocDTO> getBlocByDesignationFr(@PathVariable String designationFr) {
-        log.debug("Getting bloc by French designation: {}", designationFr);
-        
-        return blocService.findByDesignationFr(designationFr)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -169,33 +160,6 @@ public class BlocController {
         return ResponseEntity.ok(blocs);
     }
 
-    @GetMapping("/search/designation")
-    public ResponseEntity<Page<BlocDTO>> searchByDesignation(
-            @RequestParam String designation,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Searching blocs by designation: {}", designation);
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "designationFr"));
-        Page<BlocDTO> blocs = blocService.searchByDesignation(designation, pageable);
-        
-        return ResponseEntity.ok(blocs);
-    }
-
-    @GetMapping("/multilingual")
-    public ResponseEntity<Page<BlocDTO>> getMultilingualBlocs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        log.debug("Getting multilingual blocs");
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "codeLt"));
-        Page<BlocDTO> blocs = blocService.getMultilingualBlocs(pageable);
-        
-        return ResponseEntity.ok(blocs);
-    }
-
     // ========== UPDATE ENDPOINTS ==========
 
     @PutMapping("/{id}")
@@ -251,15 +215,6 @@ public class BlocController {
         return ResponseEntity.ok(exists);
     }
 
-    @GetMapping("/exists/designation-fr/{designationFr}")
-    public ResponseEntity<Boolean> checkBlocExistsByDesignationFr(@PathVariable String designationFr) {
-        log.debug("Checking existence by French designation: {}", designationFr);
-        
-        boolean exists = blocService.existsByDesignationFr(designationFr);
-        
-        return ResponseEntity.ok(exists);
-    }
-
     // ========== STATISTICS ENDPOINTS ==========
 
     @GetMapping("/count")
@@ -282,17 +237,8 @@ public class BlocController {
                                 .blocMetadata(blocDTO)
                                 .hasArabicCode(blocDTO.getCodeAr() != null && !blocDTO.getCodeAr().trim().isEmpty())
                                 .hasLatinCode(blocDTO.getCodeLt() != null && !blocDTO.getCodeLt().trim().isEmpty())
-                                .hasArabicDesignation(blocDTO.getDesignationAr() != null && !blocDTO.getDesignationAr().trim().isEmpty())
-                                .hasEnglishDesignation(blocDTO.getDesignationEn() != null && !blocDTO.getDesignationEn().trim().isEmpty())
-                                .hasFrenchDesignation(blocDTO.getDesignationFr() != null && !blocDTO.getDesignationFr().trim().isEmpty())
-                                .isMultilingual(blocDTO.isMultilingual())
                                 .isValid(blocDTO.isValid())
-                                .defaultDesignation(blocDTO.getDefaultDesignation())
                                 .displayText(blocDTO.getDisplayText())
-                                .displayTextWithCode(blocDTO.getDisplayTextWithCode())
-                                .fullDisplayText(blocDTO.getFullDisplayText())
-                                .shortDisplay(blocDTO.getShortDisplay())
-                                .availableLanguages(blocDTO.getAvailableLanguages())
                                 .build();
                         
                         return ResponseEntity.ok(response);
@@ -315,16 +261,7 @@ public class BlocController {
         private BlocDTO blocMetadata;
         private Boolean hasArabicCode;
         private Boolean hasLatinCode;
-        private Boolean hasArabicDesignation;
-        private Boolean hasEnglishDesignation;
-        private Boolean hasFrenchDesignation;
-        private Boolean isMultilingual;
         private Boolean isValid;
-        private String defaultDesignation;
         private String displayText;
-        private String displayTextWithCode;
-        private String fullDisplayText;
-        private String shortDisplay;
-        private String[] availableLanguages;
     }
 }

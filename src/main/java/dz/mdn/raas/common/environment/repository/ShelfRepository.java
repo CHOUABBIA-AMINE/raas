@@ -126,7 +126,6 @@ public interface ShelfRepository extends JpaRepository<Shelf, Long> {
 
     @Query("SELECT s FROM Shelf s WHERE " +
            "s.code LIKE %:search% OR " +
-           "s.room.code LIKE %:search% OR " +
-           "s.room.designationFr LIKE %:search%")
+           "s.room.code LIKE %:search%")
     Page<Shelf> searchByCodeOrRoomInfo(@Param("search") String search, Pageable pageable);
 }

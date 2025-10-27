@@ -37,8 +37,8 @@ public class BlocService {
     // ========== CREATE OPERATIONS ==========
 
     public BlocDTO createBloc(BlocDTO blocDTO) {
-        log.info("Creating bloc with codes: {} (AR) | {} (LT) and French designation: {}", 
-                blocDTO.getCodeAr(), blocDTO.getCodeLt(), blocDTO.getDesignationFr());
+        log.info("Creating bloc with codes: {} (AR) | {} (LT)", 
+                blocDTO.getCodeAr(), blocDTO.getCodeLt());
 
         // Validate all required fields
         validateRequiredFields(blocDTO, "create");
@@ -50,9 +50,6 @@ public class BlocService {
         Bloc bloc = new Bloc();
         bloc.setCodeAr(blocDTO.getCodeAr()); // F_01
         bloc.setCodeLt(blocDTO.getCodeLt()); // F_02
-        bloc.setDesignationAr(blocDTO.getDesignationAr()); // F_03
-        bloc.setDesignationEn(blocDTO.getDesignationEn()); // F_04
-        bloc.setDesignationFr(blocDTO.getDesignationFr()); // F_05
 
         Bloc savedBloc = blocRepository.save(bloc);
         log.info("Successfully created bloc with ID: {}", savedBloc.getId());
@@ -91,14 +88,6 @@ public class BlocService {
         log.debug("Finding bloc with Latin code: {}", codeLt);
 
         return blocRepository.findByCodeLt(codeLt)
-                .map(BlocDTO::fromEntity);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<BlocDTO> findByDesignationFr(String designationFr) {
-        log.debug("Finding bloc with French designation: {}", designationFr);
-
-        return blocRepository.findByDesignationFr(designationFr)
                 .map(BlocDTO::fromEntity);
     }
 
@@ -146,22 +135,6 @@ public class BlocService {
         return blocs.map(BlocDTO::fromEntity);
     }
 
-    @Transactional(readOnly = true)
-    public Page<BlocDTO> searchByDesignation(String designation, Pageable pageable) {
-        log.debug("Searching blocs by designation: {}", designation);
-
-        Page<Bloc> blocs = blocRepository.findByDesignationPattern(designation, pageable);
-        return blocs.map(BlocDTO::fromEntity);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<BlocDTO> getMultilingualBlocs(Pageable pageable) {
-        log.debug("Getting multilingual blocs");
-
-        Page<Bloc> blocs = blocRepository.findMultilingualBlocs(pageable);
-        return blocs.map(BlocDTO::fromEntity);
-    }
-
     // ========== UPDATE OPERATIONS ==========
 
     public BlocDTO updateBloc(Long id, BlocDTO blocDTO) {
@@ -178,9 +151,6 @@ public class BlocService {
         // Update fields with exact field mapping
         existingBloc.setCodeAr(blocDTO.getCodeAr()); // F_01
         existingBloc.setCodeLt(blocDTO.getCodeLt()); // F_02
-        existingBloc.setDesignationAr(blocDTO.getDesignationAr()); // F_03
-        existingBloc.setDesignationEn(blocDTO.getDesignationEn()); // F_04
-        existingBloc.setDesignationFr(blocDTO.getDesignationFr()); // F_05
 
         Bloc updatedBloc = blocRepository.save(existingBloc);
         log.info("Successfully updated bloc with ID: {}", id);
@@ -214,27 +184,6 @@ public class BlocService {
                 throw new RuntimeException("Another bloc with Latin code '" + blocDTO.getCodeLt() + "' already exists");
             }
             existingBloc.setCodeLt(blocDTO.getCodeLt()); // F_02
-            updated = true;
-        }
-
-        if (blocDTO.getDesignationAr() != null) {
-            existingBloc.setDesignationAr(blocDTO.getDesignationAr()); // F_03
-            updated = true;
-        }
-
-        if (blocDTO.getDesignationEn() != null) {
-            existingBloc.setDesignationEn(blocDTO.getDesignationEn()); // F_04
-            updated = true;
-        }
-
-        if (blocDTO.getDesignationFr() != null) {
-            if (blocDTO.getDesignationFr().trim().isEmpty()) {
-                throw new RuntimeException("French designation cannot be empty");
-            }
-            if (blocRepository.existsByDesignationFrAndIdNot(blocDTO.getDesignationFr(), id)) {
-                throw new RuntimeException("Another bloc with French designation '" + blocDTO.getDesignationFr() + "' already exists");
-            }
-            existingBloc.setDesignationFr(blocDTO.getDesignationFr()); // F_05
             updated = true;
         }
 
@@ -288,11 +237,6 @@ public class BlocService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByDesignationFr(String designationFr) {
-        return blocRepository.existsByDesignationFr(designationFr);
-    }
-
-    @Transactional(readOnly = true)
     public Long getTotalCount() {
         return blocRepository.countAllBlocs();
     }
@@ -306,10 +250,6 @@ public class BlocService {
 
         if (blocDTO.getCodeLt() == null || blocDTO.getCodeLt().trim().isEmpty()) {
             throw new RuntimeException("Latin code is required for " + operation);
-        }
-
-        if (blocDTO.getDesignationFr() == null || blocDTO.getDesignationFr().trim().isEmpty()) {
-            throw new RuntimeException("French designation is required for " + operation);
         }
     }
 
@@ -333,17 +273,6 @@ public class BlocService {
         } else {
             if (blocRepository.existsByCodeLtAndIdNot(blocDTO.getCodeLt(), excludeId)) {
                 throw new RuntimeException("Another bloc with Latin code '" + blocDTO.getCodeLt() + "' already exists");
-            }
-        }
-
-        // Check French designation uniqueness (F_05)
-        if (excludeId == null) {
-            if (blocRepository.existsByDesignationFr(blocDTO.getDesignationFr())) {
-                throw new RuntimeException("Bloc with French designation '" + blocDTO.getDesignationFr() + "' already exists");
-            }
-        } else {
-            if (blocRepository.existsByDesignationFrAndIdNot(blocDTO.getDesignationFr(), excludeId)) {
-                throw new RuntimeException("Another bloc with French designation '" + blocDTO.getDesignationFr() + "' already exists");
             }
         }
     }

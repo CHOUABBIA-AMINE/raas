@@ -50,13 +50,4 @@ public class Bloc {
 	@Column(name="F_02", length=20, nullable=false)
 	private String codeLt;
 	
-	@Column(name="F_03", length=200)
-	private String designationAr;
-	
-	@Column(name="F_04", length=200)
-	private String designationEn;
-	
-	@Column(name="F_05", length=200, nullable=false)
-	private String designationFr;
-	
 }

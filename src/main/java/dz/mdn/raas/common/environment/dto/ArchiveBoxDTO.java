@@ -81,8 +81,7 @@ public class ArchiveBoxDTO {
             // Get Room info from Shelf
             if (archiveBox.getShelf().getRoom() != null) {
                 builder.roomId(archiveBox.getShelf().getRoom().getId())
-                       .roomCode(archiveBox.getShelf().getRoom().getCode())
-                       .roomDesignationFr(archiveBox.getShelf().getRoom().getDesignationFr());
+                       .roomCode(archiveBox.getShelf().getRoom().getCode());
 
                 // Get Floor info from Room
                 if (archiveBox.getShelf().getRoom().getFloor() != null) {
@@ -92,8 +91,7 @@ public class ArchiveBoxDTO {
 
                 // Get Bloc info from Room
                 if (archiveBox.getShelf().getRoom().getBloc() != null) {
-                    builder.blocCodeLt(archiveBox.getShelf().getRoom().getBloc().getCodeLt())
-                           .blocDesignationFr(archiveBox.getShelf().getRoom().getBloc().getDesignationFr());
+                    builder.blocCodeLt(archiveBox.getShelf().getRoom().getBloc().getCodeLt());
                 }
 
                 // Get Structure info from Room (optional)

@@ -33,31 +33,19 @@ public class RoomDTO {
     @Size(max = 20, message = "Code must not exceed 20 characters")
     private String code; // F_01 - required and unique
 
-    @Size(max = 200, message = "Arabic designation must not exceed 200 characters")
-    private String designationAr; // F_02 - optional
-
-    @Size(max = 200, message = "English designation must not exceed 200 characters")
-    private String designationEn; // F_03 - optional
-
-    @NotBlank(message = "French designation is required")
-    @Size(max = 200, message = "French designation must not exceed 200 characters")
-    private String designationFr; // F_04 - required and unique
-
     @NotNull(message = "Bloc ID is required")
-    private Long blocId; // F_05 - foreign key to Bloc (required)
+    private Long blocId; // F_02 - foreign key to Bloc (required)
 
     @NotNull(message = "Floor ID is required")
-    private Long floorId; // F_06 - foreign key to Floor (required)
+    private Long floorId; // F_03 - foreign key to Floor (required)
 
-    private Long structureId; // F_07 - foreign key to Structure (optional)
+    private Long structureId; // F_04 - foreign key to Structure (optional)
 
     // Additional fields for display purposes (from related entities)
     private String blocCodeLt;
     private String blocCodeAr;
-    private String blocDesignationFr;
 
     private String floorCode;
-    private String floorDesignationFr;
 
     private String structureName;
     private String structureCode;
@@ -65,8 +53,7 @@ public class RoomDTO {
     private Long shelfCount; // Count of shelfs in this room
 
     // Combined display information
-    private String displayTextWithCode;
-    private String fullDisplayText;
+    private String displayText;
     private String locationPath;
 
     public static RoomDTO fromEntity(dz.mdn.raas.common.environment.model.Room room) {
@@ -74,27 +61,22 @@ public class RoomDTO {
         
         RoomDTO.RoomDTOBuilder builder = RoomDTO.builder()
                 .id(room.getId())
-                .code(room.getCode())
-                .designationAr(room.getDesignationAr())
-                .designationEn(room.getDesignationEn())
-                .designationFr(room.getDesignationFr());
+                .code(room.getCode());
 
-        // Handle Bloc relationship (required F_05)
+        // Handle Bloc relationship (required F_02)
         if (room.getBloc() != null) {
             builder.blocId(room.getBloc().getId())
                    .blocCodeLt(room.getBloc().getCodeLt())
-                   .blocCodeAr(room.getBloc().getCodeAr())
-                   .blocDesignationFr(room.getBloc().getDesignationFr());
+                   .blocCodeAr(room.getBloc().getCodeAr());
         }
 
-        // Handle Floor relationship (required F_06)
+        // Handle Floor relationship (required F_03)
         if (room.getFloor() != null) {
             builder.floorId(room.getFloor().getId())
-                   .floorCode(room.getFloor().getCode())
-                   .floorDesignationFr(room.getFloor().getDesignationFr());
+                   .floorCode(room.getFloor().getCode());
         }
 
-        // Handle Structure relationship (optional F_07)
+        // Handle Structure relationship (optional F_04)
         if (room.getStructure() != null) {
             builder.structureId(room.getStructure().getId())
                    .structureName(getStructureName(room.getStructure()))
@@ -109,8 +91,7 @@ public class RoomDTO {
         }
 
         RoomDTO dto = builder.build();
-        dto.setDisplayTextWithCode(buildDisplayTextWithCode(dto));
-        dto.setFullDisplayText(buildFullDisplayText(dto));
+        dto.setDisplayText(buildDisplayText(dto));
         dto.setLocationPath(buildLocationPath(dto));
         
         return dto;
@@ -120,9 +101,6 @@ public class RoomDTO {
         dz.mdn.raas.common.environment.model.Room room = new dz.mdn.raas.common.environment.model.Room();
         room.setId(this.id);
         room.setCode(this.code);
-        room.setDesignationAr(this.designationAr);
-        room.setDesignationEn(this.designationEn);
-        room.setDesignationFr(this.designationFr);
         // Note: relationships must be set by service layer using IDs
         return room;
     }
@@ -131,39 +109,7 @@ public class RoomDTO {
         if (this.code != null) {
             room.setCode(this.code);
         }
-        if (this.designationAr != null) {
-            room.setDesignationAr(this.designationAr);
-        }
-        if (this.designationEn != null) {
-            room.setDesignationEn(this.designationEn);
-        }
-        if (this.designationFr != null) {
-            room.setDesignationFr(this.designationFr);
-        }
         // Note: relationship updates must be handled by service layer using IDs
-    }
-
-    public String getDefaultDesignation() {
-        return designationFr;
-    }
-
-    public String getDesignationByLanguage(String language) {
-        if (language == null) return designationFr;
-        
-        return switch (language.toLowerCase()) {
-            case "ar", "arabic" -> designationAr != null ? designationAr : designationFr;
-            case "en", "english" -> designationEn != null ? designationEn : designationFr;
-            case "fr", "french" -> designationFr;
-            default -> designationFr;
-        };
-    }
-
-    public boolean isMultilingual() {
-        int languageCount = 0;
-        if (designationAr != null && !designationAr.trim().isEmpty()) languageCount++;
-        if (designationEn != null && !designationEn.trim().isEmpty()) languageCount++;
-        if (designationFr != null && !designationFr.trim().isEmpty()) languageCount++;
-        return languageCount > 1;
     }
 
     public boolean hasStructure() {
@@ -194,8 +140,7 @@ public class RoomDTO {
         return RoomDTO.builder()
                 .id(id)
                 .code(code)
-                .designationFr(designationFr)
-                .displayTextWithCode(code + " - " + designationFr)
+                .displayText(code)
                 .build();
     }
 
@@ -211,27 +156,8 @@ public class RoomDTO {
         return "STR-" + structure.getId();
     }
 
-    private static String buildDisplayTextWithCode(RoomDTO dto) {
-        return dto.getCode() + " - " + dto.getDesignationFr();
-    }
-
-    private static String buildFullDisplayText(RoomDTO dto) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(dto.getCode()).append(" - ").append(dto.getDesignationFr());
-        
-        if (dto.getFloorDesignationFr() != null) {
-            sb.append(" (Floor: ").append(dto.getFloorDesignationFr()).append(")");
-        }
-        
-        if (dto.getBlocDesignationFr() != null) {
-            sb.append(" - Bloc: ").append(dto.getBlocDesignationFr());
-        }
-        
-        if (dto.getStructureName() != null) {
-            sb.append(" [").append(dto.getStructureName()).append("]");
-        }
-        
-        return sb.toString();
+    private static String buildDisplayText(RoomDTO dto) {
+        return dto.getCode();
     }
 
     private static String buildLocationPath(RoomDTO dto) {
@@ -252,21 +178,5 @@ public class RoomDTO {
         }
         
         return sb.toString();
-    }
-    
-    public String[] getAvailableLanguages() {
-        java.util.List<String> languages = new java.util.ArrayList<>();
-        
-        if (designationAr != null && !designationAr.trim().isEmpty()) {
-            languages.add("arabic");
-        }
-        if (designationEn != null && !designationEn.trim().isEmpty()) {
-            languages.add("english");
-        }
-        if (designationFr != null && !designationFr.trim().isEmpty()) {
-            languages.add("french");
-        }
-        
-        return languages.stream().toArray(String[]::new);
     }
 }

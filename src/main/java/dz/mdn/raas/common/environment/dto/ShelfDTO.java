@@ -68,13 +68,11 @@ public class ShelfDTO {
         // Handle Room relationship (required F_02)
         if (shelf.getRoom() != null) {
             builder.roomId(shelf.getRoom().getId())
-                   .roomCode(shelf.getRoom().getCode())
-                   .roomDesignationFr(shelf.getRoom().getDesignationFr());
+                   .roomCode(shelf.getRoom().getCode());
 
             // Get Bloc info from Room
             if (shelf.getRoom().getBloc() != null) {
-                builder.blocCodeLt(shelf.getRoom().getBloc().getCodeLt())
-                       .blocDesignationFr(shelf.getRoom().getBloc().getDesignationFr());
+                builder.blocCodeLt(shelf.getRoom().getBloc().getCodeLt());
             }
 
             // Get Floor info from Room
