@@ -51,3 +51,7 @@ public class Bloc {
 	private String codeLt;
 	
 }
+/*
+Insert into T_01_01_01 (F_00,F_01,F_02) values
+(1,"س","S");
+*/

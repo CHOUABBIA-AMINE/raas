@@ -56,3 +56,15 @@ public class ShelfFloor {
 	private String designationFr;
 	
 }
+/*
+Insert into T_01_01_04 (F_00, F_01, F_02, F_03, F_04) values
+(1, "1°", "الطابق الأول", "First Floor", "Premier Etage"),
+(2, "2°", "الطابق الأول", "Second Floor", "Deuxième Etage"),
+(3, "3°", "الطابق الأول", "Third Floor", "Troisième Etage"),
+(4, "4°", "الطابق الأول", "Fourth Floor", "Quatrième Etage"),
+(5, "5°", "الطابق الأول", "Fifth Floor", "Cinquième Etage"),
+(6, "6°", "الطابق الأول", "Sixth Floor", "Siesième Etage"),
+(7, "7°", "الطابق الأول", "Seventh Floor", "Septième Etage"),
+(8, "8°", "الطابق الأول", "Eigth Floor", "Huitième Etage"),
+(9, "9°", "الطابق الأول", "Nineth Floor", "Neuvième Etage");
+*/

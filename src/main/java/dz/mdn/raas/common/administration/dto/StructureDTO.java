@@ -116,9 +116,6 @@ public class StructureDTO {
                     .designationFr(structure.getStructureType().getDesignationFr())
                     .designationEn(structure.getStructureType().getDesignationEn())
                     .designationAr(structure.getStructureType().getDesignationAr())
-                    .acronymFr(structure.getStructureType().getAcronymFr())
-                    .acronymEn(structure.getStructureType().getAcronymEn())
-                    .acronymAr(structure.getStructureType().getAcronymAr())
                     .build();
         }
         

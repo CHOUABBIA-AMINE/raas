@@ -29,10 +29,9 @@ import java.util.Optional;
 /**
  * StructureType Service with CRUD operations
  * Handles structure type management operations with multilingual support
- * Based on exact field names: F_01=designationAr, F_02=designationEn, F_03=designationFr, F_04=acronymAr, F_05=acronymEn, F_06=acronymFr
+ * Based on exact field names: F_01=designationAr, F_02=designationEn, F_03=designationFr
  * F_03 (designationFr) has unique constraint and is required
- * F_06 (acronymFr) has unique constraint and is required
- * F_01 (designationAr), F_02 (designationEn), F_04 (acronymAr), F_05 (acronymEn) are optional
+ * F_01 (designationAr), F_02 (designationEn) are optional
  */
 @Service
 @RequiredArgsConstructor
@@ -48,10 +47,9 @@ public class StructureTypeService {
      * Create new structure type
      */
     public StructureTypeDTO createStructureType(StructureTypeDTO structureTypeDTO) {
-        log.info("Creating structure type with French designation: {} and acronym: {}, designations: AR={}, EN={}, acronyms: AR={}, EN={}", 
-                structureTypeDTO.getDesignationFr(), structureTypeDTO.getAcronymFr(),
-                structureTypeDTO.getDesignationAr(), structureTypeDTO.getDesignationEn(),
-                structureTypeDTO.getAcronymAr(), structureTypeDTO.getAcronymEn());
+        log.info("Creating structure type with French designation: {} , designations: AR={}, EN={}", 
+                structureTypeDTO.getDesignationFr(),
+                structureTypeDTO.getDesignationAr(), structureTypeDTO.getDesignationEn());
 
         // Validate required fields
         validateRequiredFields(structureTypeDTO, "create");
@@ -64,9 +62,6 @@ public class StructureTypeService {
         structureType.setDesignationAr(structureTypeDTO.getDesignationAr()); // F_01
         structureType.setDesignationEn(structureTypeDTO.getDesignationEn()); // F_02
         structureType.setDesignationFr(structureTypeDTO.getDesignationFr()); // F_03
-        structureType.setAcronymAr(structureTypeDTO.getAcronymAr()); // F_04
-        structureType.setAcronymEn(structureTypeDTO.getAcronymEn()); // F_05
-        structureType.setAcronymFr(structureTypeDTO.getAcronymFr()); // F_06
 
         StructureType savedStructureType = structureTypeRepository.save(structureType);
         log.info("Successfully created structure type with ID: {}", savedStructureType.getId());
@@ -110,17 +105,6 @@ public class StructureTypeService {
     }
 
     /**
-     * Find structure type by French acronym (unique field F_06)
-     */
-    @Transactional(readOnly = true)
-    public Optional<StructureTypeDTO> findByAcronymFr(String acronymFr) {
-        log.debug("Finding structure type with French acronym: {}", acronymFr);
-
-        return structureTypeRepository.findByAcronymFr(acronymFr)
-                .map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
      * Find structure type by Arabic designation (F_01)
      */
     @Transactional(readOnly = true)
@@ -143,28 +127,6 @@ public class StructureTypeService {
     }
 
     /**
-     * Find structure type by Arabic acronym (F_04)
-     */
-    @Transactional(readOnly = true)
-    public Optional<StructureTypeDTO> findByAcronymAr(String acronymAr) {
-        log.debug("Finding structure type with Arabic acronym: {}", acronymAr);
-
-        return structureTypeRepository.findByAcronymAr(acronymAr)
-                .map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Find structure type by English acronym (F_05)
-     */
-    @Transactional(readOnly = true)
-    public Optional<StructureTypeDTO> findByAcronymEn(String acronymEn) {
-        log.debug("Finding structure type with English acronym: {}", acronymEn);
-
-        return structureTypeRepository.findByAcronymEn(acronymEn)
-                .map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
      * Get all structure types with pagination
      */
     @Transactional(readOnly = true)
@@ -172,17 +134,6 @@ public class StructureTypeService {
         log.debug("Getting all structure types with pagination");
 
         Page<StructureType> structureTypes = structureTypeRepository.findAllOrderByDesignationFr(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get all structure types ordered by acronym
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getAllStructureTypesOrderByAcronym(Pageable pageable) {
-        log.debug("Getting all structure types ordered by acronym");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findAllOrderByAcronymFr(pageable);
         return structureTypes.map(StructureTypeDTO::fromEntity);
     }
 
@@ -213,21 +164,6 @@ public class StructureTypeService {
     }
 
     /**
-     * Search structure types by acronym
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> searchStructureTypesByAcronym(String searchTerm, Pageable pageable) {
-        log.debug("Searching structure types by acronym with term: {}", searchTerm);
-
-        if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            return getAllStructureTypes(pageable);
-        }
-
-        Page<StructureType> structureTypes = structureTypeRepository.searchByAcronym(searchTerm.trim(), pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
      * Search structure types by designation or acronym
      */
     @Transactional(readOnly = true)
@@ -238,7 +174,7 @@ public class StructureTypeService {
             return getAllStructureTypes(pageable);
         }
 
-        Page<StructureType> structureTypes = structureTypeRepository.searchByDesignationOrAcronym(searchTerm.trim(), pageable);
+        Page<StructureType> structureTypes = structureTypeRepository.searchByDesignation(searchTerm.trim(), pageable);
         return structureTypes.map(StructureTypeDTO::fromEntity);
     }
 
@@ -250,182 +186,6 @@ public class StructureTypeService {
         log.debug("Getting multilingual structure types");
 
         Page<StructureType> structureTypes = structureTypeRepository.findMultilingualStructureTypes(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get command structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getCommandStructures(Pageable pageable) {
-        log.debug("Getting command structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findCommandStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get administrative structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getAdministrativeStructures(Pageable pageable) {
-        log.debug("Getting administrative structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findAdministrativeStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get operational structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getOperationalStructures(Pageable pageable) {
-        log.debug("Getting operational structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findOperationalStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get support structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getSupportStructures(Pageable pageable) {
-        log.debug("Getting support structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findSupportStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get training structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getTrainingStructures(Pageable pageable) {
-        log.debug("Getting training structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findTrainingStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get medical structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getMedicalStructures(Pageable pageable) {
-        log.debug("Getting medical structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findMedicalStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get technical structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getTechnicalStructures(Pageable pageable) {
-        log.debug("Getting technical structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findTechnicalStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get intelligence structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getIntelligenceStructures(Pageable pageable) {
-        log.debug("Getting intelligence structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findIntelligenceStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get communications structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getCommunicationsStructures(Pageable pageable) {
-        log.debug("Getting communications structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findCommunicationsStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get logistics structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getLogisticsStructures(Pageable pageable) {
-        log.debug("Getting logistics structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findLogisticsStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get strategic level structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getStrategicLevelStructures(Pageable pageable) {
-        log.debug("Getting strategic level structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findStrategicLevelStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get operational level structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getOperationalLevelStructures(Pageable pageable) {
-        log.debug("Getting operational level structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findOperationalLevelStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get tactical level structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getTacticalLevelStructures(Pageable pageable) {
-        log.debug("Getting tactical level structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findTacticalLevelStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get unit level structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getUnitLevelStructures(Pageable pageable) {
-        log.debug("Getting unit level structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findUnitLevelStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get security clearance structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getSecurityClearanceStructures(Pageable pageable) {
-        log.debug("Getting security clearance structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findSecurityClearanceStructures(pageable);
-        return structureTypes.map(StructureTypeDTO::fromEntity);
-    }
-
-    /**
-     * Get deployable structures
-     */
-    @Transactional(readOnly = true)
-    public Page<StructureTypeDTO> getDeployableStructures(Pageable pageable) {
-        log.debug("Getting deployable structures");
-
-        Page<StructureType> structureTypes = structureTypeRepository.findDeployableStructures(pageable);
         return structureTypes.map(StructureTypeDTO::fromEntity);
     }
 
@@ -449,9 +209,6 @@ public class StructureTypeService {
         existingStructureType.setDesignationAr(structureTypeDTO.getDesignationAr()); // F_01
         existingStructureType.setDesignationEn(structureTypeDTO.getDesignationEn()); // F_02
         existingStructureType.setDesignationFr(structureTypeDTO.getDesignationFr()); // F_03
-        existingStructureType.setAcronymAr(structureTypeDTO.getAcronymAr()); // F_04
-        existingStructureType.setAcronymEn(structureTypeDTO.getAcronymEn()); // F_05
-        existingStructureType.setAcronymFr(structureTypeDTO.getAcronymFr()); // F_06
 
         StructureType updatedStructureType = structureTypeRepository.save(existingStructureType);
         log.info("Successfully updated structure type with ID: {}", id);
@@ -506,59 +263,11 @@ public class StructureTypeService {
     }
 
     /**
-     * Check if structure type exists by French acronym
-     */
-    @Transactional(readOnly = true)
-    public boolean existsByAcronymFr(String acronymFr) {
-        return structureTypeRepository.existsByAcronymFr(acronymFr);
-    }
-
-    /**
      * Get total count of structure types
      */
     @Transactional(readOnly = true)
     public Long getTotalCount() {
         return structureTypeRepository.countAllStructureTypes();
-    }
-
-    /**
-     * Get count of command structures
-     */
-    @Transactional(readOnly = true)
-    public Long getCommandCount() {
-        return structureTypeRepository.countCommandStructures();
-    }
-
-    /**
-     * Get count of administrative structures
-     */
-    @Transactional(readOnly = true)
-    public Long getAdministrativeCount() {
-        return structureTypeRepository.countAdministrativeStructures();
-    }
-
-    /**
-     * Get count of operational structures
-     */
-    @Transactional(readOnly = true)
-    public Long getOperationalCount() {
-        return structureTypeRepository.countOperationalStructures();
-    }
-
-    /**
-     * Get count of support structures
-     */
-    @Transactional(readOnly = true)
-    public Long getSupportCount() {
-        return structureTypeRepository.countSupportStructures();
-    }
-
-    /**
-     * Get count of training structures
-     */
-    @Transactional(readOnly = true)
-    public Long getTrainingCount() {
-        return structureTypeRepository.countTrainingStructures();
     }
 
     // ========== VALIDATION METHODS ==========
@@ -569,9 +278,6 @@ public class StructureTypeService {
     private void validateRequiredFields(StructureTypeDTO structureTypeDTO, String operation) {
         if (structureTypeDTO.getDesignationFr() == null || structureTypeDTO.getDesignationFr().trim().isEmpty()) {
             throw new RuntimeException("French designation is required for " + operation);
-        }
-        if (structureTypeDTO.getAcronymFr() == null || structureTypeDTO.getAcronymFr().trim().isEmpty()) {
-            throw new RuntimeException("French acronym is required for " + operation);
         }
     }
 
@@ -587,17 +293,6 @@ public class StructureTypeService {
         } else {
             if (structureTypeRepository.existsByDesignationFrAndIdNot(structureTypeDTO.getDesignationFr(), excludeId)) {
                 throw new RuntimeException("Another structure type with French designation '" + structureTypeDTO.getDesignationFr() + "' already exists");
-            }
-        }
-
-        // Check French acronym uniqueness (F_06)
-        if (excludeId == null) {
-            if (structureTypeRepository.existsByAcronymFr(structureTypeDTO.getAcronymFr())) {
-                throw new RuntimeException("Structure type with French acronym '" + structureTypeDTO.getAcronymFr() + "' already exists");
-            }
-        } else {
-            if (structureTypeRepository.existsByAcronymFrAndIdNot(structureTypeDTO.getAcronymFr(), excludeId)) {
-                throw new RuntimeException("Another structure type with French acronym '" + structureTypeDTO.getAcronymFr() + "' already exists");
             }
         }
     }

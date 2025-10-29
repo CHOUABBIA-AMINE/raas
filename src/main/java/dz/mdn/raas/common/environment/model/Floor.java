@@ -56,3 +56,18 @@ public class Floor {
 	private String designationFr;
 	
 }
+/*
+Insert into T_01_01_03 (F_00, F_01, F_02, F_03, F_04) values
+(1, "-2°", "الطابق السفلي الثاني", "Second Floor Underground", "Deuxième Etage Sous Sol"),
+(2, "-1°", "الطابق السفلي الأول", "First Floor Underground", "Premier Etage Sous Sol"),
+(3, "0", "الطابق الأرضي", "Ground Floor", "Riz de Chaussé"),
+(4, "1°", "الطابق الأول", "First Floor", "Premier Etage"),
+(5, "2°", "الطابق الأول", "Second Floor", "Deuxième Etage"),
+(6, "3°", "الطابق الأول", "Third Floor", "Troisième Etage"),
+(7, "4°", "الطابق الأول", "Fourth Floor", "Quatrième Etage"),
+(8, "5°", "الطابق الأول", "Fifth Floor", "Cinquième Etage"),
+(9, "6°", "الطابق الأول", "Sixth Floor", "Siesième Etage"),
+(10, "7°", "الطابق الأول", "Seventh Floor", "Septième Etage"),
+(11, "8°", "الطابق الأول", "Eigth Floor", "Huitième Etage"),
+(12, "9°", "الطابق الأول", "Nineth Floor", "Neuvième Etage");
+*/

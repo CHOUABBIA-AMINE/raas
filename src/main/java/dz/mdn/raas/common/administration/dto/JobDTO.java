@@ -89,8 +89,6 @@ public class JobDTO {
                     .acronymAr(job.getStructure().getAcronymAr())
                     .structureTypeDesignation(job.getStructure().getStructureType() != null ? 
                                             job.getStructure().getStructureType().getDesignationFr() : null)
-                    .structureTypeAcronym(job.getStructure().getStructureType() != null ? 
-                                        job.getStructure().getStructureType().getAcronymFr() : null)
                     .parentStructureDesignation(job.getStructure().getStructureUp() != null ? 
                                                job.getStructure().getStructureUp().getDesignationFr() : null)
                     .parentStructureAcronym(job.getStructure().getStructureUp() != null ? 

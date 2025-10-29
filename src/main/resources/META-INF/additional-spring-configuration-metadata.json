@@ -18,5 +18,95 @@
     "name": "raas.audit.retention-days",
     "type": "java.lang.String",
     "description": "A description for 'raas.audit.retention-days'"
+  },
+  {
+    "name": "raas.security.jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.jwt.secret'"
+  },
+  {
+    "name": "raas.security.jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.jwt.expiration'"
+  },
+  {
+    "name": "raas.security.jwt.refresh-expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.jwt.refresh-expiration'"
+  },
+  {
+    "name": "raas.security.jwt.issuer",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.jwt.issuer'"
+  },
+  {
+    "name": "raas.security.jwt.audience",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.jwt.audience'"
+  },
+  {
+    "name": "raas.security.cors.allowed-origins",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.cors.allowed-origins'"
+  },
+  {
+    "name": "raas.security.cors.allow-credentials",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.cors.allow-credentials'"
+  },
+  {
+    "name": "raas.security.cors.max-age",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.cors.max-age'"
+  },
+  {
+    "name": "raas.security.authentication.max-failed-attempts",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.authentication.max-failed-attempts'"
+  },
+  {
+    "name": "raas.security.authentication.lock-duration",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.authentication.lock-duration'"
+  },
+  {
+    "name": "raas.security.authentication.enable-brute-force-protection",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.authentication.enable-brute-force-protection'"
+  },
+  {
+    "name": "raas.security.authentication.password-expiration-days",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.authentication.password-expiration-days'"
+  },
+  {
+    "name": "raas.security.authorization.enable-object-level-security",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.authorization.enable-object-level-security'"
+  },
+  {
+    "name": "raas.security.authorization.enable-audit-logging",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.authorization.enable-audit-logging'"
+  },
+  {
+    "name": "raas.security.authorization.default-role",
+    "type": "java.lang.String",
+    "description": "A description for 'raas.security.authorization.default-role'"
+  },
+  {
+    "name": "spring.security.require-ssl",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.security.require-ssl'"
+  },
+  {
+    "name": "spring.security.headers.frame-options",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.security.headers.frame-options'"
+  },
+  {
+    "name": "spring.security.headers.content-security-policy",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.security.headers.content-security-policy'"
   }
 ]}
