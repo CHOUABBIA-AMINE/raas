@@ -328,7 +328,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     @Query("SELECT j FROM Job j LEFT JOIN j.structure s LEFT JOIN s.structureType t WHERE " +
            "(j.designationFr LIKE %:search% OR j.designationEn LIKE %:search% OR j.designationAr LIKE %:search% OR " +
            "s.designationFr LIKE %:search% OR s.acronymFr LIKE %:search% OR " +
-           "t.designationFr LIKE %:search% OR t.acronymFr LIKE %:search%) " +
+           "t.designationFr LIKE %:search%) " +
            "ORDER BY j.designationFr ASC")
     Page<Job> searchWithStructureContext(@Param("search") String search, Pageable pageable);
 

@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.*;
  * F_03=personId, F_04=militaryRankId, F_05=jobId
  */
 @RestController
-@RequestMapping("/api/v1/employees")
+@RequestMapping("/employee")
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeController {

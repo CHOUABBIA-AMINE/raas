@@ -29,7 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/archiveBoxe")
+@RequestMapping("/archiveBox")
 @RequiredArgsConstructor
 @Slf4j
 public class ArchiveBoxController {

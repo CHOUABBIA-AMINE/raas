@@ -37,7 +37,7 @@ import java.util.List;
  * F_04=abbreviationAr, F_05=abbreviationEn, F_06=abbreviationFr, F_07=militaryCategoryId
  */
 @RestController
-@RequestMapping("/api/v1/military-ranks")
+@RequestMapping("/militaryRank")
 @RequiredArgsConstructor
 @Slf4j
 public class MilitaryRankController {

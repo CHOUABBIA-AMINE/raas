@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * REST Controller for audit log management
  */
 @RestController
-@RequestMapping("/api/v1/audit")
+@RequestMapping("/audit")
 @RequiredArgsConstructor
 @Slf4j
 public class AuditController {

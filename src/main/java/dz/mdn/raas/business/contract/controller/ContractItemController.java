@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
  * Based on the ContractItem model (F_00=id through F_06=contract)
  */
 @RestController
-@RequestMapping("/contract-item")
+@RequestMapping("/contractItem")
 @RequiredArgsConstructor
 @Slf4j
 public class ContractItemController {

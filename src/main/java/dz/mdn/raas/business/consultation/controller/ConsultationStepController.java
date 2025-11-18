@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
  * Required fields: F_03 (designationFr) with unique constraint, F_04 (consultationPhase)
  */
 @RestController
-@RequestMapping("/consultation-step")
+@RequestMapping("/consultationStep")
 @RequiredArgsConstructor
 @Slf4j
 public class ConsultationStepController {

@@ -207,12 +207,6 @@ public interface StructureRepository extends JpaRepository<Structure, Long> {
     Page<Structure> findByStructureTypeDesignation(@Param("typeDesignation") String typeDesignation, Pageable pageable);
 
     /**
-     * Find structures by structure type acronym
-     */
-    @Query("SELECT s FROM Structure s WHERE s.structureType.acronymFr = :typeAcronym ORDER BY s.designationFr ASC")
-    Page<Structure> findByStructureTypeAcronym(@Param("typeAcronym") String typeAcronym, Pageable pageable);
-
-    /**
      * Find multilingual structures (have at least 2 designations)
      */
     @Query("SELECT s FROM Structure s WHERE " +
@@ -330,7 +324,7 @@ public interface StructureRepository extends JpaRepository<Structure, Long> {
      */
     @Query("SELECT s FROM Structure s LEFT JOIN s.structureType t LEFT JOIN s.structureUp p WHERE " +
            "(s.designationFr LIKE %:search% OR s.acronymFr LIKE %:search% OR " +
-           "t.designationFr LIKE %:search% OR t.acronymFr LIKE %:search% OR " +
+           "t.designationFr LIKE %:search% OR " +
            "p.designationFr LIKE %:search% OR p.acronymFr LIKE %:search%) " +
            "ORDER BY s.designationFr ASC")
     Page<Structure> searchWithTypeAndParentContext(@Param("search") String search, Pageable pageable);

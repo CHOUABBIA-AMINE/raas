@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
  * Required fields: F_03 (designationFr) with unique constraint, F_04 (contractPhase)
  */
 @RestController
-@RequestMapping("/contract-step")
+@RequestMapping("/contractStep")
 @RequiredArgsConstructor
 @Slf4j
 public class ContractStepController {

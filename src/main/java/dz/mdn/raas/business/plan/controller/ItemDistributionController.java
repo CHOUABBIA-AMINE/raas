@@ -98,7 +98,7 @@ public class ItemDistributionController {
     public ResponseEntity<Page<ItemDistributionDTO>> getAllItemDistributions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "structure.designation") String sortBy,
+            @RequestParam(defaultValue = "structure.designationFr") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
         
         log.debug("Getting all item distributions - page: {}, size: {}, sortBy: {}, sortDir: {}", 

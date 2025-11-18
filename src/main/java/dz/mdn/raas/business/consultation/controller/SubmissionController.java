@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  * Supports all CRUD operations and business analytics
  */
 @RestController
-@RequestMapping("/api/v1/submissions")
+@RequestMapping("/submission")
 @RequiredArgsConstructor
 @Slf4j
 public class SubmissionController {
