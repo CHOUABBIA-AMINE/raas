@@ -1,11 +1,13 @@
 /**
  *	
  *	@author		: CHOUABBIA Amine
+ *
  *	@Name		: AuditAspect
  *	@CreatedOn	: 10-27-2025
+ *
  *	@Type		: Class
  *	@Layer		: Aspect
- *	@Package	: System / Audit
+ *	@Package	: Configuration
  *
  **/
 

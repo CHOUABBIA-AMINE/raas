@@ -1,31 +1,59 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: Authority
+ *	@CreatedOn	: 11-18-2025
+ *
+ *	@Type		: Class
+ *	@Layer		: Model
+ *	@Package	: System / Security
+ *
+ **/
+
 package dz.mdn.raas.system.security.model;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import dz.mdn.raas.configuration.BaseEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
-@Entity
-@Table(name = "authorities")
-@Getter
 @Setter
-public class Authority extends BaseEntity {
+@Getter
+@ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity(name="Authority")
+@Table(name = "T_00_02_05", uniqueConstraints = { @UniqueConstraint(columnNames = "F_01")})
+public class Authority {
 
-	@NotBlank
-    @Size(max = 50)
+	@Id
+	@Column(name="F_00")
+  	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private Long id;
+	
+	@Column(name="F_01", length=50, nullable=false)
     private String name;
 
-    @Size(max = 200)
+	@Column(name="F_02", length=200)
     private String description;
 
+    @Builder.Default
     @OneToMany(mappedBy = "authority", fetch = FetchType.LAZY)
     private Set<Permission> permissions = new HashSet<>();
     

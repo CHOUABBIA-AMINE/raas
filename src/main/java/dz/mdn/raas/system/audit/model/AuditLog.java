@@ -1,8 +1,10 @@
 /**
  *	
  *	@author		: CHOUABBIA Amine
+ *
  *	@Name		: AuditLog
  *	@CreatedOn	: 10-27-2025
+ *
  *	@Type		: Class
  *	@Layer		: Model
  *	@Package	: System / Audit
@@ -25,19 +27,25 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * AuditLog Entity for tracking all business operations
  * Maps to table T_SYS_AUDIT with comprehensive audit information
  */
-@Entity(name = "AuditLog")
-@Table(name = "T_SYS_AUDIT")
-@Data
+@Setter
+@Getter
+@ToString
 @Builder
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity(name="AuditLog")
+@Table(name="T_00_03_01")
 public class AuditLog {
 
     @Id

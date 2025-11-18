@@ -1,8 +1,10 @@
 /**
  *	
  *	@author		: CHOUABBIA Amine
+ *
  *	@Name		: AuditLogRepository
  *	@CreatedOn	: 10-27-2025
+ *
  *	@Type		: Interface
  *	@Layer		: Repository
  *	@Package	: System / Audit

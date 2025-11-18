@@ -1,11 +1,13 @@
 /**
  *	
  *	@author		: CHOUABBIA Amine
+ *
  *	@Name		: Auditable
  *	@CreatedOn	: 10-27-2025
+ *
  *	@Type		: Annotation
  *	@Layer		: Annotation
- *	@Package	: System / Audit
+ *	@Package	: Configuration / Annotation
  *
  **/
 

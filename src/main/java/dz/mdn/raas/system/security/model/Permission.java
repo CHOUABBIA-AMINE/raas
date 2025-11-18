@@ -1,33 +1,59 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: Permission
+ *	@CreatedOn	: 11-18-2025
+ *
+ *	@Type		: Class
+ *	@Layer		: Model
+ *	@Package	: System / Security
+ *
+ **/
+
 package dz.mdn.raas.system.security.model;
 
-import dz.mdn.raas.configuration.BaseEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
-@Entity
-@Table(name = "permissions")
-@Getter
 @Setter
+@Getter
+@ToString
+@Builder
 @NoArgsConstructor
-public class Permission extends BaseEntity {
+@AllArgsConstructor
+@Entity(name="Permission")
+@Table(name = "T_00_02_04", uniqueConstraints = { @UniqueConstraint(columnNames = "F_01")})
+public class Permission {
 
-	@NotBlank
-    @Size(max = 50)
+	@Id
+	@Column(name="F_00")
+  	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private Long id;
+	
+	@Column(name="F_01", length=50, nullable=false)
     private String name;
 
-    @Size(max = 200)
+	@Column(name="F_02", length=200)
     private String description;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "authority_fk")
+    @JoinColumn(name="F_03", foreignKey=@ForeignKey(name="T_00_02_04_FK_01"), nullable=false)
     private Authority authority;
     
 }

@@ -1,3 +1,16 @@
+/**
+ *	
+ *	@author		: CHOUABBIA Amine
+ *
+ *	@Name		: User
+ *	@CreatedOn	: 11-18-2025
+ *
+ *	@Type		: Class
+ *	@Layer		: Model
+ *	@Package	: System / Security
+ *
+ **/
+
 package dz.mdn.raas.system.security.model;
 
 import java.util.Collection;
@@ -9,60 +22,85 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import dz.mdn.raas.configuration.BaseEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
-@Entity
-@Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username"),
-        @UniqueConstraint(columnNames = "email")
-})
-@Getter
 @Setter
-public class User extends BaseEntity implements UserDetails {
+@Getter
+@ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity(name="User")
+@Table(name = "T_00_02_02", uniqueConstraints = { @UniqueConstraint(columnNames = "F_01"),
+        									 	  @UniqueConstraint(columnNames = "F_02")})
+public class User implements UserDetails {
 
 	private static final long serialVersionUID = 6957215815941701487L;
 
-	@NotBlank
-    @Size(max = 20)
+	@Id
+	@Column(name="F_00")
+  	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private Long id;
+	
+	@Column(name="F_01", length=20, nullable=false)
     private String username;
 
-    @NotBlank
-    @Size(max = 50)
-    @Email
+	@Column(name="F_02", length=100, nullable=false)
     private String email;
 
     @NotBlank
     @Size(max = 120)
     @JsonIgnore
+    @Column(name="F_03", length=100, nullable=false)
     private String password;
 
+    @Builder.Default
     private boolean accountNonExpired = true;
+    
+    @Builder.Default
     private boolean accountNonLocked = true;
+    
+    @Builder.Default
     private boolean credentialsNonExpired = true;
+    
+    @Builder.Default
     private boolean enabled = true;
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_fk"),
-            inverseJoinColumns = @JoinColumn(name = "role_fk"))
+    @JoinTable(
+			name = "R_T000202_T000203", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_T000202_T000203_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_T000202_T000203_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T000202_T000203_UK_01", columnNames = {"F_01", "F_02"}))
     private Set<Role> roles = new HashSet<>();
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_groups",
-            joinColumns = @JoinColumn(name = "user_fk"),
-            inverseJoinColumns = @JoinColumn(name = "group_fk"))
+    @JoinTable(
+			name = "R_T000202_T000201", 
+			joinColumns = @JoinColumn(name = "F_01", foreignKey=@ForeignKey(name="R_T000202_T000201_FK_01")), 
+			inverseJoinColumns = @JoinColumn(name = "F_02", foreignKey=@ForeignKey(name="R_T000202_T000201_FK_02")),
+			uniqueConstraints = @UniqueConstraint(name = "R_T000202_T000201_UK_01", columnNames = {"F_01", "F_02"}))
     private Set<Group> groups = new HashSet<>();
 
     @Override
