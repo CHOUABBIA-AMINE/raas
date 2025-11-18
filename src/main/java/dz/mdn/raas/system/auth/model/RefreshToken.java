@@ -48,8 +48,8 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name="Authority")
-@Table(name = "T_00_04_01", uniqueConstraints = { @UniqueConstraint(columnNames = "F_01")})
+@Entity(name="RefreshToken")
+@Table(name = "T_00_04_01", uniqueConstraints = { @UniqueConstraint(name = "T_00_04_01_UK_01", columnNames = "F_01")})
 public class RefreshToken {
 
 	@Id

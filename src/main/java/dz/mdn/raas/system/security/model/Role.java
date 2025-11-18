@@ -46,7 +46,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="Role")
-@Table(name = "T_00_02_03", uniqueConstraints = { @UniqueConstraint(columnNames = "F_01")})
+@Table(name = "T_00_02_03", uniqueConstraints = { @UniqueConstraint(name = "T_00_02_03_UK_01", columnNames = "F_01")})
 public class Role {
 
 	@Id

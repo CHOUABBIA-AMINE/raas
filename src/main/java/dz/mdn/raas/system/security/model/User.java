@@ -50,8 +50,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name="User")
-@Table(name = "T_00_02_02", uniqueConstraints = { @UniqueConstraint(columnNames = "F_01"),
-        									 	  @UniqueConstraint(columnNames = "F_02")})
+@Table(name = "T_00_02_02", uniqueConstraints = { @UniqueConstraint(name = "T_00_02_02_UK_01", columnNames = "F_01"),
+        									 	  @UniqueConstraint(name = "T_00_02_02_UK_02", columnNames = "F_02")})
 public class User implements UserDetails {
 
 	private static final long serialVersionUID = 6957215815941701487L;
