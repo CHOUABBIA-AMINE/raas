@@ -74,15 +74,19 @@ public class User implements UserDetails {
     private String password;
 
     @Builder.Default
+    @Column(name="F_04", nullable=false)
     private boolean accountNonExpired = true;
     
     @Builder.Default
+    @Column(name="F_05", nullable=false)
     private boolean accountNonLocked = true;
     
     @Builder.Default
+    @Column(name="F_06", nullable=false)
     private boolean credentialsNonExpired = true;
     
     @Builder.Default
+    @Column(name="F_07", nullable=false)
     private boolean enabled = true;
 
     @Builder.Default
